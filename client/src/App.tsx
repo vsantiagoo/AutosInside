@@ -87,6 +87,8 @@ function AppRouter() {
           <main className="flex-1 overflow-auto p-6 bg-background">
             <div className="max-w-7xl mx-auto">
               <Routes>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/admin-login" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
                 <Route path="/stock" element={<ProtectedRoute><StockTransactions /></ProtectedRoute>} />
