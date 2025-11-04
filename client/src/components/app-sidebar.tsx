@@ -5,7 +5,8 @@ import {
   ShoppingCart, 
   Users, 
   FolderTree,
-  LogOut
+  LogOut,
+  UtensilsCrossed
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -47,6 +48,11 @@ export function AppSidebar() {
       title: "Consumptions",
       url: "/consumptions",
       icon: ShoppingCart,
+    },
+    {
+      title: "Food Station",
+      url: "/food-station",
+      icon: UtensilsCrossed,
     },
   ];
 

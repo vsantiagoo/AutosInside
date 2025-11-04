@@ -13,6 +13,7 @@ import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import StockTransactions from "@/pages/stock-transactions";
 import Consumptions from "@/pages/consumptions";
+import FoodStation from "@/pages/food-station";
 import AdminUsers from "@/pages/admin-users";
 import AdminSectors from "@/pages/admin-sectors";
 import { Loader2 } from "lucide-react";
@@ -105,6 +106,7 @@ function AppRouter() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/stock" element={<StockTransactions />} />
                 <Route path="/consumptions" element={<Consumptions />} />
+                <Route path="/food-station" element={<FoodStation />} />
                 <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
                 <Route path="/admin/sectors" element={<ProtectedRoute adminOnly={true}><AdminSectors /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
