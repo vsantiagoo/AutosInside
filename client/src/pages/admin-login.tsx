@@ -22,11 +22,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const adminLoginSchema = z.object({
-  matricula: z.string().min(1, "Matricula is required"),
-  password: z.string().min(1, "Password is required"),
+  matricula: z.string()
+    .min(1, "Matricula is required")
+    .trim()
+    .toUpperCase(),
+  password: z.string()
+    .min(1, "Password is required")
+    .min(3, "Password must be at least 3 characters"),
 });
 
 type AdminLoginForm = z.infer<typeof adminLoginSchema>;
@@ -36,6 +41,7 @@ export default function AdminLogin() {
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<AdminLoginForm>({
     resolver: zodResolver(adminLoginSchema),
@@ -55,11 +61,27 @@ export default function AdminLogin() {
       });
       // Navigation will happen automatically when auth state updates
     } catch (error: any) {
+      // Provide more specific error messages
+      let errorMessage = 'Invalid credentials';
+      
+      if (error.message?.includes('not found')) {
+        errorMessage = 'User account not found';
+      } else if (error.message?.includes('password')) {
+        errorMessage = 'Incorrect password';
+      } else if (error.message?.includes('admin')) {
+        errorMessage = 'This account is not an administrator';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Login failed',
-        description: error.message || 'Invalid credentials',
+        description: errorMessage,
       });
+      
+      // Clear password field on error for security
+      form.setValue('password', '');
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +118,10 @@ export default function AdminLogin() {
                         {...field}
                         data-testid="input-matricula"
                         autoFocus
+                        autoComplete="username"
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        aria-label="Administrator matricula"
+                        aria-required="true"
                       />
                     </FormControl>
                     <FormMessage />
@@ -109,12 +135,34 @@ export default function AdminLogin() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        {...field}
-                        data-testid="input-password"
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          {...field}
+                          data-testid="input-password"
+                          autoComplete="current-password"
+                          aria-label="Administrator password"
+                          aria-required="true"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                          tabIndex={-1}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          data-testid="button-toggle-password"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -125,6 +173,7 @@ export default function AdminLogin() {
                 className="w-full"
                 disabled={isLoading}
                 data-testid="button-login"
+                aria-label="Sign in as administrator"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Sign In as Admin
@@ -148,6 +197,7 @@ export default function AdminLogin() {
               variant="outline"
               className="w-full"
               data-testid="link-user-login"
+              aria-label="Switch to user login"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               User Login

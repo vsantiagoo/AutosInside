@@ -25,7 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldCheck } from 'lucide-react';
 
 const userLoginSchema = z.object({
-  matricula: z.string().min(1, "Matricula is required"),
+  matricula: z.string()
+    .min(1, "Matricula is required")
+    .trim()
+    .toUpperCase(),
 });
 
 type UserLoginForm = z.infer<typeof userLoginSchema>;
@@ -53,11 +56,29 @@ export default function LoginUser() {
       });
       // Navigation will happen automatically when auth state updates
     } catch (error: any) {
+      // Provide more specific error messages
+      let errorMessage = 'Invalid matricula';
+      
+      if (error.message?.includes('not found')) {
+        errorMessage = 'User account not found. Please check your matricula.';
+      } else if (error.message?.includes('admin')) {
+        errorMessage = 'This is an admin account. Please use the Admin Login.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Login failed',
-        description: error.message || 'Invalid matricula',
+        description: errorMessage,
       });
+      
+      // Clear matricula field on error
+      form.setValue('matricula', '');
+      // Re-focus on input for better UX
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>('[data-testid="input-matricula"]')?.focus();
+      }, 100);
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +115,10 @@ export default function LoginUser() {
                         {...field}
                         data-testid="input-matricula"
                         autoFocus
+                        autoComplete="username"
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        aria-label="User matricula"
+                        aria-required="true"
                       />
                     </FormControl>
                     <FormMessage />
@@ -105,6 +130,7 @@ export default function LoginUser() {
                 className="w-full"
                 disabled={isLoading}
                 data-testid="button-login"
+                aria-label="Sign in as user"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Sign In
@@ -128,6 +154,7 @@ export default function LoginUser() {
               variant="outline"
               className="w-full"
               data-testid="link-admin-login"
+              aria-label="Switch to admin login"
             >
               <ShieldCheck className="w-4 h-4 mr-2" />
               Admin Login
