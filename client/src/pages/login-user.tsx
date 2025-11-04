@@ -51,7 +51,7 @@ export default function LoginUser() {
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
       });
-      navigate('/dashboard');
+      // Navigation will happen automatically when auth state updates
     } catch (error: any) {
       toast({
         variant: 'destructive',

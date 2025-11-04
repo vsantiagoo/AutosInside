@@ -53,7 +53,7 @@ export default function AdminLogin() {
         title: 'Welcome back, Administrator!',
         description: 'You have successfully logged in.',
       });
-      navigate('/dashboard');
+      // Navigation will happen automatically when auth state updates
     } catch (error: any) {
       toast({
         variant: 'destructive',

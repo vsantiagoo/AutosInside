@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -18,6 +19,15 @@ import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/", { replace: true });
+    } else if (!isLoading && adminOnly && user?.role !== 'admin') {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isLoading, user, adminOnly, navigate]);
 
   if (isLoading) {
     return (
@@ -28,11 +38,11 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
   }
 
   if (!user) {
-    return <Navigate to="/" replace />;
+    return null;
   }
 
   if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+    return null;
   }
 
   return <>{children}</>;
@@ -49,6 +59,7 @@ function AppRouter() {
     );
   }
 
+  // Unauthenticated users see login pages
   if (!user) {
     return (
       <Routes>
@@ -59,6 +70,7 @@ function AppRouter() {
     );
   }
 
+  // Authenticated users see the full app with sidebar
   const sidebarStyle = {
     "--sidebar-width": "16rem",
     "--sidebar-width-icon": "3rem",
@@ -89,10 +101,10 @@ function AppRouter() {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/admin-login" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
-                <Route path="/stock" element={<ProtectedRoute><StockTransactions /></ProtectedRoute>} />
-                <Route path="/consumptions" element={<ProtectedRoute><Consumptions /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/stock" element={<StockTransactions />} />
+                <Route path="/consumptions" element={<Consumptions />} />
                 <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
                 <Route path="/admin/sectors" element={<ProtectedRoute adminOnly={true}><AdminSectors /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
