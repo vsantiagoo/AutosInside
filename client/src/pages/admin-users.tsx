@@ -64,8 +64,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
-        title: 'User created',
-        description: 'The user has been successfully created.',
+        title: 'Usuário criado',
+        description: 'O usuário foi criado com sucesso.',
       });
       setIsFormOpen(false);
       form.reset();
@@ -73,8 +73,8 @@ export default function AdminUsers() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Create failed',
-        description: error.message || 'Failed to create user',
+        title: 'Falha na criação',
+        description: error.message || 'Falha ao criar usuário',
       });
     },
   });
@@ -86,8 +86,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
-        title: 'User updated',
-        description: 'The user has been successfully updated.',
+        title: 'Usuário atualizado',
+        description: 'O usuário foi atualizado com sucesso.',
       });
       setIsFormOpen(false);
       setEditingUser(null);
@@ -96,8 +96,8 @@ export default function AdminUsers() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Update failed',
-        description: error.message || 'Failed to update user',
+        title: 'Falha na atualização',
+        description: error.message || 'Falha ao atualizar usuário',
       });
     },
   });
@@ -109,16 +109,16 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
-        title: 'User deleted',
-        description: 'The user has been successfully deleted.',
+        title: 'Usuário excluído',
+        description: 'O usuário foi excluído com sucesso.',
       });
       setDeletingUser(null);
     },
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Delete failed',
-        description: error.message || 'Failed to delete user',
+        title: 'Falha na exclusão',
+        description: error.message || 'Falha ao excluir usuário',
       });
     },
   });
@@ -159,12 +159,12 @@ export default function AdminUsers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Users</h1>
-          <p className="text-muted-foreground mt-1">Manage user accounts and permissions</p>
+          <h1 className="text-3xl font-bold">Usuários</h1>
+          <p className="text-muted-foreground mt-1">Gerencie contas de usuários e permissões</p>
         </div>
         <Button onClick={handleAdd} data-testid="button-add-user">
           <Plus className="w-4 h-4 mr-2" />
-          Add User
+          Adicionar Usuário
         </Button>
       </div>
 
@@ -178,13 +178,13 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Users className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No users found</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum usuário encontrado</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Get started by adding your first user
+              Comece adicionando seu primeiro usuário
             </p>
             <Button onClick={handleAdd}>
               <Plus className="w-4 h-4 mr-2" />
-              Add User
+              Adicionar Usuário
             </Button>
           </CardContent>
         </Card>
@@ -249,9 +249,9 @@ export default function AdminUsers() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
+            <DialogTitle>{editingUser ? 'Editar Usuário' : 'Adicionar Novo Usuário'}</DialogTitle>
             <DialogDescription>
-              {editingUser ? 'Update user information' : 'Create a new user account'}
+              {editingUser ? 'Atualizar informações do usuário' : 'Criar uma nova conta de usuário'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -261,9 +261,9 @@ export default function AdminUsers() {
                 name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
+                    <FormLabel>Nome Completo *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter full name" {...field} data-testid="input-fullname" />
+                      <Input placeholder="Digite o nome completo" {...field} data-testid="input-fullname" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -275,10 +275,10 @@ export default function AdminUsers() {
                 name="matricula"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Matricula *</FormLabel>
+                    <FormLabel>Matrícula *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter matricula"
+                        placeholder="Digite a matrícula"
                         {...field}
                         disabled={!!editingUser}
                         data-testid="input-matricula"
@@ -294,19 +294,19 @@ export default function AdminUsers() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password {editingUser && '(leave blank to keep current)'}</FormLabel>
+                    <FormLabel>Senha {editingUser && '(deixe em branco para manter)'}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder={editingUser ? 'Leave blank to keep current' : 'Enter password'}
+                        placeholder={editingUser ? 'Deixe em branco para manter' : 'Digite a senha'}
                         {...field}
                         data-testid="input-password"
                       />
                     </FormControl>
                     <FormDescription>
                       {editingUser 
-                        ? 'Leave blank to keep current password' 
-                        : 'Required for admin users, optional for regular users'}
+                        ? 'Deixe em branco para manter a senha atual' 
+                        : 'Obrigatório para usuários admin, opcional para usuários normais'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -318,15 +318,15 @@ export default function AdminUsers() {
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role *</FormLabel>
+                    <FormLabel>Função *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-role">
-                          <SelectValue placeholder="Select role" />
+                          <SelectValue placeholder="Selecionar função" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="user">Usuário</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -343,11 +343,11 @@ export default function AdminUsers() {
                   disabled={isPending}
                   data-testid="button-cancel"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button type="submit" disabled={isPending} data-testid="button-submit">
                   {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {editingUser ? 'Update User' : 'Create User'}
+                  {editingUser ? 'Atualizar Usuário' : 'Criar Usuário'}
                 </Button>
               </div>
             </form>
@@ -358,14 +358,14 @@ export default function AdminUsers() {
       <Dialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
+            <DialogTitle>Excluir Usuário</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deletingUser?.full_name}"? This action cannot be undone.
+              Tem certeza que deseja excluir "{deletingUser?.full_name}"? Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingUser(null)} data-testid="button-cancel-delete">
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="destructive"
@@ -373,7 +373,7 @@ export default function AdminUsers() {
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
             </Button>
           </DialogFooter>
         </DialogContent>
