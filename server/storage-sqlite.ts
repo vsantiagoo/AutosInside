@@ -59,7 +59,8 @@ class SqliteStorage implements IStorage {
   }
 
   async getUserByMatricula(matricula: string): Promise<User | undefined> {
-    return db.prepare('SELECT * FROM users WHERE matricula = ?').get(matricula) as User | undefined;
+    // Case-insensitive matricula lookup
+    return db.prepare('SELECT * FROM users WHERE LOWER(matricula) = LOWER(?)').get(matricula) as User | undefined;
   }
 
   async getAllUsers(): Promise<User[]> {
