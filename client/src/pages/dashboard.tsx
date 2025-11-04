@@ -1,0 +1,128 @@
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Package, TrendingDown, ShoppingCart, DollarSign } from 'lucide-react';
+import type { Product, Consumption, ConsumptionWithDetails } from '@shared/schema';
+import { format } from 'date-fns';
+
+interface DashboardStats {
+  totalProducts: number;
+  lowStockCount: number;
+  monthlyConsumptions: number;
+  totalValue: number;
+}
+
+export default function Dashboard() {
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    queryKey: ['/api/dashboard/stats'],
+  });
+
+  const { data: recentConsumptions, isLoading: consumptionsLoading } = useQuery<ConsumptionWithDetails[]>({
+    queryKey: ['/api/consumptions/recent'],
+  });
+
+  const statCards = [
+    {
+      title: 'Total Products',
+      value: stats?.totalProducts ?? 0,
+      icon: Package,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950',
+    },
+    {
+      title: 'Low Stock Alerts',
+      value: stats?.lowStockCount ?? 0,
+      icon: TrendingDown,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50 dark:bg-orange-950',
+    },
+    {
+      title: 'Monthly Consumptions',
+      value: stats?.monthlyConsumptions ?? 0,
+      icon: ShoppingCart,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50 dark:bg-green-950',
+    },
+    {
+      title: 'Total Inventory Value',
+      value: `$${(stats?.totalValue ?? 0).toFixed(2)}`,
+      icon: DollarSign,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50 dark:bg-purple-950',
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Overview of your inventory system</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((stat) => (
+          <Card key={stat.title} data-testid={`card-${stat.title.toLowerCase().replace(/ /g, '-')}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
+              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                <div className="text-3xl font-bold">{stat.value}</div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Consumptions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {consumptionsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : !recentConsumptions || recentConsumptions.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No consumptions recorded yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentConsumptions.map((consumption) => (
+                <div
+                  key={consumption.id}
+                  className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover-elevate"
+                  data-testid={`consumption-${consumption.id}`}
+                >
+                  <div className="flex-1">
+                    <p className="font-medium">{consumption.product_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {consumption.user_name} • Qty: {consumption.qty}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">${consumption.total_price.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(consumption.consumed_at), 'MMM dd, yyyy')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -1,0 +1,123 @@
+# Inventory Management System
+
+## Overview
+
+This is a full-stack inventory management system built with React, Express, and SQLite. The application provides comprehensive tracking of products, stock transactions, and consumption records with role-based access control. It features a Material Design-inspired interface optimized for data-intensive productivity workflows.
+
+The system enables users to manage product catalogs organized by sectors, track stock movements (additions and removals), monitor consumption by employees, and generate reports. Admin users have additional capabilities for managing users and organizational sectors.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+
+**Framework & Build System**
+- **React 18** with TypeScript for the user interface
+- **Vite** as the build tool and development server
+- **Wouter** for client-side routing (lightweight alternative to React Router)
+- **TanStack Query (React Query)** for server state management, caching, and data synchronization
+
+**UI Component System**
+- **Shadcn/ui** components built on Radix UI primitives
+- **Tailwind CSS** for styling with a custom Material Design-inspired theme
+- **Class Variance Authority (CVA)** for component variant management
+- Typography uses **Roboto** font family loaded from Google Fonts CDN
+
+**State Management Pattern**
+- Server state managed by React Query with query invalidation
+- Authentication state maintained in React Context (`AuthProvider`)
+- Form state managed by React Hook Form with Zod validation
+- No global client state management library (Redux, Zustand, etc.)
+
+**Design System**
+- Material Design principles focused on information density and efficiency
+- Custom color system using HSL CSS variables for theme flexibility
+- Elevation system using subtle shadows and overlays (`--elevate-1`, `--elevate-2`)
+- Responsive grid layouts with mobile-first breakpoints
+
+### Backend Architecture
+
+**Server Framework**
+- **Express.js** running on Node.js with TypeScript
+- ESM module system (`"type": "module"` in package.json)
+- Custom middleware for request logging and JSON response capture
+- Cookie-based session management with JWT authentication
+
+**API Design**
+- RESTful endpoints under `/api` prefix
+- Endpoint groups: `/auth`, `/users`, `/sectors`, `/products`, `/stock-transactions`, `/consumptions`, `/dashboard`
+- File upload support via Multer for product photos (5MB limit, images only)
+- Excel export functionality using ExcelJS library
+
+**Authentication & Authorization**
+- JWT tokens stored in HTTP-only cookies
+- Password hashing with bcrypt (10 salt rounds)
+- Role-based access control: `admin` and `user` roles
+- Protected routes check authentication middleware
+- Admin-only endpoints for user and sector management
+
+**Request/Response Flow**
+- Request validation using Zod schemas (shared between client and server)
+- Centralized error handling with appropriate HTTP status codes
+- JSON response format with captured logging for debugging
+- CORS handled implicitly through Vite proxy in development
+
+### Data Storage
+
+**Database**
+- **better-sqlite3** for SQLite database operations
+- Write-Ahead Logging (WAL) mode enabled for better concurrency
+- Database file: `data.db` in project root
+- File-based storage in `uploads/` directory for product photos
+
+**Schema Design**
+- **users**: Authentication, roles (admin/user), matricula (employee ID)
+- **sectors**: Product categorization/organization
+- **products**: Inventory items with SKU, pricing, stock levels, photos, and aggregated transaction totals
+- **stock_transactions**: Record of all stock movements (in/out) with timestamps and reasons
+- **consumptions**: Employee consumption records linking users and products with quantities
+
+**Data Access Pattern**
+- Storage abstraction layer (`IStorage` interface in `storage-sqlite.ts`)
+- Synchronous SQLite operations (better-sqlite3 is synchronous by design)
+- Type-safe queries with TypeScript interfaces derived from Zod schemas
+- Aggregate fields (`total_in`, `total_out`, `total_consumed`) maintained on products table
+
+**Migrations**
+- SQL migrations in `server/migrations.sql` executed on startup
+- Schema defined in `shared/schema.ts` using Zod for validation
+- Drizzle Kit configured but not actively used (configuration points to PostgreSQL, but app uses SQLite)
+- Database seeding: Default admin user (`admin`/`admin123`) and sample sectors created on first run
+
+### External Dependencies
+
+**Key Third-Party Libraries**
+- **@radix-ui/***: Headless UI primitives for accessible components
+- **date-fns**: Date formatting and manipulation
+- **exceljs**: Excel file generation for reports
+- **jsonwebtoken**: JWT token creation and verification
+- **multer**: Multipart form data handling for file uploads
+- **zod**: Runtime type validation and schema definition
+
+**Development Tools**
+- **tsx**: TypeScript execution for development server
+- **esbuild**: Production build bundling for server code
+- **@replit/vite-plugin-***: Replit-specific development enhancements
+
+**Build & Deployment**
+- Development: `npm run dev` - Vite dev server with HMR and tsx for backend
+- Production build: `npm run build` - Vite builds frontend, esbuild bundles backend
+- Production start: `npm start` - Runs compiled server from `dist/` directory
+- Database operations: `npm run db:push` - Drizzle Kit schema push (configured but unused)
+
+**Environment Requirements**
+- `DATABASE_URL` environment variable (configured for PostgreSQL via Drizzle but not used)
+- `SESSION_SECRET` for JWT signing
+- Node.js with ESM support
+- File system access for SQLite database and uploads directory
+
+**Note on Database Configuration**
+The application has a hybrid database configuration: Drizzle Kit is configured for PostgreSQL (`drizzle.config.ts`), but the actual implementation uses SQLite via better-sqlite3. This suggests the project may have originally used or planned to use PostgreSQL, but currently operates entirely on SQLite for simplicity.
