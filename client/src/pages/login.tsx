@@ -70,7 +70,7 @@ export default function Login() {
           <div>
             <CardTitle className="text-3xl font-bold">Inventory System</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sign in with your matricula and password
+              Sign in with your matricula (password required for admins only)
             </CardDescription>
           </div>
         </CardHeader>
@@ -100,11 +100,11 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Password (optional for regular users)</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="Enter your password (admins only)"
                         {...field}
                         data-testid="input-password"
                       />

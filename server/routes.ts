@@ -134,17 +134,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const credentials = loginSchema.parse(req.body);
-      const user = await storage.getUserByMatricula(credentials.matricula);
-
-      if (!user || !user.password_hash) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+      const { matricula, password } = req.body;
+      
+      if (!matricula) {
+        return res.status(400).json({ message: 'Matricula is required' });
       }
 
-      const isValid = await bcrypt.compare(credentials.password, user.password_hash);
-      if (!isValid) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+      const user = await storage.getUserByMatricula(matricula);
+
+      if (!user) {
+        return res.status(401).json({ message: 'User not found' });
       }
+
+      // For admins, password is required and must be validated
+      if (user.role === 'admin') {
+        if (!password) {
+          return res.status(401).json({ message: 'Password required for admin users' });
+        }
+        
+        if (!user.password_hash) {
+          return res.status(401).json({ message: 'Admin account not properly configured' });
+        }
+
+        const isValid = await bcrypt.compare(password, user.password_hash);
+        if (!isValid) {
+          return res.status(401).json({ message: 'Invalid password' });
+        }
+      }
+      // For regular users, no password required - matricula is sufficient
 
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
       
@@ -192,7 +209,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Matricula already exists' });
       }
 
-      const password_hash = await bcrypt.hash(userData.password, 10);
+      // For admin users, password is required
+      if (userData.role === 'admin' && !userData.password) {
+        return res.status(400).json({ message: 'Password is required for admin users' });
+      }
+
+      // Hash password if provided
+      const password_hash = userData.password ? await bcrypt.hash(userData.password, 10) : undefined;
+      
       const user = await storage.createUser({
         ...userData,
         password_hash,

@@ -13,13 +13,13 @@ export const userSchema = z.object({
 export const insertUserSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   matricula: z.string().min(1, "Matricula is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
   role: z.enum(['admin', 'user']).default('user'),
 });
 
 export const loginSchema = z.object({
   matricula: z.string().min(1, "Matricula is required"),
-  password: z.string().min(1, "Password is required"),
+  password: z.string().optional(),
 });
 
 export type User = z.infer<typeof userSchema>;
