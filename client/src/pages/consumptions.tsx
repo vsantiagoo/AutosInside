@@ -73,8 +73,8 @@ export default function Consumptions() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       toast({
-        title: 'Consumption recorded',
-        description: 'The consumption has been successfully recorded.',
+        title: 'Consumo registrado',
+        description: 'O consumo foi registrado com sucesso.',
       });
       setIsFormOpen(false);
       form.reset();
@@ -82,8 +82,8 @@ export default function Consumptions() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Failed to record',
-        description: error.message || 'Failed to record consumption',
+        title: 'Falha no registro',
+        description: error.message || 'Falha ao registrar consumo',
       });
     },
   });
@@ -106,15 +106,15 @@ export default function Consumptions() {
       a.click();
       window.URL.revokeObjectURL(url);
       toast({
-        title: 'Export successful',
-        description: 'Consumptions have been exported to Excel.',
+        title: 'Exportação bem-sucedida',
+        description: 'Os consumos foram exportados para Excel.',
       });
     },
     onError: () => {
       toast({
         variant: 'destructive',
-        title: 'Export failed',
-        description: 'Failed to export consumptions',
+        title: 'Falha na exportação',
+        description: 'Falha ao exportar consumos',
       });
     },
   });
@@ -127,8 +127,8 @@ export default function Consumptions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Consumptions</h1>
-          <p className="text-muted-foreground mt-1">Track product usage and withdrawals</p>
+          <h1 className="text-3xl font-bold">Consumos</h1>
+          <p className="text-muted-foreground mt-1">Rastreie uso e retiradas de produtos</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -138,11 +138,11 @@ export default function Consumptions() {
             data-testid="button-export"
           >
             <Download className="w-4 h-4 mr-2" />
-            Export to Excel
+            Exportar para Excel
           </Button>
           <Button onClick={() => setIsFormOpen(true)} data-testid="button-add-consumption">
             <Plus className="w-4 h-4 mr-2" />
-            Record Consumption
+            Registrar Consumo
           </Button>
         </div>
       </div>
@@ -157,13 +157,13 @@ export default function Consumptions() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No consumptions recorded</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum consumo registrado</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Start tracking product usage
+              Comece a rastrear o uso de produtos
             </p>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Record Consumption
+              Registrar Consumo
             </Button>
           </CardContent>
         </Card>
@@ -179,16 +179,16 @@ export default function Consumptions() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold">{consumption.product_name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {consumption.user_name} • Quantity: {consumption.qty}
+                      {consumption.user_name} • Qtd: {consumption.qty}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-xl font-bold">${consumption.total_price.toFixed(2)}</div>
+                    <div className="text-xl font-bold">R${consumption.total_price.toFixed(2)}</div>
                     <p className="text-xs text-muted-foreground">
-                      ${consumption.unit_price.toFixed(2)} per unit
+                      R${consumption.unit_price.toFixed(2)} por unidade
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(consumption.consumed_at), 'MMM dd, yyyy HH:mm')}
+                      {format(new Date(consumption.consumed_at), 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -201,9 +201,9 @@ export default function Consumptions() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Record Consumption</DialogTitle>
+            <DialogTitle>Registrar Consumo</DialogTitle>
             <DialogDescription>
-              Track product usage and automatically update stock
+              Rastreie o uso do produto e atualize automaticamente o estoque
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -213,26 +213,26 @@ export default function Consumptions() {
                 name="product_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product *</FormLabel>
+                    <FormLabel>Produto *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       value={field.value?.toString() || ''}
                     >
                       <FormControl>
                         <SelectTrigger data-testid="select-product">
-                          <SelectValue placeholder="Select product" />
+                          <SelectValue placeholder="Selecionar produto" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {products?.map((product) => (
                           <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name} - ${product.unit_price.toFixed(2)} (Stock: {product.stock_quantity})
+                            {product.name} - R${product.unit_price.toFixed(2)} (Estoque: {product.stock_quantity})
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {selectedProduct && selectedProduct.stock_quantity === 0 && (
-                      <p className="text-sm text-destructive">This product is out of stock</p>
+                      <p className="text-sm text-destructive">Este produto está sem estoque</p>
                     )}
                     <FormMessage />
                   </FormItem>
@@ -244,13 +244,13 @@ export default function Consumptions() {
                 name="qty"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity *</FormLabel>
+                    <FormLabel>Quantidade *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min="1"
                         max={selectedProduct?.stock_quantity || 999999}
-                        placeholder="Enter quantity"
+                        placeholder="Digite a quantidade"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                         data-testid="input-quantity"
@@ -258,7 +258,7 @@ export default function Consumptions() {
                     </FormControl>
                     {selectedProduct && (
                       <FormDescription>
-                        Available: {selectedProduct.stock_quantity} units
+                        Disponível: {selectedProduct.stock_quantity} unidades
                       </FormDescription>
                     )}
                     <FormMessage />
@@ -269,8 +269,8 @@ export default function Consumptions() {
               {selectedProduct && quantity > 0 && (
                 <div className="p-4 bg-muted rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Total Price:</span>
-                    <span className="text-2xl font-bold">${totalPrice.toFixed(2)}</span>
+                    <span className="font-medium">Preço Total:</span>
+                    <span className="text-2xl font-bold">R${totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               )}
@@ -283,11 +283,11 @@ export default function Consumptions() {
                   disabled={createMutation.isPending}
                   data-testid="button-cancel"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
                   {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Record Consumption
+                  Registrar Consumo
                 </Button>
               </div>
             </form>

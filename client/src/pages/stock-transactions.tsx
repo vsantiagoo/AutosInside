@@ -73,8 +73,8 @@ export default function StockTransactions() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       toast({
-        title: 'Stock updated',
-        description: 'Stock transaction has been recorded successfully.',
+        title: 'Estoque atualizado',
+        description: 'A movimentação de estoque foi registrada com sucesso.',
       });
       setIsFormOpen(false);
       form.reset();
@@ -82,8 +82,8 @@ export default function StockTransactions() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Transaction failed',
-        description: error.message || 'Failed to record stock transaction',
+        title: 'Falha na movimentação',
+        description: error.message || 'Falha ao registrar movimentação de estoque',
       });
     },
   });
@@ -96,12 +96,12 @@ export default function StockTransactions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Stock Transactions</h1>
-          <p className="text-muted-foreground mt-1">Track inventory adjustments and changes</p>
+          <h1 className="text-3xl font-bold">Movimentações de Estoque</h1>
+          <p className="text-muted-foreground mt-1">Rastreie ajustes e alterações do inventário</p>
         </div>
         <Button onClick={() => setIsFormOpen(true)} data-testid="button-add-transaction">
           <Plus className="w-4 h-4 mr-2" />
-          Add Transaction
+          Adicionar Movimentação
         </Button>
       </div>
 
@@ -115,13 +115,13 @@ export default function StockTransactions() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <History className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No transactions recorded</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhuma movimentação registrada</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Start tracking your inventory changes
+              Comece a rastrear as alterações do seu inventário
             </p>
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Transaction
+              Adicionar Movimentação
             </Button>
           </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function StockTransactions() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold">{transaction.product_name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {transaction.reason || 'No reason specified'}
+                      {transaction.reason || 'Nenhum motivo especificado'}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -156,7 +156,7 @@ export default function StockTransactions() {
                       {transaction.change > 0 ? '+' : ''}{transaction.change}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(transaction.created_at), 'MMM dd, yyyy HH:mm')}
+                      {format(new Date(transaction.created_at), 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -169,9 +169,9 @@ export default function StockTransactions() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Stock Transaction</DialogTitle>
+            <DialogTitle>Adicionar Movimentação de Estoque</DialogTitle>
             <DialogDescription>
-              Record a stock adjustment for a product
+              Registrar um ajuste de estoque para um produto
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -181,20 +181,20 @@ export default function StockTransactions() {
                 name="product_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product *</FormLabel>
+                    <FormLabel>Produto *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       value={field.value?.toString() || ''}
                     >
                       <FormControl>
                         <SelectTrigger data-testid="select-product">
-                          <SelectValue placeholder="Select product" />
+                          <SelectValue placeholder="Selecionar produto" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {products?.map((product) => (
                           <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name} (Stock: {product.stock_quantity})
+                            {product.name} (Estoque: {product.stock_quantity})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -209,18 +209,18 @@ export default function StockTransactions() {
                 name="change"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Change *</FormLabel>
+                    <FormLabel>Alteração *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="Use negative for decrease"
+                        placeholder="Use negativo para diminuir"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         data-testid="input-change"
                       />
                     </FormControl>
                     <FormDescription>
-                      Use positive numbers to add stock, negative to remove
+                      Use números positivos para adicionar estoque, negativos para remover
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -232,10 +232,10 @@ export default function StockTransactions() {
                 name="reason"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reason</FormLabel>
+                    <FormLabel>Motivo</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Optional reason for adjustment"
+                        placeholder="Motivo opcional para o ajuste"
                         {...field}
                         value={field.value || ''}
                         data-testid="input-reason"
@@ -254,11 +254,11 @@ export default function StockTransactions() {
                   disabled={createMutation.isPending}
                   data-testid="button-cancel"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button type="submit" disabled={createMutation.isPending} data-testid="button-submit">
                   {createMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Record Transaction
+                  Registrar Movimentação
                 </Button>
               </div>
             </form>

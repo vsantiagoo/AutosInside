@@ -52,16 +52,16 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({
-        title: 'Product deleted',
-        description: 'The product has been successfully deleted.',
+        title: 'Produto excluído',
+        description: 'O produto foi excluído com sucesso.',
       });
       setDeletingProduct(null);
     },
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Delete failed',
-        description: error.message || 'Failed to delete product',
+        title: 'Falha na exclusão',
+        description: error.message || 'Falha ao excluir produto',
       });
     },
   });
@@ -75,19 +75,19 @@ export default function Products() {
 
   const getStockBadge = (quantity: number) => {
     if (quantity === 0) {
-      return <Badge variant="destructive">Out of Stock</Badge>;
+      return <Badge variant="destructive">Sem Estoque</Badge>;
     } else if (quantity < 10) {
-      return <Badge className="bg-orange-500 hover:bg-orange-600">Low Stock</Badge>;
+      return <Badge className="bg-orange-500 hover:bg-orange-600">Estoque Baixo</Badge>;
     }
-    return <Badge className="bg-green-600 hover:bg-green-700">In Stock</Badge>;
+    return <Badge className="bg-green-600 hover:bg-green-700">Em Estoque</Badge>;
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-muted-foreground mt-1">Manage your product inventory</p>
+          <h1 className="text-3xl font-bold">Produtos</h1>
+          <p className="text-muted-foreground mt-1">Gerencie seu inventário de produtos</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -96,11 +96,11 @@ export default function Products() {
             data-testid="button-bulk-import"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Bulk Import
+            Importação em Lote
           </Button>
           <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} data-testid="button-add-product">
             <Plus className="w-4 h-4 mr-2" />
-            Add Product
+            Adicionar Produto
           </Button>
         </div>
       </div>
@@ -111,7 +111,7 @@ export default function Products() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search products by name or SKU..."
+                placeholder="Buscar produtos por nome ou SKU..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -120,10 +120,10 @@ export default function Products() {
             </div>
             <Select value={sectorFilter} onValueChange={setSectorFilter}>
               <SelectTrigger className="w-full md:w-48" data-testid="select-sector-filter">
-                <SelectValue placeholder="All Sectors" />
+                <SelectValue placeholder="Todos os Setores" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sectors</SelectItem>
+                <SelectItem value="all">Todos os Setores</SelectItem>
                 {sectors?.map((sector) => (
                   <SelectItem key={sector.id} value={sector.id.toString()}>
                     {sector.name}
@@ -163,14 +163,14 @@ export default function Products() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Package className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No products found</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
             <p className="text-muted-foreground text-center mb-4">
-              {searchQuery || sectorFilter !== 'all' ? 'Try adjusting your filters' : 'Get started by adding your first product'}
+              {searchQuery || sectorFilter !== 'all' ? 'Tente ajustar seus filtros' : 'Comece adicionando seu primeiro produto'}
             </p>
             {!searchQuery && sectorFilter === 'all' && (
               <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Product
+                Adicionar Produto
               </Button>
             )}
           </CardContent>
@@ -210,9 +210,9 @@ export default function Products() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">${product.unit_price.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">R${product.unit_price.toFixed(2)}</div>
                     <div className="text-sm text-muted-foreground">
-                      Stock: {product.stock_quantity}
+                      Estoque: {product.stock_quantity}
                     </div>
                   </div>
                   {getStockBadge(product.stock_quantity)}
@@ -226,7 +226,7 @@ export default function Products() {
                     data-testid={`button-edit-${product.id}`}
                   >
                     <Edit className="w-3 h-3 mr-1" />
-                    Edit
+                    Editar
                   </Button>
                   <Button
                     variant="destructive"
@@ -236,7 +236,7 @@ export default function Products() {
                     data-testid={`button-delete-${product.id}`}
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
-                    Delete
+                    Excluir
                   </Button>
                 </div>
               </CardContent>
@@ -273,8 +273,8 @@ export default function Products() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-xl font-bold">${product.unit_price.toFixed(2)}</div>
-                    <div className="text-sm text-muted-foreground">Stock: {product.stock_quantity}</div>
+                    <div className="text-xl font-bold">R${product.unit_price.toFixed(2)}</div>
+                    <div className="text-sm text-muted-foreground">Estoque: {product.stock_quantity}</div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <Button
@@ -304,9 +304,9 @@ export default function Products() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogTitle>{editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}</DialogTitle>
             <DialogDescription>
-              {editingProduct ? 'Update product information' : 'Create a new product in your inventory'}
+              {editingProduct ? 'Atualizar informações do produto' : 'Criar um novo produto em seu inventário'}
             </DialogDescription>
           </DialogHeader>
           <ProductForm
@@ -320,14 +320,14 @@ export default function Products() {
       <Dialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
+            <DialogTitle>Excluir Produto</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deletingProduct?.name}"? This action cannot be undone.
+              Tem certeza de que deseja excluir "{deletingProduct?.name}"? Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingProduct(null)} data-testid="button-cancel-delete">
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="destructive"
@@ -335,7 +335,7 @@ export default function Products() {
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
             </Button>
           </DialogFooter>
         </DialogContent>
