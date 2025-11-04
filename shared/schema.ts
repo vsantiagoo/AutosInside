@@ -13,7 +13,10 @@ export const userSchema = z.object({
 export const insertUserSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   matricula: z.string().min(1, "Matricula is required"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  password: z.string().optional().refine(
+    (val) => !val || val.length >= 6,
+    { message: "Password must be at least 6 characters if provided" }
+  ),
   role: z.enum(['admin', 'user']).default('user'),
 });
 

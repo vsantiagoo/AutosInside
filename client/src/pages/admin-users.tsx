@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -302,6 +303,11 @@ export default function AdminUsers() {
                         data-testid="input-password"
                       />
                     </FormControl>
+                    <FormDescription>
+                      {editingUser 
+                        ? 'Leave blank to keep current password' 
+                        : 'Required for admin users, optional for regular users'}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
