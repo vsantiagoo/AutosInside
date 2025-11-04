@@ -125,7 +125,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     const formData = new FormData();
     formData.append('name', data.name);
     if (data.sector_id) formData.append('sector_id', data.sector_id.toString());
-    if (data.sku) formData.append('sku', data.sku);
+    if (data.sku && data.sku.trim() !== '') formData.append('sku', data.sku.trim());
     formData.append('unit_price', data.unit_price.toString());
     formData.append('stock_quantity', data.stock_quantity.toString());
     formData.append('low_stock_threshold', (data.low_stock_threshold || 10).toString());
@@ -167,9 +167,9 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Name *</FormLabel>
+              <FormLabel>Nome do Produto *</FormLabel>
               <FormControl>
-                <Input placeholder="Enter product name" {...field} data-testid="input-name" />
+                <Input placeholder="Digite o nome do produto" {...field} data-testid="input-name" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -182,9 +182,9 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             name="sku"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SKU</FormLabel>
+                <FormLabel>Código SKU</FormLabel>
                 <FormControl>
-                  <Input placeholder="Product SKU" {...field} value={field.value || ''} data-testid="input-sku" />
+                  <Input placeholder="Código do produto" {...field} value={field.value || ''} data-testid="input-sku" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -196,18 +196,18 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             name="sector_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sector</FormLabel>
+                <FormLabel>Setor</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
                   value={field.value?.toString() || "none"}
                 >
                   <FormControl>
                     <SelectTrigger data-testid="select-sector">
-                      <SelectValue placeholder="Select sector" />
+                      <SelectValue placeholder="Selecione o setor" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">No Sector</SelectItem>
+                    <SelectItem value="none">Sem Setor</SelectItem>
                     {sectors?.map((sector) => (
                       <SelectItem key={sector.id} value={sector.id.toString()}>
                         {sector.name}
@@ -227,7 +227,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             name="unit_price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Unit Price *</FormLabel>
+                <FormLabel>Preço Unitário *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -249,7 +249,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             name="stock_quantity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Stock Quantity *</FormLabel>
+                <FormLabel>Quantidade em Estoque *</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -271,7 +271,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           name="low_stock_threshold"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Low Stock Threshold</FormLabel>
+              <FormLabel>Limite de Estoque Baixo</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -283,7 +283,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                 />
               </FormControl>
               <FormDescription>
-                Alert when stock falls below this level
+                Alerta quando o estoque cair abaixo deste nível
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -295,14 +295,14 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           name="photo"
           render={({ field: { value, ...field } }) => (
             <FormItem>
-              <FormLabel>Product Photo</FormLabel>
+              <FormLabel>Foto do Produto</FormLabel>
               <FormControl>
                 <div className="space-y-3">
                   {photoPreview && (
                     <div className="relative inline-block">
                       <img
                         src={photoPreview}
-                        alt="Preview"
+                        alt="Pré-visualização"
                         className="w-32 h-32 object-cover rounded-lg border"
                       />
                       <Button
@@ -332,7 +332,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
                       onClick={() => document.getElementById('photo-upload')?.click()}
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                      {photoPreview ? 'Alterar Foto' : 'Enviar Foto'}
                     </Button>
                   </div>
                 </div>
@@ -344,11 +344,11 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
 
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isPending} data-testid="button-cancel">
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" disabled={isPending} data-testid="button-submit">
             {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {product ? 'Update Product' : 'Create Product'}
+            {product ? 'Atualizar Produto' : 'Criar Produto'}
           </Button>
         </div>
       </form>

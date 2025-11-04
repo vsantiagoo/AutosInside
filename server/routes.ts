@@ -509,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const product = await storage.getProduct(id);
       
       if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
+        return res.status(404).json({ message: 'Produto não encontrado' });
       }
 
       if (product.photo_path) {
@@ -518,9 +518,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const deleted = await storage.deleteProduct(id);
-      res.json({ message: 'Product deleted successfully' });
+      res.json({ message: 'Produto excluído com sucesso' });
     } catch (error: any) {
-      res.status(400).json({ message: error.message || 'Failed to delete product' });
+      if (error.message && error.message.includes('FOREIGN KEY constraint failed')) {
+        return res.status(400).json({ 
+          message: 'Não é possível excluir este produto porque ele possui consumos registrados. Você pode excluir os consumos relacionados primeiro ou manter o produto no sistema.' 
+        });
+      }
+      res.status(400).json({ message: error.message || 'Falha ao excluir produto' });
     }
   });
 

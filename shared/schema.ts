@@ -59,11 +59,11 @@ export const productSchema = z.object({
 });
 
 export const insertProductSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
+  name: z.string().min(1, "Nome do produto é obrigatório"),
   sector_id: z.number().nullable().optional(),
-  sku: z.string().optional(),
-  unit_price: z.number().min(0, "Unit price must be positive").default(0),
-  stock_quantity: z.number().int().min(0, "Stock quantity must be non-negative").default(0),
+  sku: z.string().nullable().optional(),
+  unit_price: z.number().min(0, "Preço unitário deve ser positivo").default(0),
+  stock_quantity: z.number().int().min(0, "Quantidade em estoque não pode ser negativa").default(0),
   low_stock_threshold: z.number().int().min(0).optional().default(10),
 });
 
