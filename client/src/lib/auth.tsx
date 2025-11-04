@@ -31,8 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await apiRequest<{ user: User }>('POST', '/api/auth/login', credentials);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Set the user data immediately
       queryClient.setQueryData(['/api/auth/me'], data.user);
+      // Also invalidate to ensure components re-render
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
     },
   });
 

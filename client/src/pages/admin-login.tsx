@@ -150,9 +150,8 @@ export default function AdminLogin() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          className="absolute right-0 top-0 h-full px-3"
                           onClick={() => setShowPassword(!showPassword)}
-                          tabIndex={-1}
                           aria-label={showPassword ? "Hide password" : "Show password"}
                           data-testid="button-toggle-password"
                         >
