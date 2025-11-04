@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === 'development') {
   }
 
   // Seed sample sectors (DEVELOPMENT ONLY)
-  const sampleSectors = ['Electronics', 'Office Supplies', 'Furniture', 'Tools'];
+  const sampleSectors = ['FoodStation', 'Electronics', 'Office Supplies', 'Furniture', 'Tools'];
   for (const sectorName of sampleSectors) {
     try {
       const exists = db.prepare('SELECT * FROM sectors WHERE name = ?').get(sectorName);

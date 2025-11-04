@@ -76,15 +76,15 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       toast({
-        title: 'Product created',
-        description: 'The product has been successfully created.',
+        title: 'Produto criado',
+        description: 'O produto foi criado com sucesso.',
       });
       onSuccess();
     },
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: 'Create failed',
+        title: 'Falha na criação',
         description: error.message,
       });
     },
@@ -107,15 +107,15 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       toast({
-        title: 'Product updated',
-        description: 'The product has been successfully updated.',
+        title: 'Produto atualizado',
+        description: 'O produto foi atualizado com sucesso.',
       });
       onSuccess();
     },
     onError: (error: Error) => {
       toast({
         variant: 'destructive',
-        title: 'Update failed',
+        title: 'Falha na atualização',
         description: error.message,
       });
     },

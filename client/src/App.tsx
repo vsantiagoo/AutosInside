@@ -26,7 +26,7 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
     if (!isLoading && !user) {
       navigate("/", { replace: true });
     } else if (!isLoading && adminOnly && user?.role !== 'admin') {
-      navigate("/dashboard", { replace: true });
+      navigate("/food-station", { replace: true });
     }
   }, [isLoading, user, adminOnly, navigate]);
 
@@ -100,16 +100,16 @@ function AppRouter() {
           <main className="flex-1 overflow-auto p-6 bg-background">
             <div className="max-w-7xl mx-auto">
               <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/admin-login" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/stock" element={<StockTransactions />} />
-                <Route path="/consumptions" element={<Consumptions />} />
+                <Route path="/" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
+                <Route path="/admin-login" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
+                <Route path="/dashboard" element={<ProtectedRoute adminOnly={true}><Dashboard /></ProtectedRoute>} />
+                <Route path="/products" element={<ProtectedRoute adminOnly={true}><Products /></ProtectedRoute>} />
+                <Route path="/stock" element={<ProtectedRoute adminOnly={true}><StockTransactions /></ProtectedRoute>} />
+                <Route path="/consumptions" element={<ProtectedRoute adminOnly={true}><Consumptions /></ProtectedRoute>} />
                 <Route path="/food-station" element={<FoodStation />} />
                 <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
                 <Route path="/admin/sectors" element={<ProtectedRoute adminOnly={true}><AdminSectors /></ProtectedRoute>} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
               </Routes>
             </div>
           </main>

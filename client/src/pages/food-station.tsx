@@ -117,7 +117,7 @@ export default function FoodStation() {
     );
   }
 
-  const availableProducts = products?.filter(p => p.stock_quantity > 0) || [];
+  const availableProducts = products?.filter(p => p.stock_quantity > 0 && p.sector_name === 'FoodStation') || [];
 
   return (
     <div className="space-y-6">
