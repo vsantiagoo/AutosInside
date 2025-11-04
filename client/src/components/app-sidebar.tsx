@@ -30,27 +30,27 @@ export function AppSidebar() {
 
   const mainItems = [
     {
-      title: "Dashboard",
+      title: "Painel",
       url: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: "Products",
+      title: "Produtos",
       url: "/products",
       icon: Package,
     },
     {
-      title: "Stock Transactions",
+      title: "Movimentações de Estoque",
       url: "/stock",
       icon: History,
     },
     {
-      title: "Consumptions",
+      title: "Consumos",
       url: "/consumptions",
       icon: ShoppingCart,
     },
     {
-      title: "Food Station",
+      title: "Estação de Alimentos",
       url: "/food-station",
       icon: UtensilsCrossed,
     },
@@ -58,12 +58,12 @@ export function AppSidebar() {
 
   const adminItems = user?.role === 'admin' ? [
     {
-      title: "Users",
+      title: "Usuários",
       url: "/admin/users",
       icon: Users,
     },
     {
-      title: "Sectors",
+      title: "Setores",
       url: "/admin/sectors",
       icon: FolderTree,
     },
@@ -75,7 +75,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-lg font-bold px-4 py-4">
             <span className="material-icons text-primary mr-2 align-middle">inventory_2</span>
-            Inventory
+            Inventário
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -101,7 +101,7 @@ export function AppSidebar() {
           <>
             <Separator className="my-2" />
             <SidebarGroup>
-              <SidebarGroupLabel>Administration</SidebarGroupLabel>
+              <SidebarGroupLabel>Administração</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminItems.map((item) => (
@@ -128,7 +128,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <div className="flex flex-col gap-3">
           <div className="px-2 py-1 bg-muted rounded-md">
-            <div className="text-xs text-muted-foreground">Logged in as</div>
+            <div className="text-xs text-muted-foreground">Conectado como</div>
             <div className="text-sm font-medium truncate">{user?.full_name}</div>
             <div className="text-xs text-muted-foreground font-mono">{user?.matricula}</div>
           </div>
@@ -140,7 +140,7 @@ export function AppSidebar() {
             data-testid="button-logout"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            Sair
           </Button>
         </div>
       </SidebarFooter>

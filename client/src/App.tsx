@@ -87,13 +87,13 @@ function AppRouter() {
               <SidebarTrigger data-testid="button-sidebar-toggle" />
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="material-icons text-base">inventory_2</span>
-                <span className="font-medium text-foreground">Inventory Management</span>
+                <span className="font-medium text-foreground">Gestão de Inventário</span>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden md:block">
                 <div className="text-sm font-medium">{user?.full_name}</div>
-                <div className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Administrator' : 'User'}</div>
+                <div className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Administrador' : 'Usuário'}</div>
               </div>
             </div>
           </header>

@@ -26,12 +26,12 @@ import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const adminLoginSchema = z.object({
   matricula: z.string()
-    .min(1, "Matricula is required")
+    .min(1, "Matrícula é obrigatória")
     .trim()
     .toUpperCase(),
   password: z.string()
-    .min(1, "Password is required")
-    .min(3, "Password must be at least 3 characters"),
+    .min(1, "Senha é obrigatória")
+    .min(3, "Senha deve ter pelo menos 3 caracteres"),
 });
 
 type AdminLoginForm = z.infer<typeof adminLoginSchema>;
@@ -56,27 +56,27 @@ export default function AdminLogin() {
     try {
       await login(data);
       toast({
-        title: 'Welcome back, Administrator!',
-        description: 'You have successfully logged in.',
+        title: 'Bem-vindo, Administrador!',
+        description: 'Login realizado com sucesso.',
       });
       // Navigation will happen automatically when auth state updates
     } catch (error: any) {
       // Provide more specific error messages
-      let errorMessage = 'Invalid credentials';
+      let errorMessage = 'Credenciais inválidas';
       
       if (error.message?.includes('not found')) {
-        errorMessage = 'User account not found';
+        errorMessage = 'Conta de usuário não encontrada';
       } else if (error.message?.includes('password')) {
-        errorMessage = 'Incorrect password';
+        errorMessage = 'Senha incorreta';
       } else if (error.message?.includes('admin')) {
-        errorMessage = 'This account is not an administrator';
+        errorMessage = 'Esta conta não é de administrador';
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       toast({
         variant: 'destructive',
-        title: 'Login failed',
+        title: 'Falha no login',
         description: errorMessage,
       });
       
@@ -97,9 +97,9 @@ export default function AdminLogin() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold">Admin Login</CardTitle>
+            <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sign in with your matricula and password
+              Entre com sua matrícula e senha
             </CardDescription>
           </div>
         </CardHeader>
@@ -111,16 +111,16 @@ export default function AdminLogin() {
                 name="matricula"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Matricula</FormLabel>
+                    <FormLabel>Matrícula</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your matricula"
+                        placeholder="Digite sua matrícula"
                         {...field}
                         data-testid="input-matricula"
                         autoFocus
                         autoComplete="username"
                         onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                        aria-label="Administrator matricula"
+                        aria-label="Matrícula do administrador"
                         aria-required="true"
                       />
                     </FormControl>
@@ -133,16 +133,16 @@ export default function AdminLogin() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
+                          placeholder="Digite sua senha"
                           {...field}
                           data-testid="input-password"
                           autoComplete="current-password"
-                          aria-label="Administrator password"
+                          aria-label="Senha do administrador"
                           aria-required="true"
                           className="pr-10"
                         />
@@ -152,7 +152,7 @@ export default function AdminLogin() {
                           size="icon"
                           className="absolute right-0 top-0 h-full px-3"
                           onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                           data-testid="button-toggle-password"
                         >
                           {showPassword ? (
@@ -172,10 +172,10 @@ export default function AdminLogin() {
                 className="w-full"
                 disabled={isLoading}
                 data-testid="button-login"
-                aria-label="Sign in as administrator"
+                aria-label="Entrar como administrador"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Sign In as Admin
+                Entrar como Admin
               </Button>
             </form>
           </Form>
@@ -186,7 +186,7 @@ export default function AdminLogin() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Not an admin?
+                Não é administrador?
               </span>
             </div>
           </div>
@@ -196,10 +196,10 @@ export default function AdminLogin() {
               variant="outline"
               className="w-full"
               data-testid="link-user-login"
-              aria-label="Switch to user login"
+              aria-label="Mudar para login de usuário"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              User Login
+              Login de Usuário
             </Button>
           </Link>
         </CardContent>

@@ -26,7 +26,7 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 
 const userLoginSchema = z.object({
   matricula: z.string()
-    .min(1, "Matricula is required")
+    .min(1, "Matrícula é obrigatória")
     .trim()
     .toUpperCase(),
 });
@@ -51,25 +51,25 @@ export default function LoginUser() {
     try {
       await login({ matricula: data.matricula, password: '' });
       toast({
-        title: 'Welcome back!',
-        description: 'You have successfully logged in.',
+        title: 'Bem-vindo!',
+        description: 'Login realizado com sucesso.',
       });
       // Navigation will happen automatically when auth state updates
     } catch (error: any) {
       // Provide more specific error messages
-      let errorMessage = 'Invalid matricula';
+      let errorMessage = 'Matrícula inválida';
       
       if (error.message?.includes('not found')) {
-        errorMessage = 'User account not found. Please check your matricula.';
+        errorMessage = 'Conta de usuário não encontrada. Verifique sua matrícula.';
       } else if (error.message?.includes('admin')) {
-        errorMessage = 'This is an admin account. Please use the Admin Login.';
+        errorMessage = 'Esta é uma conta de administrador. Use o Login de Administrador.';
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       toast({
         variant: 'destructive',
-        title: 'Login failed',
+        title: 'Falha no login',
         description: errorMessage,
       });
       
@@ -94,9 +94,9 @@ export default function LoginUser() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold">User Login</CardTitle>
+            <CardTitle className="text-3xl font-bold">Login de Usuário</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sign in with your matricula
+              Entre com sua matrícula
             </CardDescription>
           </div>
         </CardHeader>
@@ -108,16 +108,16 @@ export default function LoginUser() {
                 name="matricula"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Matricula</FormLabel>
+                    <FormLabel>Matrícula</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your matricula"
+                        placeholder="Digite sua matrícula"
                         {...field}
                         data-testid="input-matricula"
                         autoFocus
                         autoComplete="username"
                         onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                        aria-label="User matricula"
+                        aria-label="Matrícula do usuário"
                         aria-required="true"
                       />
                     </FormControl>
@@ -130,10 +130,10 @@ export default function LoginUser() {
                 className="w-full"
                 disabled={isLoading}
                 data-testid="button-login"
-                aria-label="Sign in as user"
+                aria-label="Entrar como usuário"
               >
                 {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Sign In
+                Entrar
               </Button>
             </form>
           </Form>
@@ -144,7 +144,7 @@ export default function LoginUser() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Administrator?
+                Administrador?
               </span>
             </div>
           </div>
@@ -154,10 +154,10 @@ export default function LoginUser() {
               variant="outline"
               className="w-full"
               data-testid="link-admin-login"
-              aria-label="Switch to admin login"
+              aria-label="Mudar para login de administrador"
             >
               <ShieldCheck className="w-4 h-4 mr-2" />
-              Admin Login
+              Login de Administrador
             </Button>
           </Link>
         </CardContent>
