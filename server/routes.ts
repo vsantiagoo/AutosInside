@@ -234,10 +234,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const userData = req.body;
 
+      // Get existing user to check current password status
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
       const updateData: any = {
         full_name: userData.full_name,
         role: userData.role,
       };
+
+      // If promoting to admin, ensure password exists or is being set
+      if (userData.role === 'admin') {
+        const hasExistingPassword = !!existingUser.password_hash;
+        const isSettingNewPassword = userData.password && userData.password.trim() !== '';
+        
+        if (!hasExistingPassword && !isSettingNewPassword) {
+          return res.status(400).json({ 
+            message: 'Password is required when promoting user to admin role' 
+          });
+        }
+      }
 
       if (userData.password && userData.password.trim() !== '') {
         updateData.password_hash = await bcrypt.hash(userData.password, 10);
