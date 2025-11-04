@@ -51,8 +51,8 @@ export default function AdminSectors() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
       toast({
-        title: 'Sector created',
-        description: 'The sector has been successfully created.',
+        title: 'Setor criado',
+        description: 'O setor foi criado com sucesso.',
       });
       setIsFormOpen(false);
       form.reset();
@@ -60,8 +60,8 @@ export default function AdminSectors() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Create failed',
-        description: error.message || 'Failed to create sector',
+        title: 'Falha na criação',
+        description: error.message || 'Falha ao criar setor',
       });
     },
   });
@@ -74,8 +74,8 @@ export default function AdminSectors() {
       queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({
-        title: 'Sector updated',
-        description: 'The sector has been successfully updated.',
+        title: 'Setor atualizado',
+        description: 'O setor foi atualizado com sucesso.',
       });
       setIsFormOpen(false);
       setEditingSector(null);
@@ -84,8 +84,8 @@ export default function AdminSectors() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Update failed',
-        description: error.message || 'Failed to update sector',
+        title: 'Falha na atualização',
+        description: error.message || 'Falha ao atualizar setor',
       });
     },
   });
@@ -98,16 +98,16 @@ export default function AdminSectors() {
       queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({
-        title: 'Sector deleted',
-        description: 'The sector has been successfully deleted.',
+        title: 'Setor excluído',
+        description: 'O setor foi excluído com sucesso.',
       });
       setDeletingSector(null);
     },
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Delete failed',
-        description: error.message || 'Failed to delete sector',
+        title: 'Falha na exclusão',
+        description: error.message || 'Falha ao excluir setor',
       });
     },
   });
@@ -138,12 +138,12 @@ export default function AdminSectors() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Sectors</h1>
-          <p className="text-muted-foreground mt-1">Organize products by department or category</p>
+          <h1 className="text-3xl font-bold">Setores</h1>
+          <p className="text-muted-foreground mt-1">Organize produtos por departamento ou categoria</p>
         </div>
         <Button onClick={handleAdd} data-testid="button-add-sector">
           <Plus className="w-4 h-4 mr-2" />
-          Add Sector
+          Adicionar Setor
         </Button>
       </div>
 
@@ -157,13 +157,13 @@ export default function AdminSectors() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FolderTree className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">No sectors found</h3>
+            <h3 className="text-lg font-semibold mb-2">Nenhum setor encontrado</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Create sectors to organize your products
+              Crie setores para organizar seus produtos
             </p>
             <Button onClick={handleAdd}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Sector
+              Adicionar Setor
             </Button>
           </CardContent>
         </Card>
@@ -207,9 +207,9 @@ export default function AdminSectors() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingSector ? 'Edit Sector' : 'Add New Sector'}</DialogTitle>
+            <DialogTitle>{editingSector ? 'Editar Setor' : 'Adicionar Novo Setor'}</DialogTitle>
             <DialogDescription>
-              {editingSector ? 'Update sector information' : 'Create a new sector to organize products'}
+              {editingSector ? 'Atualizar informações do setor' : 'Criar um novo setor para organizar produtos'}
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -219,9 +219,9 @@ export default function AdminSectors() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sector Name *</FormLabel>
+                    <FormLabel>Nome do Setor *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter sector name" {...field} data-testid="input-name" />
+                      <Input placeholder="Digite o nome do setor" {...field} data-testid="input-name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -236,11 +236,11 @@ export default function AdminSectors() {
                   disabled={isPending}
                   data-testid="button-cancel"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button type="submit" disabled={isPending} data-testid="button-submit">
                   {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {editingSector ? 'Update Sector' : 'Create Sector'}
+                  {editingSector ? 'Atualizar Setor' : 'Criar Setor'}
                 </Button>
               </div>
             </form>
@@ -251,14 +251,14 @@ export default function AdminSectors() {
       <Dialog open={!!deletingSector} onOpenChange={(open) => !open && setDeletingSector(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Sector</DialogTitle>
+            <DialogTitle>Excluir Setor</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deletingSector?.name}"? This action cannot be undone.
+              Tem certeza que deseja excluir "{deletingSector?.name}"? Esta ação não pode ser desfeita.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeletingSector(null)} data-testid="button-cancel-delete">
-              Cancel
+              Cancelar
             </Button>
             <Button
               variant="destructive"
@@ -266,7 +266,7 @@ export default function AdminSectors() {
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete"
             >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
             </Button>
           </DialogFooter>
         </DialogContent>
