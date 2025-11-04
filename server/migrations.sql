@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS products (
   total_in INTEGER NOT NULL DEFAULT 0,
   total_out INTEGER NOT NULL DEFAULT 0,
   photo_path TEXT,
+  low_stock_threshold INTEGER DEFAULT 10,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(sector_id) REFERENCES sectors(id)

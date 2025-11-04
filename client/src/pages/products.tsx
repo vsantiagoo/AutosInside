@@ -22,15 +22,17 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Package, Edit, Trash2, Grid, List } from 'lucide-react';
+import { Plus, Search, Package, Edit, Trash2, Grid, List, Upload } from 'lucide-react';
 import type { ProductWithSector, Sector } from '@shared/schema';
 import { ProductForm } from '@/components/product-form';
+import { BulkImportDialog } from '@/components/bulk-import-dialog';
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sectorFilter, setSectorFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithSector | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductWithSector | null>(null);
   const { toast } = useToast();
@@ -87,10 +89,20 @@ export default function Products() {
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-muted-foreground mt-1">Manage your product inventory</p>
         </div>
-        <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} data-testid="button-add-product">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setIsBulkImportOpen(true)} 
+            data-testid="button-bulk-import"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Import
+          </Button>
+          <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} data-testid="button-add-product">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -328,6 +340,8 @@ export default function Products() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BulkImportDialog open={isBulkImportOpen} onOpenChange={setIsBulkImportOpen} />
     </div>
   );
 }

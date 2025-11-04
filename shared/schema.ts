@@ -50,6 +50,7 @@ export const productSchema = z.object({
   total_in: z.number(),
   total_out: z.number(),
   photo_path: z.string().nullable(),
+  low_stock_threshold: z.number().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -60,6 +61,7 @@ export const insertProductSchema = z.object({
   sku: z.string().optional(),
   unit_price: z.number().min(0, "Unit price must be positive").default(0),
   stock_quantity: z.number().int().min(0, "Stock quantity must be non-negative").default(0),
+  low_stock_threshold: z.number().int().min(0).optional().default(10),
 });
 
 export type Product = z.infer<typeof productSchema>;

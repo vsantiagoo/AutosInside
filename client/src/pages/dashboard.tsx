@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, TrendingDown, ShoppingCart, DollarSign } from 'lucide-react';
-import type { Product, Consumption, ConsumptionWithDetails } from '@shared/schema';
+import { Badge } from '@/components/ui/badge';
+import { Package, TrendingDown, ShoppingCart, DollarSign, AlertTriangle } from 'lucide-react';
+import type { Product, Consumption, ConsumptionWithDetails, ProductWithSector } from '@shared/schema';
 import { format } from 'date-fns';
+import { Link } from 'wouter';
 
 interface DashboardStats {
   totalProducts: number;
@@ -19,6 +21,10 @@ export default function Dashboard() {
 
   const { data: recentConsumptions, isLoading: consumptionsLoading } = useQuery<ConsumptionWithDetails[]>({
     queryKey: ['/api/consumptions/recent'],
+  });
+
+  const { data: lowStockProducts, isLoading: lowStockLoading } = useQuery<ProductWithSector[]>({
+    queryKey: ['/api/products/low-stock'],
   });
 
   const statCards = [
@@ -81,48 +87,99 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Consumptions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {consumptionsLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : !recentConsumptions || recentConsumptions.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No consumptions recorded yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentConsumptions.map((consumption) => (
-                <div
-                  key={consumption.id}
-                  className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover-elevate"
-                  data-testid={`consumption-${consumption.id}`}
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{consumption.product_name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {consumption.user_name} • Qty: {consumption.qty}
-                    </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Low Stock Alerts</CardTitle>
+            {lowStockProducts && lowStockProducts.length > 0 && (
+              <Badge variant="destructive">{lowStockProducts.length}</Badge>
+            )}
+          </CardHeader>
+          <CardContent>
+            {lowStockLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : !lowStockProducts || lowStockProducts.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>All products are well-stocked</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {lowStockProducts.slice(0, 5).map((product) => (
+                  <Link key={product.id} href="/products">
+                    <div className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-950 rounded-lg hover-elevate border border-orange-200 dark:border-orange-800 cursor-pointer">
+                      <div className="flex items-center gap-3 flex-1">
+                        <AlertTriangle className="w-5 h-5 text-orange-600" />
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {product.sector_name || 'No sector'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-orange-600">
+                          {product.stock_quantity} units
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Threshold: {product.low_stock_threshold || 10}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Consumptions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {consumptionsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : !recentConsumptions || recentConsumptions.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No consumptions recorded yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentConsumptions.map((consumption) => (
+                  <div
+                    key={consumption.id}
+                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover-elevate"
+                    data-testid={`consumption-${consumption.id}`}
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium">{consumption.product_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {consumption.user_name} • Qty: {consumption.qty}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">${consumption.total_price.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(consumption.consumed_at), 'MMM dd, yyyy')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold">${consumption.total_price.toFixed(2)}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(consumption.consumed_at), 'MMM dd, yyyy')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

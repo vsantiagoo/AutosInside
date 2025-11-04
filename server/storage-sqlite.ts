@@ -35,6 +35,8 @@ export interface IStorage {
   getProduct(id: number): Promise<Product | undefined>;
   getAllProducts(): Promise<ProductWithSector[]>;
   createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product>;
+  bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]): Promise<number>;
+  getLowStockProducts(): Promise<ProductWithSector[]>;
   updateProduct(id: number, product: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
 
@@ -142,8 +144,8 @@ class SqliteStorage implements IStorage {
 
   async createProduct(insertProduct: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     const result = db.prepare(`
-      INSERT INTO products (name, sector_id, sku, unit_price, stock_quantity, total_in, total_out, photo_path)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (name, sector_id, sku, unit_price, stock_quantity, total_in, total_out, photo_path, low_stock_threshold)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       insertProduct.name,
       insertProduct.sector_id,
@@ -152,10 +154,47 @@ class SqliteStorage implements IStorage {
       insertProduct.stock_quantity,
       insertProduct.total_in,
       insertProduct.total_out,
-      insertProduct.photo_path
+      insertProduct.photo_path,
+      insertProduct.low_stock_threshold || 10
     );
     
     return this.getProduct(result.lastInsertRowid as number) as Promise<Product>;
+  }
+
+  async bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]): Promise<number> {
+    const insertStmt = db.prepare(`
+      INSERT INTO products (name, sector_id, sku, unit_price, stock_quantity, total_in, total_out, photo_path, low_stock_threshold)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const insertMany = db.transaction((productList: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]) => {
+      for (const product of productList) {
+        insertStmt.run(
+          product.name,
+          product.sector_id,
+          product.sku,
+          product.unit_price,
+          product.stock_quantity,
+          product.total_in || 0,
+          product.total_out || 0,
+          product.photo_path || null,
+          product.low_stock_threshold || 10
+        );
+      }
+    });
+
+    insertMany(products);
+    return products.length;
+  }
+
+  async getLowStockProducts(): Promise<ProductWithSector[]> {
+    return db.prepare(`
+      SELECT p.*, s.name as sector_name
+      FROM products p
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      WHERE p.stock_quantity <= p.low_stock_threshold
+      ORDER BY p.stock_quantity ASC
+    `).all() as ProductWithSector[];
   }
 
   async updateProduct(id: number, updateData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>): Promise<Product | undefined> {
@@ -193,6 +232,10 @@ class SqliteStorage implements IStorage {
     if (updateData.photo_path !== undefined) {
       fields.push('photo_path = ?');
       values.push(updateData.photo_path);
+    }
+    if (updateData.low_stock_threshold !== undefined) {
+      fields.push('low_stock_threshold = ?');
+      values.push(updateData.low_stock_threshold);
     }
 
     fields.push('updated_at = CURRENT_TIMESTAMP');

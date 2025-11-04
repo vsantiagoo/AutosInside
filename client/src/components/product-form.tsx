@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -53,6 +54,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       sku: product?.sku || '',
       unit_price: product?.unit_price || 0,
       stock_quantity: product?.stock_quantity || 0,
+      low_stock_threshold: product?.low_stock_threshold || 10,
       photo: '',
     },
   });
@@ -126,6 +128,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     if (data.sku) formData.append('sku', data.sku);
     formData.append('unit_price', data.unit_price.toString());
     formData.append('stock_quantity', data.stock_quantity.toString());
+    formData.append('low_stock_threshold', (data.low_stock_threshold || 10).toString());
     if (data.photo instanceof File) {
       formData.append('photo', data.photo);
     }
@@ -262,6 +265,30 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="low_stock_threshold"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Low Stock Threshold</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="10"
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value) || 10)}
+                  data-testid="input-threshold"
+                />
+              </FormControl>
+              <FormDescription>
+                Alert when stock falls below this level
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}

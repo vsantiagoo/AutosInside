@@ -58,6 +58,27 @@ const upload = multer({
   }
 });
 
+// Separate multer config for bulk imports (Excel/CSV)
+const bulkImportUpload = multer({
+  storage: multerStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for Excel/CSV
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /csv|xlsx|xls/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const allowedMimes = [
+      'text/csv',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    const mimetype = allowedMimes.includes(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only CSV and Excel files are allowed'));
+  }
+});
+
 // Extend Express Request to include user
 declare global {
   namespace Express {
@@ -349,6 +370,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(400).json({ message: error.message || 'Failed to update product' });
     }
+  });
+
+  // Bulk import products
+  app.post('/api/products/bulk-import', authMiddleware, bulkImportUpload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const ExcelJS = await import('exceljs');
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(req.file.path);
+      
+      const worksheet = workbook.getWorksheet(1);
+      if (!worksheet) {
+        return res.status(400).json({ message: 'Invalid Excel file: no worksheet found' });
+      }
+
+      const products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[] = [];
+      const errors: string[] = [];
+
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // Skip header row
+        
+        try {
+          const name = row.getCell(1).value?.toString() || '';
+          const sku = row.getCell(2).value?.toString() || '';
+          const unit_price = parseFloat(row.getCell(3).value?.toString() || '0');
+          const stock_quantity = parseInt(row.getCell(4).value?.toString() || '0');
+          const sector_name = row.getCell(5).value?.toString() || '';
+          const low_stock_threshold = parseInt(row.getCell(6).value?.toString() || '10');
+
+          if (!name) {
+            errors.push(`Row ${rowNumber}: Product name is required`);
+            return;
+          }
+
+          let sector_id: number | null = null;
+          if (sector_name) {
+            const sector = storage.getAllSectors().then(sectors => 
+              sectors.find(s => s.name.toLowerCase() === sector_name.toLowerCase())
+            );
+          }
+
+          products.push({
+            name,
+            sku: sku || null,
+            unit_price,
+            stock_quantity,
+            sector_id,
+            total_in: stock_quantity,
+            total_out: 0,
+            photo_path: null,
+            low_stock_threshold,
+          });
+        } catch (error: any) {
+          errors.push(`Row ${rowNumber}: ${error.message}`);
+        }
+      });
+
+      // Clean up uploaded file
+      await fs.unlink(req.file.path);
+
+      if (products.length === 0) {
+        return res.status(400).json({ 
+          message: 'No valid products found in file',
+          errors 
+        });
+      }
+
+      const imported = await storage.bulkCreateProducts(products);
+
+      res.json({ 
+        message: `Successfully imported ${imported} products`,
+        imported,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error: any) {
+      if (req.file) {
+        await fs.unlink(req.file.path).catch(console.error);
+      }
+      res.status(400).json({ message: error.message || 'Failed to import products' });
+    }
+  });
+
+  // Get low stock products
+  app.get('/api/products/low-stock', authMiddleware, async (req, res) => {
+    const products = await storage.getLowStockProducts();
+    res.json(products);
   });
 
   app.delete('/api/products/:id', authMiddleware, async (req, res) => {
