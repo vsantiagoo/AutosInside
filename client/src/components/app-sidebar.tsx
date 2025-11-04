@@ -7,7 +7,7 @@ import {
   FolderTree,
   LogOut
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -24,13 +24,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export function AppSidebar() {
-  const [location] = useLocation();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   const mainItems = [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: LayoutDashboard,
     },
     {
@@ -77,10 +77,10 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={location === item.url}
+                    isActive={location.pathname === item.url}
                     data-testid={`link-${item.title.toLowerCase().replace(' ', '-')}`}
                   >
-                    <Link href={item.url}>
+                    <Link to={item.url}>
                       <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>
                     </Link>
@@ -102,10 +102,10 @@ export function AppSidebar() {
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton
                         asChild
-                        isActive={location === item.url}
+                        isActive={location.pathname === item.url}
                         data-testid={`link-${item.title.toLowerCase().replace(' ', '-')}`}
                       >
-                        <Link href={item.url}>
+                        <Link to={item.url}>
                           <item.icon className="w-4 h-4" />
                           <span>{item.title}</span>
                         </Link>

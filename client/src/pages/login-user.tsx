@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, type LoginCredentials } from '@shared/schema';
+import { z } from 'zod';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,36 +22,41 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 
-export default function Login() {
-  const [, setLocation] = useLocation();
+const userLoginSchema = z.object({
+  matricula: z.string().min(1, "Matricula is required"),
+});
+
+type UserLoginForm = z.infer<typeof userLoginSchema>;
+
+export default function LoginUser() {
+  const navigate = useNavigate();
   const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginCredentials>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<UserLoginForm>({
+    resolver: zodResolver(userLoginSchema),
     defaultValues: {
       matricula: '',
-      password: '',
     },
   });
 
-  const onSubmit = async (data: LoginCredentials) => {
+  const onSubmit = async (data: UserLoginForm) => {
     setIsLoading(true);
     try {
-      await login(data);
+      await login({ matricula: data.matricula, password: '' });
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
       });
-      setLocation('/');
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Login failed',
-        description: error.message || 'Invalid matricula or password',
+        description: error.message || 'Invalid matricula',
       });
     } finally {
       setIsLoading(false);
@@ -68,13 +73,13 @@ export default function Login() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold">Inventory System</CardTitle>
+            <CardTitle className="text-3xl font-bold">User Login</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sign in with your matricula (password required for admins only)
+              Sign in with your matricula
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -95,24 +100,6 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password (optional for regular users)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter your password (admins only)"
-                        {...field}
-                        data-testid="input-password"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <Button
                 type="submit"
                 className="w-full"
@@ -124,6 +111,28 @@ export default function Login() {
               </Button>
             </form>
           </Form>
+          
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Administrator?
+              </span>
+            </div>
+          </div>
+
+          <Link to="/admin-login">
+            <Button
+              variant="outline"
+              className="w-full"
+              data-testid="link-admin-login"
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Admin Login
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>

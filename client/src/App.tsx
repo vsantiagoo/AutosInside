@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,7 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AppSidebar } from "@/components/app-sidebar";
-import Login from "@/pages/login";
+import LoginUser from "@/pages/login-user";
+import AdminLogin from "@/pages/admin-login";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import StockTransactions from "@/pages/stock-transactions";
@@ -15,7 +16,7 @@ import AdminUsers from "@/pages/admin-users";
 import AdminSectors from "@/pages/admin-sectors";
 import { Loader2 } from "lucide-react";
 
-function ProtectedRoute({ component: Component, adminOnly = false }: { component: any; adminOnly?: boolean }) {
+function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -27,14 +28,14 @@ function ProtectedRoute({ component: Component, adminOnly = false }: { component
   }
 
   if (!user) {
-    return <Redirect to="/login" />;
+    return <Navigate to="/" replace />;
   }
 
   if (adminOnly && user.role !== 'admin') {
-    return <Redirect to="/" />;
+    return <Navigate to="/dashboard" replace />;
   }
 
-  return <Component />;
+  return <>{children}</>;
 }
 
 function AppRouter() {
@@ -50,12 +51,11 @@ function AppRouter() {
 
   if (!user) {
     return (
-      <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="*">
-          <Redirect to="/login" />
-        </Route>
-      </Switch>
+      <Routes>
+        <Route path="/" element={<LoginUser />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     );
   }
 
@@ -86,17 +86,15 @@ function AppRouter() {
           </header>
           <main className="flex-1 overflow-auto p-6 bg-background">
             <div className="max-w-7xl mx-auto">
-              <Switch>
-                <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-                <Route path="/products" component={() => <ProtectedRoute component={Products} />} />
-                <Route path="/stock" component={() => <ProtectedRoute component={StockTransactions} />} />
-                <Route path="/consumptions" component={() => <ProtectedRoute component={Consumptions} />} />
-                <Route path="/admin/users" component={() => <ProtectedRoute component={AdminUsers} adminOnly={true} />} />
-                <Route path="/admin/sectors" component={() => <ProtectedRoute component={AdminSectors} adminOnly={true} />} />
-                <Route path="*">
-                  <Redirect to="/" />
-                </Route>
-              </Switch>
+              <Routes>
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+                <Route path="/stock" element={<ProtectedRoute><StockTransactions /></ProtectedRoute>} />
+                <Route path="/consumptions" element={<ProtectedRoute><Consumptions /></ProtectedRoute>} />
+                <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
+                <Route path="/admin/sectors" element={<ProtectedRoute adminOnly={true}><AdminSectors /></ProtectedRoute>} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
             </div>
           </main>
         </div>

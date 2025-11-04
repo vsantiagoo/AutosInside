@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Package, TrendingDown, ShoppingCart, DollarSign, AlertTriangle } from 'lucide-react';
 import type { Product, Consumption, ConsumptionWithDetails, ProductWithSector } from '@shared/schema';
 import { format } from 'date-fns';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 interface DashboardStats {
   totalProducts: number;
