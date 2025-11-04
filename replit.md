@@ -174,3 +174,21 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 - **Stock Awareness**: Only displays products with available stock (stock_quantity > 0)
 - **Query Integration**: Proper cache invalidation for consumptions, products, and dashboard stats after session completion
 - **Accessible UI**: Full keyboard navigation, disabled states, and comprehensive test IDs for all interactive elements
+
+### Brazilian Portuguese Localization (November 2025)
+- **Complete Translation**: Entire system translated to Brazilian Portuguese including all user-facing text
+- **Translated Pages**:
+  - Login pages (user and admin login) with all form labels, placeholders, and error messages
+  - Sidebar navigation and application header
+  - Dashboard page with stats cards, alerts, and consumption history
+  - Products page with filters, forms, dialogs, empty states, and table headers
+  - Stock Transactions page with forms, dialogs, and transaction history
+  - Consumptions page with recording forms and export functionality
+  - Food Station page with all buttons, labels, and toast notifications
+  - Admin Users page with user management forms and dialogs
+  - Admin Sectors page with sector management forms and dialogs
+- **Currency Formatting**: Changed from $ to R$ (Brazilian Real) throughout the application
+- **Date Formatting**: Updated from MMM dd, yyyy to dd/MM/yyyy HH:mm (Brazilian standard)
+- **Localized Messages**: All toast notifications, validation messages, error messages, success messages, and form descriptions translated
+- **Consistent Terminology**: Maintained consistent Portuguese terminology across all features (e.g., "Matrícula" for employee ID, "Setor" for sector, "Estoque" for stock)
+- **User Experience**: All user-facing text including buttons, labels, placeholders, dialog titles, empty states, and help text fully localized
