@@ -163,3 +163,13 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
   - Password toggle accessible via keyboard (Tab + Enter/Space)
 - **Auth State Reliability**: Query invalidation after login ensures immediate UI updates and automatic dashboard redirect
 - **Security Maintained**: HTTP-only cookie authentication (more secure than localStorage-based approaches)
+
+### Food Station Feature (November 2025)
+- **New Quick Consumption Page**: Added `/food-station` route for rapid consumption tracking
+- **Streamlined UX**: Card-based product selection interface with increment/decrement controls
+- **Multi-Product Selection**: Users can select multiple products with custom quantities in a single session
+- **Real-Time Summary**: Alert banner displays total items selected and total value
+- **Auto-Logout Flow**: "End Session" button records all consumptions and automatically logs out user after 1.5 seconds
+- **Stock Awareness**: Only displays products with available stock (stock_quantity > 0)
+- **Query Integration**: Proper cache invalidation for consumptions, products, and dashboard stats after session completion
+- **Accessible UI**: Full keyboard navigation, disabled states, and comprehensive test IDs for all interactive elements
