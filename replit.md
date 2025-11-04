@@ -201,3 +201,17 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 - **Localized Messages**: All toast notifications, validation messages, error messages, success messages, and form descriptions translated
 - **Consistent Terminology**: Maintained consistent Portuguese terminology across all features (e.g., "Matrícula" for employee ID, "Setor" for sector, "Estoque" for stock)
 - **User Experience**: All user-facing text including buttons, labels, placeholders, dialog titles, empty states, and help text fully localized
+
+### Product Form Improvements (November 2025)
+- **SKU Field Fix**: Changed SKU field to nullable in schema to prevent validation errors when field is left empty
+- **Complete Translation**: Product form fully translated to Brazilian Portuguese:
+  - Form labels: "Nome do Produto", "Código SKU", "Setor", "Preço Unitário", "Quantidade em Estoque", "Limite de Estoque Baixo", "Foto do Produto"
+  - Placeholders: All in Portuguese
+  - Buttons: "Cancelar", "Criar Produto", "Atualizar Produto", "Enviar Foto", "Alterar Foto"
+  - Validation messages: All error messages in Portuguese
+- **Delete Functionality**: Product deletion already implemented with improvements:
+  - Enhanced error message when deleting product with related consumptions
+  - Clear Portuguese message: "Não é possível excluir este produto porque ele possui consumos registrados"
+  - Successful deletion shows: "Produto excluído com sucesso"
+- **Validation**: SKU field properly handles empty values and trims whitespace
+- **End-to-End Testing**: All product creation and deletion flows validated with automated tests
