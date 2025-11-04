@@ -27,7 +27,10 @@ Preferred communication style: Simple, everyday language.
 - Auth-driven routing: Login pages don't manually navigate; auth state updates trigger automatic route switching
 - `AppRouter` component separates unauthenticated and authenticated route trees to avoid race conditions
 - `ProtectedRoute` component guards admin-only routes (users management, sectors management)
-- After successful login, auth context update causes automatic redirect to `/dashboard`
+- **Role-based post-login redirect**:
+  - Admin users: Automatically redirect to `/dashboard` after login
+  - Regular users: Automatically redirect to `/food-station` after login
+  - Non-admin users attempting to access admin-only routes are redirected to `/food-station`
 
 **UI Component System**
 - **Shadcn/ui** components built on Radix UI primitives
@@ -172,8 +175,14 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 - **Real-Time Summary**: Alert banner displays total items selected and total value
 - **Auto-Logout Flow**: "End Session" button records all consumptions and automatically logs out user after 1.5 seconds
 - **Stock Awareness**: Only displays products with available stock (stock_quantity > 0)
+- **Sector Filtering**: Food Station only displays products from the "FoodStation" sector (filter: `sector_name === 'FoodStation'`)
+- **FoodStation Sector**: Database automatically seeds "FoodStation" sector on first run for development
+- **Role-Based Access**: Regular users are redirected to `/food-station` after login; admins go to `/dashboard`
+- **Consumption Tracking**: Records user_id, product_id, quantity, unit_price, total_price, and consumed_at timestamp
+- **Admin Reports**: Admins can view all consumption records on `/consumptions` page with Excel export
 - **Query Integration**: Proper cache invalidation for consumptions, products, and dashboard stats after session completion
 - **Accessible UI**: Full keyboard navigation, disabled states, and comprehensive test IDs for all interactive elements
+- **End-to-End Testing**: Complete user and admin flows validated with automated tests
 
 ### Brazilian Portuguese Localization (November 2025)
 - **Complete Translation**: Entire system translated to Brazilian Portuguese including all user-facing text
