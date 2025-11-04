@@ -17,8 +17,17 @@ Preferred communication style: Simple, everyday language.
 **Framework & Build System**
 - **React 18** with TypeScript for the user interface
 - **Vite** as the build tool and development server
-- **Wouter** for client-side routing (lightweight alternative to React Router)
+- **React Router** for client-side routing with separate login pages
 - **TanStack Query (React Query)** for server state management, caching, and data synchronization
+
+**Routing Architecture**
+- Separate login pages for different user types:
+  - `/` - User login (matricula only, no password)
+  - `/admin-login` - Admin login (matricula + password required)
+- Auth-driven routing: Login pages don't manually navigate; auth state updates trigger automatic route switching
+- `AppRouter` component separates unauthenticated and authenticated route trees to avoid race conditions
+- `ProtectedRoute` component guards admin-only routes (users management, sectors management)
+- After successful login, auth context update causes automatic redirect to `/dashboard`
 
 **UI Component System**
 - **Shadcn/ui** components built on Radix UI primitives
@@ -125,3 +134,16 @@ Preferred communication style: Simple, everyday language.
 
 **Note on Database Configuration**
 The application has a hybrid database configuration: Drizzle Kit is configured for PostgreSQL (`drizzle.config.ts`), but the actual implementation uses SQLite via better-sqlite3. This suggests the project may have originally used or planned to use PostgreSQL, but currently operates entirely on SQLite for simplicity.
+
+## Recent Changes (November 2025)
+
+### React Router Refactoring
+- **Migrated from Wouter to React Router** for enhanced routing capabilities
+- **Implemented separate login pages**:
+  - User login at `/` (matricula only)
+  - Admin login at `/admin-login` (matricula + password)
+  - Navigation links between login pages for user convenience
+- **Resolved authentication race conditions** by removing manual navigation from login forms
+- **Auth-driven routing**: Login success updates auth context, which automatically triggers route switching to authenticated views
+- Architecture now uses conditional rendering in `AppRouter`: unauthenticated users see login routes, authenticated users see app routes with sidebar
+- All end-to-end tests passing for both user and admin login flows
