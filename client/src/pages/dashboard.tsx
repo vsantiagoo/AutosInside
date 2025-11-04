@@ -29,29 +29,29 @@ export default function Dashboard() {
 
   const statCards = [
     {
-      title: 'Total Products',
+      title: 'Total de Produtos',
       value: stats?.totalProducts ?? 0,
       icon: Package,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 dark:bg-blue-950',
     },
     {
-      title: 'Low Stock Alerts',
+      title: 'Alertas de Estoque Baixo',
       value: stats?.lowStockCount ?? 0,
       icon: TrendingDown,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50 dark:bg-orange-950',
     },
     {
-      title: 'Monthly Consumptions',
+      title: 'Consumos Mensais',
       value: stats?.monthlyConsumptions ?? 0,
       icon: ShoppingCart,
       color: 'text-green-600',
       bgColor: 'bg-green-50 dark:bg-green-950',
     },
     {
-      title: 'Total Inventory Value',
-      value: `$${(stats?.totalValue ?? 0).toFixed(2)}`,
+      title: 'Valor Total do Inventário',
+      value: `R$${(stats?.totalValue ?? 0).toFixed(2)}`,
       icon: DollarSign,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50 dark:bg-purple-950',
@@ -61,8 +61,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Overview of your inventory system</p>
+        <h1 className="text-3xl font-bold">Painel</h1>
+        <p className="text-muted-foreground mt-1">Visão geral do sistema de inventário</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -90,7 +90,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Low Stock Alerts</CardTitle>
+            <CardTitle>Alertas de Estoque Baixo</CardTitle>
             {lowStockProducts && lowStockProducts.length > 0 && (
               <Badge variant="destructive">{lowStockProducts.length}</Badge>
             )}
@@ -105,7 +105,7 @@ export default function Dashboard() {
             ) : !lowStockProducts || lowStockProducts.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>All products are well-stocked</p>
+                <p>Todos os produtos estão bem estocados</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -117,16 +117,16 @@ export default function Dashboard() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {product.sector_name || 'No sector'}
+                            {product.sector_name || 'Sem setor'}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-orange-600">
-                          {product.stock_quantity} units
+                          {product.stock_quantity} unidades
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Threshold: {product.low_stock_threshold || 10}
+                          Limite: {product.low_stock_threshold || 10}
                         </p>
                       </div>
                     </div>
@@ -139,7 +139,7 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recent Consumptions</CardTitle>
+            <CardTitle>Consumos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
             {consumptionsLoading ? (
@@ -151,7 +151,7 @@ export default function Dashboard() {
             ) : !recentConsumptions || recentConsumptions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No consumptions recorded yet</p>
+                <p>Nenhum consumo registrado ainda</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -164,13 +164,13 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <p className="font-medium">{consumption.product_name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {consumption.user_name} • Qty: {consumption.qty}
+                        {consumption.user_name} • Qtd: {consumption.qty}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${consumption.total_price.toFixed(2)}</p>
+                      <p className="font-semibold">R${consumption.total_price.toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(consumption.consumed_at), 'MMM dd, yyyy')}
+                        {format(new Date(consumption.consumed_at), 'dd/MM/yyyy')}
                       </p>
                     </div>
                   </div>

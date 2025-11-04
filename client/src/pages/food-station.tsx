@@ -32,7 +32,7 @@ export default function FoodStation() {
         }));
 
       if (consumptions.length === 0) {
-        throw new Error('Please select at least one item');
+        throw new Error('Por favor, selecione pelo menos um item');
       }
 
       // Record each consumption
@@ -44,8 +44,8 @@ export default function FoodStation() {
     },
     onSuccess: (consumptions) => {
       toast({
-        title: 'Session completed',
-        description: `${consumptions.length} item(s) recorded. Logging out...`,
+        title: 'Sessão concluída',
+        description: `${consumptions.length} item(ns) registrado(s). Saindo...`,
       });
 
       // Invalidate queries before logout
@@ -61,8 +61,8 @@ export default function FoodStation() {
     onError: (error: any) => {
       toast({
         variant: 'destructive',
-        title: 'Failed to complete session',
-        description: error.message || 'Failed to record consumption',
+        title: 'Falha ao concluir sessão',
+        description: error.message || 'Falha ao registrar consumo',
       });
     },
   });
@@ -126,10 +126,10 @@ export default function FoodStation() {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <UtensilsCrossed className="h-8 w-8 text-primary" />
-              Food Station
+              Estação de Alimentos
             </h1>
             <p className="text-muted-foreground mt-1">
-              Quickly select items and end your session
+              Selecione rapidamente os itens e encerre sua sessão
             </p>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function FoodStation() {
           <AlertDescription>
             <div className="flex items-center justify-between">
               <span>
-                Selected: <strong>{totalItems}</strong> item(s) • Total: <strong>${totalValue.toFixed(2)}</strong>
+                Selecionado: <strong>{totalItems}</strong> item(ns) • Total: <strong>R${totalValue.toFixed(2)}</strong>
               </span>
               <Button
                 onClick={handleEndSession}
@@ -150,12 +150,12 @@ export default function FoodStation() {
                 {endSessionMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Ending Session...
+                    Encerrando Sessão...
                   </>
                 ) : (
                   <>
                     <LogOut className="w-4 h-4 mr-2" />
-                    End Session
+                    Encerrar Sessão
                   </>
                 )}
               </Button>
@@ -168,7 +168,7 @@ export default function FoodStation() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              No products available in stock
+              Nenhum produto disponível em estoque
             </p>
           </CardContent>
         </Card>
@@ -224,11 +224,11 @@ export default function FoodStation() {
                 <CardContent className="pb-3">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Price:</span>
-                      <span className="font-semibold">${product.unit_price.toFixed(2)}</span>
+                      <span className="text-muted-foreground">Preço:</span>
+                      <span className="font-semibold">R${product.unit_price.toFixed(2)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">In Stock:</span>
+                      <span className="text-muted-foreground">Em Estoque:</span>
                       <span className={product.stock_quantity < 10 ? 'text-destructive font-medium' : ''}>
                         {product.stock_quantity}
                       </span>
@@ -236,7 +236,7 @@ export default function FoodStation() {
                     {quantity > 0 && (
                       <div className="flex items-center justify-between text-sm pt-2 border-t">
                         <span className="text-muted-foreground">Subtotal:</span>
-                        <span className="font-bold text-primary">${itemTotal.toFixed(2)}</span>
+                        <span className="font-bold text-primary">R${itemTotal.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
