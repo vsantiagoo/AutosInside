@@ -53,11 +53,15 @@ Preferred communication style: Simple, everyday language.
 - Excel export functionality using ExcelJS library
 
 **Authentication & Authorization**
+- **Dual-mode authentication system**:
+  - Regular users: Login with matricula only (no password required)
+  - Admin users: Login with matricula + password (both required)
 - JWT tokens stored in HTTP-only cookies
 - Password hashing with bcrypt (10 salt rounds)
 - Role-based access control: `admin` and `user` roles
 - Protected routes check authentication middleware
 - Admin-only endpoints for user and sector management
+- Password enforcement: Admin role requires password (validated on creation and role promotion)
 
 **Request/Response Flow**
 - Request validation using Zod schemas (shared between client and server)
