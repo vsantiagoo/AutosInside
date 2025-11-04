@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, ShoppingCart, LogOut, Loader2, UtensilsCrossed } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, LogOut, Loader2, UtensilsCrossed, Package } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function FoodStation() {
@@ -183,6 +184,22 @@ export default function FoodStation() {
                 className={quantity > 0 ? 'border-primary' : ''}
                 data-testid={`card-product-${product.id}`}
               >
+                <div className="overflow-hidden">
+                  <AspectRatio ratio={16 / 9}>
+                    {product.photo_path ? (
+                      <img
+                        src={product.photo_path}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        data-testid={`img-product-${product.id}`}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <Package className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                    )}
+                  </AspectRatio>
+                </div>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">

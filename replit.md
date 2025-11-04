@@ -167,6 +167,7 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 ### Food Station Feature (November 2025)
 - **New Quick Consumption Page**: Added `/food-station` route for rapid consumption tracking
 - **Streamlined UX**: Card-based product selection interface with increment/decrement controls
+- **Product Photos**: Each product card displays product photo (if available) with 16:9 aspect ratio, or placeholder icon
 - **Multi-Product Selection**: Users can select multiple products with custom quantities in a single session
 - **Real-Time Summary**: Alert banner displays total items selected and total value
 - **Auto-Logout Flow**: "End Session" button records all consumptions and automatically logs out user after 1.5 seconds
