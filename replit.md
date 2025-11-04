@@ -147,3 +147,19 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 - **Auth-driven routing**: Login success updates auth context, which automatically triggers route switching to authenticated views
 - Architecture now uses conditional rendering in `AppRouter`: unauthenticated users see login routes, authenticated users see app routes with sidebar
 - All end-to-end tests passing for both user and admin login flows
+
+### Login UX & Accessibility Enhancements
+- **Password Visibility Toggle**: Admin login now features eye icon button to show/hide password (fully keyboard accessible)
+- **Case-Insensitive Authentication**: Backend performs case-insensitive matricula lookups; users can enter any case variation
+- **Smart Form Validation**: Matricula auto-converts to uppercase, password minimum length (3 chars), whitespace trimming
+- **Enhanced Error Messages**: Specific feedback for different error types:
+  - "User account not found" vs "Incorrect password"
+  - "This is an admin account. Please use Admin Login" for role mismatch
+  - Password field automatically cleared on failed admin login
+- **Improved Accessibility**:
+  - ARIA labels on all form inputs and buttons
+  - Autocomplete attributes for better browser integration
+  - Full keyboard navigation support (Tab through all form elements)
+  - Password toggle accessible via keyboard (Tab + Enter/Space)
+- **Auth State Reliability**: Query invalidation after login ensures immediate UI updates and automatic dashboard redirect
+- **Security Maintained**: HTTP-only cookie authentication (more secure than localStorage-based approaches)
