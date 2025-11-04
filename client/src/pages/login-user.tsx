@@ -27,8 +27,7 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 const userLoginSchema = z.object({
   matricula: z.string()
     .min(1, "Matrícula é obrigatória")
-    .trim()
-    .toUpperCase(),
+    .trim(),
 });
 
 type UserLoginForm = z.infer<typeof userLoginSchema>;
@@ -116,7 +115,6 @@ export default function LoginUser() {
                         data-testid="input-matricula"
                         autoFocus
                         autoComplete="username"
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                         aria-label="Matrícula do usuário"
                         aria-required="true"
                       />

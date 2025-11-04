@@ -27,8 +27,7 @@ import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 const adminLoginSchema = z.object({
   matricula: z.string()
     .min(1, "Matrícula é obrigatória")
-    .trim()
-    .toUpperCase(),
+    .trim(),
   password: z.string()
     .min(1, "Senha é obrigatória")
     .min(3, "Senha deve ter pelo menos 3 caracteres"),
@@ -119,7 +118,6 @@ export default function AdminLogin() {
                         data-testid="input-matricula"
                         autoFocus
                         autoComplete="username"
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                         aria-label="Matrícula do administrador"
                         aria-required="true"
                       />
