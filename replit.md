@@ -13,6 +13,7 @@ Preferred communication style: Simple, everyday language.
 - **UI/UX**: Shadcn/ui components on Radix UI, Tailwind CSS with a custom Material Design-inspired theme, Class Variance Authority (CVA), Roboto font.
 - **State Management**: React Query for server state, React Context for authentication, React Hook Form with Zod for form state.
 - **Design System**: Material Design principles, HSL CSS variables for theming, elevation system, responsive grid layouts.
+- **Responsive Design**: Mobile-first approach with Tailwind breakpoints (sm: 640px, md: 768px, lg: 1024px). All screens fully responsive for mobile portrait/landscape, tablet portrait/landscape, and desktop. Typography scales (text-2xl → text-3xl), buttons adapt (w-full → w-auto), layouts flex/stack (flex-col → flex-row), grids collapse (grid-cols-1 → grid-cols-2/3/4). Tested across viewports 375px to 1440px+.
 
 ### Backend Architecture
 - **Server**: Express.js on Node.js with TypeScript (ESM).
@@ -29,9 +30,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Feature Specifications
 - **Login UX**: Password visibility toggle, case-insensitive matricula lookup, smart form validation (matricula auto-uppercase, password length), enhanced error messages, improved accessibility (ARIA labels, autocomplete, keyboard navigation).
-- **Food Station**: New `/food-station` route for quick consumption tracking with an inline list view, checkbox-based selection, real-time summary, and auto-logout. Displays products with available stock from the "FoodStation" sector. Records consumption timestamps in America/Sao_Paulo timezone.
+- **Food Station**: New `/food-station` route for quick consumption tracking with an inline list view, checkbox-based selection, real-time summary, and auto-logout. Displays products with available stock from the "FoodStation" sector. Records consumption timestamps in America/Sao_Paulo timezone. Fully responsive with stacked mobile layout and optimized desktop view.
 - **Localization**: Complete Brazilian Portuguese translation for all user-facing text, currency (R$), and date formatting (dd/MM/yyyy HH:mm).
 - **Product Forms**: SKU field is nullable, full localization, enhanced error messages for product deletion (e.g., when products have related consumptions).
+- **Monthly Consumption Limits**: Users can configure monthly spending limits with real-time tracking, progress bars, and automatic validation in FoodStation. Limits stored per user with enable/disable toggle.
+- **Consumption Reporting**: Users can view personal consumption history with date filtering (by month, custom range, or today). Monthly totals displayed with auto-applied current month filter.
 
 ## External Dependencies
 - **Third-Party Libraries**:
