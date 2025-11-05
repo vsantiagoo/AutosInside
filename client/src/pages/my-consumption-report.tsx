@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Calendar, DollarSign } from "lucide-react";
 import type { ConsumptionWithDetails } from "@shared/schema";
 
@@ -171,7 +172,7 @@ export default function MyConsumptionReport() {
               R$ {monthlyData.total.toFixed(2)}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {format(new Date(monthlyData.year, monthlyData.month - 1), "MMMM 'de' yyyy", { locale: { code: 'pt-BR' } as any })}
+              {format(new Date(monthlyData.year, monthlyData.month - 1), "MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </CardContent>
         </Card>

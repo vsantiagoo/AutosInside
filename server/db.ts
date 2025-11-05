@@ -18,6 +18,26 @@ if (fs.existsSync(migrationsPath)) {
   console.log('✅ Database migrations executed');
 }
 
+// Add new columns to existing tables if they don't exist
+// This handles schema updates for existing databases
+function addColumnIfNotExists(tableName: string, columnName: string, columnDefinition: string) {
+  try {
+    const columns = db.prepare(`PRAGMA table_info(${tableName})`).all() as any[];
+    const columnExists = columns.some((col: any) => col.name === columnName);
+    
+    if (!columnExists) {
+      db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+      console.log(`✅ Added column ${columnName} to ${tableName}`);
+    }
+  } catch (e: any) {
+    console.error(`Error adding column ${columnName} to ${tableName}:`, e.message);
+  }
+}
+
+// Add monthly_limit and limit_enabled to users table
+addColumnIfNotExists('users', 'monthly_limit', 'REAL');
+addColumnIfNotExists('users', 'limit_enabled', 'INTEGER NOT NULL DEFAULT 0');
+
 // Seed development data only in development mode
 if (process.env.NODE_ENV === 'development') {
   console.log('\n⚠️  DEVELOPMENT MODE - Seeding test data');
