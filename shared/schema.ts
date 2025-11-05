@@ -56,12 +56,22 @@ export const productSchema = z.object({
   name: z.string(),
   sector_id: z.number().nullable(),
   sku: z.string().nullable(),
+  category: z.string().nullable(),
+  unit_measure: z.string().nullable(),
   unit_price: z.number(),
+  sale_price: z.number().nullable(),
   stock_quantity: z.number(),
+  min_quantity: z.number().nullable(),
+  max_quantity: z.number().nullable(),
   total_in: z.number(),
   total_out: z.number(),
   photo_path: z.string().nullable(),
   low_stock_threshold: z.number().nullable(),
+  supplier: z.string().nullable(),
+  last_purchase_date: z.string().nullable(),
+  last_count_date: z.string().nullable(),
+  asset_number: z.string().nullable(),
+  status: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -70,9 +80,19 @@ export const insertProductSchema = z.object({
   name: z.string().min(1, "Nome do produto é obrigatório"),
   sector_id: z.number().nullable().optional(),
   sku: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  unit_measure: z.string().nullable().optional(),
   unit_price: z.number().min(0, "Preço unitário deve ser positivo").default(0),
+  sale_price: z.number().min(0).nullable().optional(),
   stock_quantity: z.number().int().min(0, "Quantidade em estoque não pode ser negativa").default(0),
+  min_quantity: z.number().int().min(0).nullable().optional(),
+  max_quantity: z.number().int().min(0).nullable().optional(),
   low_stock_threshold: z.number().int().min(0).optional().default(10),
+  supplier: z.string().nullable().optional(),
+  last_purchase_date: z.string().nullable().optional(),
+  last_count_date: z.string().nullable().optional(),
+  asset_number: z.string().nullable().optional(),
+  status: z.enum(['Ativo', 'Inativo']).nullable().optional().default('Ativo'),
 });
 
 export type Product = z.infer<typeof productSchema>;
@@ -82,6 +102,8 @@ export type InsertProduct = z.infer<typeof insertProductSchema>;
 export const stockTransactionSchema = z.object({
   id: z.number(),
   product_id: z.number(),
+  user_id: z.number().nullable(),
+  transaction_type: z.string().nullable(),
   change: z.number(),
   reason: z.string().nullable(),
   created_at: z.string(),
@@ -89,6 +111,8 @@ export const stockTransactionSchema = z.object({
 
 export const insertStockTransactionSchema = z.object({
   product_id: z.number(),
+  user_id: z.number().nullable().optional(),
+  transaction_type: z.enum(['entrada', 'saida', 'ajuste', 'devolucao']).optional(),
   change: z.number().int().refine((val) => val !== 0, "Change cannot be zero"),
   reason: z.string().optional(),
 });
@@ -128,4 +152,23 @@ export type ConsumptionWithDetails = Consumption & {
 
 export type StockTransactionWithProduct = StockTransaction & {
   product_name?: string;
+  user_name?: string;
+};
+
+// Inventory KPIs and Reports
+export type InventoryKPI = {
+  sector_id: number | null;
+  sector_name: string;
+  total_products: number;
+  total_value: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+  turnover_rate: number | null;
+  coverage_days: number | null;
+};
+
+export type ProductInventoryDetails = Product & {
+  sector_name?: string;
+  inventory_value: number;
+  stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Excesso';
 };
