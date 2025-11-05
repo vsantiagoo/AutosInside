@@ -6,7 +6,9 @@ import {
   Users, 
   FolderTree,
   LogOut,
-  UtensilsCrossed
+  UtensilsCrossed,
+  FileText,
+  DollarSign
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -28,7 +30,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const mainItems = [
+  const adminMainItems = [
     {
       title: "Painel",
       url: "/dashboard",
@@ -55,6 +57,26 @@ export function AppSidebar() {
       icon: UtensilsCrossed,
     },
   ];
+
+  const userMainItems = [
+    {
+      title: "Estação de Alimentos",
+      url: "/food-station",
+      icon: UtensilsCrossed,
+    },
+    {
+      title: "Relatório de Consumo",
+      url: "/my-consumption-report",
+      icon: FileText,
+    },
+    {
+      title: "Limitação de Consumo",
+      url: "/consumption-limit",
+      icon: DollarSign,
+    },
+  ];
+
+  const mainItems = user?.role === 'admin' ? adminMainItems : userMainItems;
 
   const adminItems = user?.role === 'admin' ? [
     {

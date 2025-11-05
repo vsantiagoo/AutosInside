@@ -14,6 +14,8 @@ import Products from "@/pages/products";
 import StockTransactions from "@/pages/stock-transactions";
 import Consumptions from "@/pages/consumptions";
 import FoodStation from "@/pages/food-station";
+import MyConsumptionReport from "@/pages/my-consumption-report";
+import ConsumptionLimit from "@/pages/consumption-limit";
 import AdminUsers from "@/pages/admin-users";
 import AdminSectors from "@/pages/admin-sectors";
 import { Loader2 } from "lucide-react";
@@ -107,6 +109,8 @@ function AppRouter() {
                 <Route path="/stock" element={<ProtectedRoute adminOnly={true}><StockTransactions /></ProtectedRoute>} />
                 <Route path="/consumptions" element={<ProtectedRoute adminOnly={true}><Consumptions /></ProtectedRoute>} />
                 <Route path="/food-station" element={<FoodStation />} />
+                <Route path="/my-consumption-report" element={<ProtectedRoute><MyConsumptionReport /></ProtectedRoute>} />
+                <Route path="/consumption-limit" element={<ProtectedRoute><ConsumptionLimit /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
                 <Route path="/admin/sectors" element={<ProtectedRoute adminOnly={true}><AdminSectors /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />

@@ -7,6 +7,8 @@ export const userSchema = z.object({
   matricula: z.string(),
   password_hash: z.string().optional(),
   role: z.enum(['admin', 'user']),
+  monthly_limit: z.number().nullable(),
+  limit_enabled: z.boolean(),
   created_at: z.string(),
 });
 
@@ -25,9 +27,15 @@ export const loginSchema = z.object({
   password: z.string().optional(),
 });
 
+export const updateUserLimitSchema = z.object({
+  monthly_limit: z.number().min(0, "Limite deve ser maior ou igual a zero").nullable(),
+  limit_enabled: z.boolean(),
+});
+
 export type User = z.infer<typeof userSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+export type UpdateUserLimit = z.infer<typeof updateUserLimitSchema>;
 
 // Sectors Schema
 export const sectorSchema = z.object({

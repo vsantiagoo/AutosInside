@@ -2,6 +2,7 @@ import db from './db';
 import type {
   User,
   InsertUser,
+  UpdateUserLimit,
   Sector,
   InsertSector,
   Product,
@@ -22,6 +23,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser & { password_hash: string }): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser> & { password_hash?: string }): Promise<User | undefined>;
+  updateUserLimit(userId: number, limit: UpdateUserLimit): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
 
   // Sectors
@@ -49,6 +51,8 @@ export interface IStorage {
   getConsumption(id: number): Promise<Consumption | undefined>;
   getAllConsumptions(): Promise<ConsumptionWithDetails[]>;
   getRecentConsumptions(limit: number): Promise<ConsumptionWithDetails[]>;
+  getUserConsumptions(userId: number, startDate?: string, endDate?: string): Promise<ConsumptionWithDetails[]>;
+  getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number>;
   createConsumption(consumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption>;
 }
 
@@ -98,6 +102,15 @@ class SqliteStorage implements IStorage {
     values.push(id);
     db.prepare(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`).run(...values);
     return this.getUser(id);
+  }
+
+  async updateUserLimit(userId: number, limit: UpdateUserLimit): Promise<User | undefined> {
+    db.prepare(`
+      UPDATE users 
+      SET monthly_limit = ?, limit_enabled = ? 
+      WHERE id = ?
+    `).run(limit.monthly_limit, limit.limit_enabled ? 1 : 0, userId);
+    return this.getUser(userId);
   }
 
   async deleteUser(id: number): Promise<boolean> {
@@ -332,6 +345,50 @@ class SqliteStorage implements IStorage {
       ORDER BY c.consumed_at DESC
       LIMIT ?
     `).all(limit) as ConsumptionWithDetails[];
+  }
+
+  async getUserConsumptions(userId: number, startDate?: string, endDate?: string): Promise<ConsumptionWithDetails[]> {
+    let query = `
+      SELECT 
+        c.*,
+        u.full_name as user_name,
+        p.name as product_name
+      FROM consumptions c
+      LEFT JOIN users u ON c.user_id = u.id
+      LEFT JOIN products p ON c.product_id = p.id
+      WHERE c.user_id = ?
+    `;
+    const params: any[] = [userId];
+
+    if (startDate) {
+      query += ` AND date(c.consumed_at) >= date(?)`;
+      params.push(startDate);
+    }
+
+    if (endDate) {
+      query += ` AND date(c.consumed_at) <= date(?)`;
+      params.push(endDate);
+    }
+
+    query += ` ORDER BY c.consumed_at DESC`;
+
+    return db.prepare(query).all(...params) as ConsumptionWithDetails[];
+  }
+
+  async getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number> {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+
+    const result = db.prepare(`
+      SELECT COALESCE(SUM(total_price), 0) as total
+      FROM consumptions
+      WHERE user_id = ?
+        AND date(consumed_at) >= date(?)
+        AND date(consumed_at) <= date(?)
+    `).get(userId, startDate, endDate) as { total: number };
+
+    return result.total;
   }
 
   async createConsumption(insertConsumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption> {

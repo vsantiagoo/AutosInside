@@ -1,25 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/lib/auth';
-import { type ProductWithSector } from '@shared/schema';
+import { type ProductWithSector, type User } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, LogOut, Loader2, UtensilsCrossed, Package } from 'lucide-react';
+import { ShoppingCart, LogOut, Loader2, UtensilsCrossed, Package, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const STORAGE_KEY = 'foodstation_selection';
 
 export default function FoodStation() {
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
   const { logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: products, isLoading } = useQuery<ProductWithSector[]>({
     queryKey: ['/api/products'],
   });
+
+  const { data: user } = useQuery<User>({
+    queryKey: ['/api/auth/me'],
+  });
+
+  const { data: monthlyData } = useQuery<{ total: number; year: number; month: number }>({
+    queryKey: ['/api/consumptions/my-monthly-total'],
+  });
+
+  // Load saved selection from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSelectedItems(parsed);
+        localStorage.removeItem(STORAGE_KEY); // Clear after loading
+      } catch (e) {
+        console.error('Failed to parse saved selection', e);
+      }
+    }
+  }, []);
+
+  // Save selection to localStorage
+  const saveSelection = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedItems));
+  };
 
   const endSessionMutation = useMutation({
     mutationFn: async () => {
@@ -51,6 +93,7 @@ export default function FoodStation() {
       queryClient.invalidateQueries({ queryKey: ['/api/consumptions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/consumptions/my-monthly-total'] });
 
       // Logout after a short delay to show the toast
       setTimeout(async () => {
@@ -94,7 +137,23 @@ export default function FoodStation() {
   };
 
   const handleEndSession = async () => {
+    // Check if limit is enabled and would be exceeded
+    if (user?.limit_enabled && user.monthly_limit && monthlyData) {
+      const currentSpent = monthlyData.total;
+      const newTotal = currentSpent + totalValue;
+      
+      if (newTotal > user.monthly_limit) {
+        setShowLimitDialog(true);
+        return;
+      }
+    }
+    
     await endSessionMutation.mutateAsync();
+  };
+
+  const handleIncreaseLimit = () => {
+    saveSelection();
+    navigate('/consumption-limit');
   };
 
   const totalItems = Object.values(selectedItems).reduce((sum, qty) => sum + qty, 0);
@@ -269,6 +328,40 @@ export default function FoodStation() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+        <AlertDialogContent data-testid="dialog-limit-exceeded">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Atenção! Você ultrapassou o seu limite de consumo.
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Você configurou um limite mensal de <strong>R$ {user?.monthly_limit?.toFixed(2)}</strong>.
+              </p>
+              <p>
+                Com esta sessão, seu consumo total seria de <strong>R$ {((monthlyData?.total || 0) + totalValue).toFixed(2)}</strong>, 
+                ultrapassando o limite estabelecido.
+              </p>
+              <p className="text-sm">
+                Você pode aumentar o limite na página de configurações ou cancelar esta sessão.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-ok-limit">
+              Ok
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleIncreaseLimit}
+              data-testid="button-increase-limit"
+            >
+              Aumentar limite de consumo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

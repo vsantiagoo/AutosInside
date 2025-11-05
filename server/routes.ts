@@ -10,6 +10,7 @@ import ExcelJS from "exceljs";
 import {
   loginSchema,
   insertUserSchema,
+  updateUserLimitSchema,
   insertSectorSchema,
   insertProductSchema,
   insertStockTransactionSchema,
@@ -643,6 +644,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.end();
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to export consumptions' });
+    }
+  });
+
+  app.get('/api/consumptions/my', authMiddleware, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const consumptions = await storage.getUserConsumptions(
+        req.user!.id, 
+        startDate as string | undefined, 
+        endDate as string | undefined
+      );
+      res.json(consumptions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch user consumptions' });
+    }
+  });
+
+  app.get('/api/consumptions/my-monthly-total', authMiddleware, async (req, res) => {
+    try {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const total = await storage.getUserMonthlyTotal(req.user!.id, year, month);
+      res.json({ total, year, month });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch monthly total' });
+    }
+  });
+
+  // User limit routes
+  app.patch('/api/users/me/limit', authMiddleware, async (req, res) => {
+    try {
+      const limitData = updateUserLimitSchema.parse(req.body);
+      const updatedUser = await storage.updateUserLimit(req.user!.id, limitData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json(updatedUser);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Failed to update limit' });
     }
   });
 
