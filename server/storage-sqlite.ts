@@ -58,6 +58,22 @@ export interface IStorage {
   // Inventory KPIs
   getInventoryKPIsBySector(): Promise<any[]>;
   getTotalInventoryValue(): Promise<number>;
+  
+  // Sector Reports
+  getSectorReport(sectorId: number): Promise<{
+    sector: Sector;
+    products: ProductWithSector[];
+    stockTransactions: StockTransactionWithProduct[];
+    consumptions: ConsumptionWithDetails[];
+    summary: {
+      totalProducts: number;
+      totalValue: number;
+      totalIn: number;
+      totalOut: number;
+      lowStockCount: number;
+      outOfStockCount: number;
+    };
+  }>;
 }
 
 class SqliteStorage implements IStorage {
@@ -476,6 +492,81 @@ class SqliteStorage implements IStorage {
       FROM products
     `).get() as { total_value: number | null };
     return result.total_value || 0;
+  }
+
+  async getSectorReport(sectorId: number) {
+    // Get sector info
+    const sector = await this.getSector(sectorId);
+    if (!sector) {
+      throw new Error('Sector not found');
+    }
+
+    // Get all products in this sector
+    const products = db.prepare(`
+      SELECT 
+        p.*,
+        s.name as sector_name
+      FROM products p
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      WHERE p.sector_id = ?
+      ORDER BY p.name
+    `).all(sectorId) as ProductWithSector[];
+
+    const productIds = products.map(p => p.id);
+
+    // Get stock transactions for products in this sector
+    let stockTransactions: StockTransactionWithProduct[] = [];
+    if (productIds.length > 0) {
+      const placeholders = productIds.map(() => '?').join(',');
+      stockTransactions = db.prepare(`
+        SELECT 
+          st.*,
+          p.name as product_name,
+          u.full_name as user_name
+        FROM stock_transactions st
+        LEFT JOIN products p ON st.product_id = p.id
+        LEFT JOIN users u ON st.user_id = u.id
+        WHERE st.product_id IN (${placeholders})
+        ORDER BY st.created_at DESC
+      `).all(...productIds) as StockTransactionWithProduct[];
+    }
+
+    // Get consumptions for products in this sector
+    let consumptions: ConsumptionWithDetails[] = [];
+    if (productIds.length > 0) {
+      const placeholders = productIds.map(() => '?').join(',');
+      consumptions = db.prepare(`
+        SELECT 
+          c.*,
+          u.full_name as user_name,
+          p.name as product_name
+        FROM consumptions c
+        LEFT JOIN users u ON c.user_id = u.id
+        LEFT JOIN products p ON c.product_id = p.id
+        WHERE c.product_id IN (${placeholders})
+        ORDER BY c.consumed_at DESC
+      `).all(...productIds) as ConsumptionWithDetails[];
+    }
+
+    // Calculate summary
+    const summary = {
+      totalProducts: products.length,
+      totalValue: products.reduce((sum, p) => sum + (p.stock_quantity * p.unit_price), 0),
+      totalIn: products.reduce((sum, p) => sum + (p.total_in || 0), 0),
+      totalOut: products.reduce((sum, p) => sum + (p.total_out || 0), 0),
+      lowStockCount: products.filter(p => 
+        p.stock_quantity <= (p.low_stock_threshold || 10) && p.stock_quantity > 0
+      ).length,
+      outOfStockCount: products.filter(p => p.stock_quantity === 0).length,
+    };
+
+    return {
+      sector,
+      products,
+      stockTransactions,
+      consumptions,
+      summary,
+    };
   }
 }
 
