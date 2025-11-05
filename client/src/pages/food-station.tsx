@@ -183,37 +183,37 @@ export default function FoodStation() {
   const availableProducts = products?.filter(p => p.stock_quantity > 0 && p.sector_name === 'FoodStation') || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <UtensilsCrossed className="h-8 w-8 text-primary" />
-              Estação de Alimentos
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Selecione rapidamente os itens e encerre sua sessão
-            </p>
-          </div>
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <UtensilsCrossed className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+            Estação de Alimentos
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Selecione rapidamente os itens e encerre sua sessão
+          </p>
         </div>
 
         <Alert>
-          <ShoppingCart className="h-4 w-4" />
+          <ShoppingCart className="h-4 w-4 flex-shrink-0" />
           <AlertDescription>
-            <div className="flex items-center justify-between">
-              <span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <span className="text-sm md:text-base">
                 Selecionado: <strong>{totalItems}</strong> item(ns) • Total: <strong>R${totalValue.toFixed(2)}</strong>
               </span>
               <Button
                 onClick={handleEndSession}
                 disabled={totalItems === 0 || endSessionMutation.isPending}
                 size="sm"
+                className="w-full sm:w-auto"
                 data-testid="button-end-session"
               >
                 {endSessionMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Encerrando Sessão...
+                    <span className="hidden sm:inline">Encerrando Sessão...</span>
+                    <span className="sm:hidden">Encerrando...</span>
                   </>
                 ) : (
                   <>
@@ -247,79 +247,85 @@ export default function FoodStation() {
                 return (
                   <div 
                     key={product.id}
-                    className={`p-4 flex items-center gap-4 hover-elevate ${isSelected ? 'bg-accent/30' : ''}`}
+                    className={`p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover-elevate ${isSelected ? 'bg-accent/30' : ''}`}
                     data-testid={`row-product-${product.id}`}
                   >
-                    {/* Checkbox */}
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(checked) => toggleItem(product.id, checked as boolean)}
-                      data-testid={`checkbox-product-${product.id}`}
-                      className="flex-shrink-0"
-                    />
-
-                    {/* Product Image */}
-                    <div className="w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                      {product.photo_path ? (
-                        <img
-                          src={product.photo_path}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          data-testid={`img-product-${product.id}`}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-8 h-8 text-muted-foreground opacity-30" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Product Name and Description */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base truncate">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Em estoque: {product.stock_quantity}
-                      </p>
-                    </div>
-
-                    {/* Price */}
-                    <div className="text-right flex-shrink-0 w-24">
-                      <p className="font-bold text-lg">
-                        R${product.unit_price.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        unitário
-                      </p>
-                    </div>
-
-                    {/* Quantity Input */}
-                    <div className="flex-shrink-0 w-24">
-                      <label className="text-xs text-muted-foreground block mb-1">
-                        Quantidade
-                      </label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max={product.stock_quantity}
-                        value={isSelected ? quantity : ''}
-                        onChange={(e) => setQuantity(product.id, e.target.value)}
-                        disabled={!isSelected}
-                        className="text-center h-9"
-                        placeholder="0"
-                        data-testid={`input-quantity-${product.id}`}
+                    {/* Mobile: Top Row (Checkbox, Image, Name) */}
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* Checkbox */}
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => toggleItem(product.id, checked as boolean)}
+                        data-testid={`checkbox-product-${product.id}`}
+                        className="flex-shrink-0"
                       />
+
+                      {/* Product Image */}
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                        {product.photo_path ? (
+                          <img
+                            src={product.photo_path}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            data-testid={`img-product-${product.id}`}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground opacity-30" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Name and Description */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-base truncate">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Em estoque: {product.stock_quantity}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Subtotal */}
-                    <div className="text-right flex-shrink-0 w-28">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        Subtotal
-                      </p>
-                      <p className={`font-bold text-lg ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
-                        R${isSelected ? itemTotal.toFixed(2) : '0.00'}
-                      </p>
+                    {/* Mobile: Bottom Row / Desktop: Right Side (Price & Quantity & Subtotal) */}
+                    <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                      {/* Price */}
+                      <div className="text-left sm:text-right flex-shrink-0 order-1">
+                        <p className="font-bold text-base sm:text-lg">
+                          R${product.unit_price.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          unitário
+                        </p>
+                      </div>
+
+                      {/* Quantity Input */}
+                      <div className="flex-shrink-0 w-28 order-2">
+                        <label className="text-xs text-muted-foreground block mb-1">
+                          Quantidade
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max={product.stock_quantity}
+                          value={isSelected ? quantity : ''}
+                          onChange={(e) => setQuantity(product.id, e.target.value)}
+                          disabled={!isSelected}
+                          className="text-center h-9"
+                          placeholder="0"
+                          data-testid={`input-quantity-${product.id}`}
+                        />
+                      </div>
+
+                      {/* Subtotal */}
+                      <div className="text-right flex-shrink-0 w-full sm:w-28 order-3">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Subtotal
+                        </p>
+                        <p className={`font-bold text-base sm:text-lg ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>
+                          R${isSelected ? itemTotal.toFixed(2) : '0.00'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
