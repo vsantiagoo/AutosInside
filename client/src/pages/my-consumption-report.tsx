@@ -89,14 +89,12 @@ export default function MyConsumptionReport() {
   const periodTotal = calculatePeriodTotal(consumptions);
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Relatório de Consumo</h1>
-          <p className="text-muted-foreground mt-1">
-            Acompanhe seu consumo diário e mensal
-          </p>
-        </div>
+    <div className="space-y-4 md:space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Relatório de Consumo</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
+          Acompanhe seu consumo diário e mensal
+        </p>
       </div>
 
       <Card>
@@ -143,6 +141,7 @@ export default function MyConsumptionReport() {
             <Button 
               onClick={handleTodayFilter} 
               variant="outline"
+              className="flex-1 sm:flex-none"
               data-testid="button-today-filter"
             >
               <Calendar className="h-4 w-4 mr-2" />
@@ -151,6 +150,7 @@ export default function MyConsumptionReport() {
             <Button 
               onClick={handleClearFilter} 
               variant="outline"
+              className="flex-1 sm:flex-none"
               data-testid="button-clear-filter"
             >
               Limpar Filtros
@@ -168,10 +168,10 @@ export default function MyConsumptionReport() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">
+            <div className="text-2xl md:text-3xl font-bold text-primary">
               R$ {monthlyData.total.toFixed(2)}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               {format(new Date(monthlyData.year, monthlyData.month - 1), "MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </CardContent>

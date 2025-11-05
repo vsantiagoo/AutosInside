@@ -74,14 +74,12 @@ export default function ConsumptionLimit() {
   const percentageUsed = limitValue > 0 ? (currentSpent / limitValue) * 100 : 0;
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Limitação de Consumo</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure o limite mensal de gastos
-          </p>
-        </div>
+    <div className="space-y-4 md:space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Limitação de Consumo</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
+          Configure o limite mensal de gastos
+        </p>
       </div>
 
       {user && monthlyData && user.limit_enabled && user.monthly_limit && (
@@ -93,16 +91,16 @@ export default function ConsumptionLimit() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <div className="text-sm text-muted-foreground">Gasto no Mês</div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-xs sm:text-sm text-muted-foreground">Gasto no Mês</div>
+                <div className="text-xl sm:text-2xl font-bold text-primary">
                   R$ {currentSpent.toFixed(2)}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground">Limite Mensal</div>
-                <div className="text-2xl font-bold">
+              <div className="sm:text-right">
+                <div className="text-xs sm:text-sm text-muted-foreground">Limite Mensal</div>
+                <div className="text-xl sm:text-2xl font-bold">
                   R$ {limitValue.toFixed(2)}
                 </div>
               </div>
@@ -150,10 +148,10 @@ export default function ConsumptionLimit() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1 flex-1">
               <Label htmlFor="limit-enabled">Habilitar Limite de Consumo</Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Ative para controlar seus gastos mensais
               </p>
             </div>
@@ -162,6 +160,7 @@ export default function ConsumptionLimit() {
               checked={limitEnabled}
               onCheckedChange={setLimitEnabled}
               data-testid="switch-limit-enabled"
+              className="self-start sm:self-center"
             />
           </div>
 
