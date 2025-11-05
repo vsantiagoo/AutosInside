@@ -59,10 +59,10 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Painel</h1>
-        <p className="text-muted-foreground mt-1">Visão geral do sistema de inventário</p>
+        <h1 className="text-2xl md:text-3xl font-bold">Painel</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">Visão geral do sistema de inventário</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -80,7 +80,7 @@ export default function Dashboard() {
               {statsLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-3xl font-bold">{stat.value}</div>
+                <div className="text-2xl md:text-3xl font-bold">{stat.value}</div>
               )}
             </CardContent>
           </Card>

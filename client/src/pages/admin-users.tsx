@@ -156,13 +156,13 @@ export default function AdminUsers() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Usuários</h1>
-          <p className="text-muted-foreground mt-1">Gerencie contas de usuários e permissões</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Usuários</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Gerencie contas de usuários e permissões</p>
         </div>
-        <Button onClick={handleAdd} data-testid="button-add-user">
+        <Button onClick={handleAdd} className="w-full sm:w-auto" data-testid="button-add-user">
           <Plus className="w-4 h-4 mr-2" />
           Adicionar Usuário
         </Button>

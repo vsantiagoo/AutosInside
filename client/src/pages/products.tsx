@@ -83,22 +83,27 @@ export default function Products() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Produtos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie seu inventário de produtos</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Produtos</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Gerencie seu inventário de produtos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             variant="outline" 
             onClick={() => setIsBulkImportOpen(true)} 
+            className="flex-1 sm:flex-none"
             data-testid="button-bulk-import"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Importação em Lote
+            <span className="sm:inline">Importação em Lote</span>
           </Button>
-          <Button onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} data-testid="button-add-product">
+          <Button 
+            onClick={() => { setEditingProduct(null); setIsFormOpen(true); }} 
+            className="flex-1 sm:flex-none"
+            data-testid="button-add-product"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Produto
           </Button>
@@ -131,7 +136,7 @@ export default function Products() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'outline'}
                 size="icon"

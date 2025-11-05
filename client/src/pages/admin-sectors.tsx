@@ -135,13 +135,13 @@ export default function AdminSectors() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Setores</h1>
-          <p className="text-muted-foreground mt-1">Organize produtos por departamento ou categoria</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Setores</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Organize produtos por departamento ou categoria</p>
         </div>
-        <Button onClick={handleAdd} data-testid="button-add-sector">
+        <Button onClick={handleAdd} className="w-full sm:w-auto" data-testid="button-add-sector">
           <Plus className="w-4 h-4 mr-2" />
           Adicionar Setor
         </Button>

@@ -124,23 +124,28 @@ export default function Consumptions() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Consumos</h1>
-          <p className="text-muted-foreground mt-1">Rastreie uso e retiradas de produtos</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Consumos</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Rastreie uso e retiradas de produtos</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={() => exportMutation.mutate()}
             disabled={exportMutation.isPending || !consumptions?.length}
+            className="flex-1 sm:flex-none"
             data-testid="button-export"
           >
             <Download className="w-4 h-4 mr-2" />
             Exportar para Excel
           </Button>
-          <Button onClick={() => setIsFormOpen(true)} data-testid="button-add-consumption">
+          <Button 
+            onClick={() => setIsFormOpen(true)} 
+            className="flex-1 sm:flex-none"
+            data-testid="button-add-consumption"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Registrar Consumo
           </Button>

@@ -93,13 +93,17 @@ export default function StockTransactions() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Movimentações de Estoque</h1>
-          <p className="text-muted-foreground mt-1">Rastreie ajustes e alterações do inventário</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Movimentações de Estoque</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Rastreie ajustes e alterações do inventário</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} data-testid="button-add-transaction">
+        <Button 
+          onClick={() => setIsFormOpen(true)} 
+          className="w-full sm:w-auto"
+          data-testid="button-add-transaction"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Adicionar Movimentação
         </Button>
