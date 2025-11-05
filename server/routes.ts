@@ -741,6 +741,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sector report routes
+  app.get('/api/sectors/:id/report', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = parseInt(req.params.id);
+      if (isNaN(sectorId)) {
+        return res.status(400).json({ message: 'Invalid sector ID' });
+      }
+      
+      const report = await storage.getSectorReport(sectorId);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate sector report' });
+    }
+  });
+
+  app.get('/api/sectors/:id/export', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = parseInt(req.params.id);
+      if (isNaN(sectorId)) {
+        return res.status(400).json({ message: 'Invalid sector ID' });
+      }
+      
+      const report = await storage.getSectorReport(sectorId);
+      
+      // Create Excel workbook
+      const workbook = new ExcelJS.Workbook();
+      
+      // Summary sheet
+      const summarySheet = workbook.addWorksheet('Resumo');
+      summarySheet.columns = [
+        { header: 'Métrica', key: 'metric', width: 30 },
+        { header: 'Valor', key: 'value', width: 20 },
+      ];
+      
+      summarySheet.addRows([
+        { metric: 'Setor', value: report.sector.name },
+        { metric: 'Total de Produtos', value: report.summary.totalProducts },
+        { metric: 'Valor Total em Estoque', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.summary.totalValue) },
+        { metric: 'Total de Entradas', value: report.summary.totalIn },
+        { metric: 'Total de Saídas', value: report.summary.totalOut },
+        { metric: 'Produtos com Estoque Baixo', value: report.summary.lowStockCount },
+        { metric: 'Produtos Sem Estoque', value: report.summary.outOfStockCount },
+      ]);
+      
+      // Products sheet
+      const productsSheet = workbook.addWorksheet('Produtos');
+      productsSheet.columns = [
+        { header: 'Nome', key: 'name', width: 30 },
+        { header: 'SKU', key: 'sku', width: 15 },
+        { header: 'Categoria', key: 'category', width: 20 },
+        { header: 'Unidade', key: 'unit_measure', width: 15 },
+        { header: 'Estoque Atual', key: 'stock_quantity', width: 15 },
+        { header: 'Preço Unitário', key: 'unit_price', width: 15 },
+        { header: 'Valor Total', key: 'total_value', width: 15 },
+        { header: 'Estoque Mínimo', key: 'min_quantity', width: 15 },
+        { header: 'Estoque Máximo', key: 'max_quantity', width: 15 },
+      ];
+      
+      productsSheet.addRows(report.products.map(p => ({
+        name: p.name,
+        sku: p.sku || '-',
+        category: p.category || '-',
+        unit_measure: p.unit_measure || '-',
+        stock_quantity: p.stock_quantity,
+        unit_price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.unit_price),
+        total_value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.stock_quantity * p.unit_price),
+        min_quantity: p.min_quantity || '-',
+        max_quantity: p.max_quantity || '-',
+      })));
+      
+      // Stock Transactions sheet
+      const transactionsSheet = workbook.addWorksheet('Movimentações de Estoque');
+      transactionsSheet.columns = [
+        { header: 'Data', key: 'created_at', width: 20 },
+        { header: 'Produto', key: 'product_name', width: 30 },
+        { header: 'Tipo', key: 'transaction_type', width: 15 },
+        { header: 'Quantidade', key: 'change', width: 15 },
+        { header: 'Responsável', key: 'user_name', width: 25 },
+        { header: 'Observação', key: 'notes', width: 40 },
+      ];
+      
+      transactionsSheet.addRows(report.stockTransactions.map(t => ({
+        created_at: new Date(t.created_at).toLocaleString('pt-BR'),
+        product_name: t.product_name,
+        transaction_type: t.transaction_type || '-',
+        change: t.change,
+        user_name: t.user_name || '-',
+        notes: t.notes || '-',
+      })));
+      
+      // Consumptions sheet
+      const consumptionsSheet = workbook.addWorksheet('Consumos');
+      consumptionsSheet.columns = [
+        { header: 'Data', key: 'consumed_at', width: 20 },
+        { header: 'Produto', key: 'product_name', width: 30 },
+        { header: 'Quantidade', key: 'qty', width: 15 },
+        { header: 'Preço Unitário', key: 'unit_price', width: 15 },
+        { header: 'Preço Total', key: 'total_price', width: 15 },
+        { header: 'Usuário', key: 'user_name', width: 25 },
+      ];
+      
+      consumptionsSheet.addRows(report.consumptions.map(c => ({
+        consumed_at: new Date(c.consumed_at).toLocaleString('pt-BR'),
+        product_name: c.product_name,
+        qty: c.qty,
+        unit_price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.unit_price),
+        total_price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.total_price),
+        user_name: c.user_name,
+      })));
+      
+      // Set response headers for Excel download
+      const fileName = `Relatorio_${report.sector.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      // Write to response
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to export sector report' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
