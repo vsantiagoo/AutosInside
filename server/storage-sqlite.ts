@@ -14,6 +14,7 @@ import type {
   StockTransaction,
   InsertStockTransaction,
   StockTransactionWithProduct,
+  SectorReport,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -60,20 +61,7 @@ export interface IStorage {
   getTotalInventoryValue(): Promise<number>;
   
   // Sector Reports
-  getSectorReport(sectorId: number): Promise<{
-    sector: Sector;
-    products: ProductWithSector[];
-    stockTransactions: StockTransactionWithProduct[];
-    consumptions: ConsumptionWithDetails[];
-    summary: {
-      totalProducts: number;
-      totalValue: number;
-      totalIn: number;
-      totalOut: number;
-      lowStockCount: number;
-      outOfStockCount: number;
-    };
-  }>;
+  getSectorReport(sectorId: number): Promise<SectorReport>;
 }
 
 class SqliteStorage implements IStorage {

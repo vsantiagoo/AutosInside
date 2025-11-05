@@ -819,7 +819,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { header: 'Tipo', key: 'transaction_type', width: 15 },
         { header: 'Quantidade', key: 'change', width: 15 },
         { header: 'Responsável', key: 'user_name', width: 25 },
-        { header: 'Observação', key: 'notes', width: 40 },
+        { header: 'Motivo', key: 'reason', width: 40 },
       ];
       
       transactionsSheet.addRows(report.stockTransactions.map(t => ({
@@ -828,7 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transaction_type: t.transaction_type || '-',
         change: t.change,
         user_name: t.user_name || '-',
-        notes: t.notes || '-',
+        reason: t.reason || '-',
       })));
       
       // Consumptions sheet

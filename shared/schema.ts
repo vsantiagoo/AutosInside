@@ -172,3 +172,25 @@ export type ProductInventoryDetails = Product & {
   inventory_value: number;
   stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Excesso';
 };
+
+export type InventoryKPIResponse = {
+  kpis: InventoryKPI[];
+  totalValue: number;
+};
+
+export type SectorReportSummary = {
+  totalProducts: number;
+  totalValue: number;
+  totalIn: number;
+  totalOut: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+};
+
+export type SectorReport = {
+  sector: Sector;
+  products: ProductWithSector[];
+  stockTransactions: StockTransactionWithProduct[];
+  consumptions: ConsumptionWithDetails[];
+  summary: SectorReportSummary;
+};

@@ -1,11 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, TrendingDown, TrendingUp, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Package, TrendingDown, TrendingUp, DollarSign, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import type { InventoryKPIResponse } from "@shared/schema";
 
 export default function Inventory() {
-  const { data: inventoryData, isLoading } = useQuery({
+  const { toast } = useToast();
+  const { data: inventoryData, isLoading } = useQuery<InventoryKPIResponse>({
     queryKey: ['/api/inventory/kpis'],
   });
+
+  const handleDownloadReport = async (sectorId: number, sectorName: string) => {
+    try {
+      const response = await fetch(`/api/sectors/${sectorId}/export`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao baixar relatório');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Relatorio_${sectorName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Relatório baixado!",
+        description: `O relatório do setor ${sectorName} foi baixado com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao baixar relatório",
+        description: "Não foi possível baixar o relatório. Tente novamente.",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -48,8 +85,22 @@ export default function Inventory() {
         {kpis.map((sector: any) => (
           <Card key={sector.sector_id} className="hover-elevate" data-testid={`card-sector-${sector.sector_id}`}>
             <CardHeader>
-              <CardTitle className="text-lg md:text-xl" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
-              <CardDescription>Setor</CardDescription>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg md:text-xl" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
+                  <CardDescription>Setor</CardDescription>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDownloadReport(sector.sector_id, sector.sector_name)}
+                  data-testid={`button-download-report-${sector.sector_id}`}
+                  className="shrink-0"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Exportar
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Total de Produtos */}
