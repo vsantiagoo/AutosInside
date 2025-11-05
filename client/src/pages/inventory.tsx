@@ -29,7 +29,7 @@ export default function Inventory() {
       </div>
 
       {/* Valor Total do Inventário */}
-      <Card>
+      <Card data-testid="card-total-inventory-value">
         <CardHeader className="pb-4">
           <CardTitle className="flex flex-wrap items-center gap-2">
             <DollarSign className="w-5 h-5 text-primary" />
@@ -37,7 +37,7 @@ export default function Inventory() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl md:text-4xl font-bold text-primary">
+          <div className="text-3xl md:text-4xl font-bold text-primary" data-testid="text-total-value">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValue)}
           </div>
         </CardContent>
@@ -46,9 +46,9 @@ export default function Inventory() {
       {/* KPIs por Setor */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {kpis.map((sector: any) => (
-          <Card key={sector.sector_id} className="hover-elevate">
+          <Card key={sector.sector_id} className="hover-elevate" data-testid={`card-sector-${sector.sector_id}`}>
             <CardHeader>
-              <CardTitle className="text-lg md:text-xl">{sector.sector_name}</CardTitle>
+              <CardTitle className="text-lg md:text-xl" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
               <CardDescription>Setor</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -58,7 +58,7 @@ export default function Inventory() {
                   <Package className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Total de Produtos</span>
                 </div>
-                <span className="font-semibold">{sector.total_products}</span>
+                <span className="font-semibold" data-testid={`text-total-products-${sector.sector_id}`}>{sector.total_products}</span>
               </div>
 
               {/* Valor Total */}
@@ -67,7 +67,7 @@ export default function Inventory() {
                   <DollarSign className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">Valor Total</span>
                 </div>
-                <span className="font-semibold">
+                <span className="font-semibold" data-testid={`text-sector-value-${sector.sector_id}`}>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sector.total_value || 0)}
                 </span>
               </div>
@@ -79,7 +79,7 @@ export default function Inventory() {
                     <TrendingDown className="w-4 h-4" />
                     <span className="text-sm">Estoque Baixo</span>
                   </div>
-                  <span className="font-semibold">{sector.low_stock_count}</span>
+                  <span className="font-semibold" data-testid={`text-low-stock-${sector.sector_id}`}>{sector.low_stock_count}</span>
                 </div>
               )}
 
@@ -90,7 +90,7 @@ export default function Inventory() {
                     <TrendingUp className="w-4 h-4 rotate-180" />
                     <span className="text-sm">Sem Estoque</span>
                   </div>
-                  <span className="font-semibold">{sector.out_of_stock_count}</span>
+                  <span className="font-semibold" data-testid={`text-out-stock-${sector.sector_id}`}>{sector.out_of_stock_count}</span>
                 </div>
               )}
             </CardContent>
