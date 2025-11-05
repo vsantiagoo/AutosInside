@@ -337,16 +337,36 @@ class SqliteStorage implements IStorage {
   async createConsumption(insertConsumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption> {
     // Start transaction
     const createCons = db.transaction(() => {
-      // Insert consumption
+      // Generate timestamp in Brasília timezone (America/Sao_Paulo)
+      // Get the components in Brasília timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      const parts = formatter.formatToParts(new Date());
+      const partsMap = Object.fromEntries(parts.map(p => [p.type, p.value]));
+      
+      // Construct ISO 8601 timestamp (Brasília doesn't observe DST, UTC-3 year-round)
+      const consumedAt = `${partsMap.year}-${partsMap.month}-${partsMap.day}T${partsMap.hour}:${partsMap.minute}:${partsMap.second}-03:00`;
+      
+      // Insert consumption with explicit timestamp
       const result = db.prepare(`
-        INSERT INTO consumptions (user_id, product_id, qty, unit_price, total_price)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO consumptions (user_id, product_id, qty, unit_price, total_price, consumed_at)
+        VALUES (?, ?, ?, ?, ?, ?)
       `).run(
         insertConsumption.user_id,
         insertConsumption.product_id,
         insertConsumption.qty,
         insertConsumption.unit_price,
-        insertConsumption.total_price
+        insertConsumption.total_price,
+        consumedAt
       );
 
       // Update product stock (decrease)
