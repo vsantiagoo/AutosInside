@@ -169,20 +169,26 @@ The application has a hybrid database configuration: Drizzle Kit is configured f
 
 ### Food Station Feature (November 2025)
 - **New Quick Consumption Page**: Added `/food-station` route for rapid consumption tracking
-- **Streamlined UX**: Card-based product selection interface with increment/decrement controls
-- **Product Photos**: Each product card displays product photo (if available) with 16:9 aspect ratio, or placeholder icon
+- **Inline List View with Checkboxes**: Products displayed in horizontal rows (not grid cards) with checkbox-based selection
+- **Layout Structure**: Each row contains: checkbox, product image (64x64px), name/stock info, unit price, quantity input, and subtotal
+- **Checkbox Selection**: Marking checkbox enables quantity field and sets default quantity to 1; unmarking disables field and removes item
+- **Selected Row Highlighting**: Active selections have subtle background highlighting (bg-accent/30) for visual feedback
+- **Product Photos**: Small product preview images (64x64px, rounded) displayed in each row, or placeholder icon if no image
+- **Quantity Input**: Number input field (min: 1, max: stock_quantity) enabled only when checkbox is marked
 - **Multi-Product Selection**: Users can select multiple products with custom quantities in a single session
-- **Real-Time Summary**: Alert banner displays total items selected and total value
+- **Real-Time Summary**: Alert banner displays total items selected and total value, updated dynamically
 - **Auto-Logout Flow**: "End Session" button records all consumptions and automatically logs out user after 1.5 seconds
 - **Stock Awareness**: Only displays products with available stock (stock_quantity > 0)
 - **Sector Filtering**: Food Station only displays products from the "FoodStation" sector (filter: `sector_name === 'FoodStation'`)
 - **FoodStation Sector**: Database automatically seeds "FoodStation" sector on first run for development
 - **Role-Based Access**: Regular users are redirected to `/food-station` after login; admins go to `/dashboard`
-- **Consumption Tracking**: Records user_id, product_id, quantity, unit_price, total_price, and consumed_at timestamp
+- **Brasília Timezone**: Consumption timestamps recorded in America/Sao_Paulo timezone (UTC-3) using Intl.DateTimeFormat
+- **Timestamp Format**: ISO 8601 format with explicit offset (e.g., `2025-11-05T13:54:11-03:00`) ensures accurate local time recording
+- **Consumption Tracking**: Records user_id, product_id, quantity, unit_price, total_price, and consumed_at timestamp with Brasília timezone
 - **Admin Reports**: Admins can view all consumption records on `/consumptions` page with Excel export
 - **Query Integration**: Proper cache invalidation for consumptions, products, and dashboard stats after session completion
 - **Accessible UI**: Full keyboard navigation, disabled states, and comprehensive test IDs for all interactive elements
-- **End-to-End Testing**: Complete user and admin flows validated with automated tests
+- **End-to-End Testing**: Complete user and admin flows validated with automated tests, including timestamp verification
 
 ### Brazilian Portuguese Localization (November 2025)
 - **Complete Translation**: Entire system translated to Brazilian Portuguese including all user-facing text
