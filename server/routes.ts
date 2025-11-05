@@ -16,6 +16,7 @@ import {
   insertStockTransactionSchema,
   insertConsumptionSchema,
   type User,
+  type Product,
 } from "@shared/schema";
 
 // Validate JWT secret is configured
@@ -216,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password if provided
-      const password_hash = userData.password ? await bcrypt.hash(userData.password, 10) : undefined;
+      const password_hash = userData.password ? await bcrypt.hash(userData.password, 10) : null;
       
       const user = await storage.createUser({
         ...userData,
@@ -365,6 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         photo_path,
         total_in: productData.stock_quantity,
         total_out: 0,
+        low_stock_threshold: 10,
       });
 
       res.json(product);
@@ -521,11 +523,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deleted = await storage.deleteProduct(id);
       res.json({ message: 'Produto excluído com sucesso' });
     } catch (error: any) {
-      if (error.message && error.message.includes('FOREIGN KEY constraint failed')) {
-        return res.status(400).json({ 
-          message: 'Não é possível excluir este produto porque ele possui consumos registrados. Você pode excluir os consumos relacionados primeiro ou manter o produto no sistema.' 
-        });
-      }
       res.status(400).json({ message: error.message || 'Falha ao excluir produto' });
     }
   });

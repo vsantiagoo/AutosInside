@@ -21,7 +21,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByMatricula(matricula: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
-  createUser(user: InsertUser & { password_hash: string }): Promise<User>;
+  createUser(user: InsertUser & { password_hash: string | null }): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser> & { password_hash?: string }): Promise<User | undefined>;
   updateUserLimit(userId: number, limit: UpdateUserLimit): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
@@ -71,7 +71,7 @@ class SqliteStorage implements IStorage {
     return db.prepare('SELECT * FROM users ORDER BY created_at DESC').all() as User[];
   }
 
-  async createUser(insertUser: InsertUser & { password_hash: string }): Promise<User> {
+  async createUser(insertUser: InsertUser & { password_hash: string | null }): Promise<User> {
     const result = db.prepare(`
       INSERT INTO users (full_name, matricula, password_hash, role)
       VALUES (?, ?, ?, ?)
@@ -263,8 +263,14 @@ class SqliteStorage implements IStorage {
   }
 
   async deleteProduct(id: number): Promise<boolean> {
-    const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
-    return result.changes > 0;
+    const deleteTx = db.transaction(() => {
+      db.prepare('DELETE FROM consumptions WHERE product_id = ?').run(id);
+      db.prepare('DELETE FROM stock_transactions WHERE product_id = ?').run(id);
+      const result = db.prepare('DELETE FROM products WHERE id = ?').run(id);
+      return result.changes > 0;
+    });
+    
+    return deleteTx();
   }
 
   // Stock Transactions
