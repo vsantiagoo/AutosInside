@@ -38,6 +38,22 @@ function addColumnIfNotExists(tableName: string, columnName: string, columnDefin
 addColumnIfNotExists('users', 'monthly_limit', 'REAL');
 addColumnIfNotExists('users', 'limit_enabled', 'INTEGER NOT NULL DEFAULT 0');
 
+// Add new columns to products table
+addColumnIfNotExists('products', 'category', 'TEXT');
+addColumnIfNotExists('products', 'unit_measure', 'TEXT');
+addColumnIfNotExists('products', 'sale_price', 'REAL');
+addColumnIfNotExists('products', 'min_quantity', 'INTEGER');
+addColumnIfNotExists('products', 'max_quantity', 'INTEGER');
+addColumnIfNotExists('products', 'supplier', 'TEXT');
+addColumnIfNotExists('products', 'last_purchase_date', 'TEXT');
+addColumnIfNotExists('products', 'last_count_date', 'TEXT');
+addColumnIfNotExists('products', 'asset_number', 'TEXT');
+addColumnIfNotExists('products', 'status', 'TEXT DEFAULT "Ativo"');
+
+// Add new columns to stock_transactions table
+addColumnIfNotExists('stock_transactions', 'user_id', 'INTEGER REFERENCES users(id)');
+addColumnIfNotExists('stock_transactions', 'transaction_type', 'TEXT');
+
 // Seed development data only in development mode
 if (process.env.NODE_ENV === 'development') {
   console.log('\n⚠️  DEVELOPMENT MODE - Seeding test data');

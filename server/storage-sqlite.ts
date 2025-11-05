@@ -54,6 +54,10 @@ export interface IStorage {
   getUserConsumptions(userId: number, startDate?: string, endDate?: string): Promise<ConsumptionWithDetails[]>;
   getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number>;
   createConsumption(consumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption>;
+
+  // Inventory KPIs
+  getInventoryKPIsBySector(): Promise<any[]>;
+  getTotalInventoryValue(): Promise<number>;
 }
 
 class SqliteStorage implements IStorage {
@@ -447,6 +451,31 @@ class SqliteStorage implements IStorage {
 
     const consId = createCons();
     return this.getConsumption(consId) as Promise<Consumption>;
+  }
+
+  // Inventory KPIs
+  async getInventoryKPIsBySector(): Promise<any[]> {
+    return db.prepare(`
+      SELECT 
+        s.id as sector_id,
+        s.name as sector_name,
+        COUNT(p.id) as total_products,
+        SUM(p.stock_quantity * p.unit_price) as total_value,
+        SUM(CASE WHEN p.stock_quantity <= COALESCE(p.low_stock_threshold, 10) AND p.stock_quantity > 0 THEN 1 ELSE 0 END) as low_stock_count,
+        SUM(CASE WHEN p.stock_quantity = 0 THEN 1 ELSE 0 END) as out_of_stock_count
+      FROM sectors s
+      LEFT JOIN products p ON s.id = p.sector_id
+      GROUP BY s.id, s.name
+      ORDER BY s.name
+    `).all();
+  }
+
+  async getTotalInventoryValue(): Promise<number> {
+    const result = db.prepare(`
+      SELECT SUM(stock_quantity * unit_price) as total_value
+      FROM products
+    `).get() as { total_value: number | null };
+    return result.total_value || 0;
   }
 }
 

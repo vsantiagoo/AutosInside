@@ -50,19 +50,3 @@ CREATE TABLE IF NOT EXISTS stock_transactions (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(product_id) REFERENCES products(id)
 );
-
--- Add new columns to products table
-ALTER TABLE products ADD COLUMN category TEXT;
-ALTER TABLE products ADD COLUMN unit_measure TEXT;
-ALTER TABLE products ADD COLUMN sale_price REAL;
-ALTER TABLE products ADD COLUMN min_quantity INTEGER;
-ALTER TABLE products ADD COLUMN max_quantity INTEGER;
-ALTER TABLE products ADD COLUMN supplier TEXT;
-ALTER TABLE products ADD COLUMN last_purchase_date TEXT;
-ALTER TABLE products ADD COLUMN last_count_date TEXT;
-ALTER TABLE products ADD COLUMN asset_number TEXT;
-ALTER TABLE products ADD COLUMN status TEXT DEFAULT 'Ativo';
-
--- Add new columns to stock_transactions table
-ALTER TABLE stock_transactions ADD COLUMN user_id INTEGER REFERENCES users(id);
-ALTER TABLE stock_transactions ADD COLUMN transaction_type TEXT;

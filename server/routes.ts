@@ -367,6 +367,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         total_in: productData.stock_quantity,
         total_out: 0,
         low_stock_threshold: 10,
+        category: null,
+        unit_measure: null,
+        sale_price: null,
+        min_quantity: null,
+        max_quantity: null,
+        supplier: null,
+        last_purchase_date: null,
+        last_count_date: null,
+        asset_number: null,
+        status: 'Ativo',
       });
 
       res.json(product);
@@ -469,6 +479,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             total_out: 0,
             photo_path: null,
             low_stock_threshold,
+            category: null,
+            unit_measure: null,
+            sale_price: null,
+            min_quantity: null,
+            max_quantity: null,
+            supplier: null,
+            last_purchase_date: null,
+            last_count_date: null,
+            asset_number: null,
+            status: 'Ativo',
           });
         } catch (error: any) {
           errors.push(`Row ${rowNumber}: ${error.message}`);
@@ -547,7 +567,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const transaction = await storage.createStockTransaction({
-        ...transactionData,
+        product_id: transactionData.product_id,
+        change: transactionData.change,
+        user_id: transactionData.user_id ?? null,
+        transaction_type: transactionData.transaction_type ?? null,
         reason: transactionData.reason || null,
       });
 
@@ -705,6 +728,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       monthlyConsumptions,
       totalValue,
     });
+  });
+
+  // Inventory routes
+  app.get('/api/inventory/kpis', authMiddleware, async (req, res) => {
+    try {
+      const kpis = await storage.getInventoryKPIsBySector();
+      const totalValue = await storage.getTotalInventoryValue();
+      res.json({ kpis, totalValue });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch inventory KPIs' });
+    }
   });
 
   const httpServer = createServer(app);

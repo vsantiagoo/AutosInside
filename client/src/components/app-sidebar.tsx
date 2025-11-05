@@ -8,7 +8,8 @@ import {
   LogOut,
   UtensilsCrossed,
   FileText,
-  DollarSign
+  DollarSign,
+  Warehouse
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -35,6 +36,11 @@ export function AppSidebar() {
       title: "Painel",
       url: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Inventário",
+      url: "/inventory",
+      icon: Warehouse,
     },
     {
       title: "Produtos",
