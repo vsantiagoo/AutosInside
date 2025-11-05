@@ -53,7 +53,7 @@ export default function AdminUsers() {
       full_name: '',
       matricula: '',
       password: '',
-      role: 'user' as const,
+      role: 'user',
     },
   });
 

@@ -110,7 +110,7 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {lowStockProducts.slice(0, 5).map((product) => (
-                  <Link key={product.id} href="/products">
+                  <Link key={product.id} to="/products">
                     <div className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-950 rounded-lg hover-elevate border border-orange-200 dark:border-orange-800 cursor-pointer">
                       <div className="flex items-center gap-3 flex-1">
                         <AlertTriangle className="w-5 h-5 text-orange-600" />
