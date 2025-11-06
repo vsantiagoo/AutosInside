@@ -522,7 +522,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get low stock products
   app.get('/api/products/low-stock', authMiddleware, async (req, res) => {
-    const products = await storage.getLowStockProducts();
+    const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+    const products = await storage.getLowStockProductsBySector(sectorId);
     res.json(products);
   });
 
@@ -693,6 +694,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/consumptions/top-items', authMiddleware, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const topItems = await storage.getTopConsumedItems(limit);
+      res.json(topItems);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch top consumed items' });
+    }
+  });
+
   // User limit routes
   app.patch('/api/users/me/limit', authMiddleware, async (req, res) => {
     try {
@@ -709,8 +720,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dashboard stats
   app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
+    const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+    
     const products = await storage.getAllProducts();
     const consumptions = await storage.getAllConsumptions();
+    
+    // Filter by sector if specified
+    const filteredProducts = sectorId !== undefined 
+      ? products.filter(p => p.sector_id === sectorId)
+      : products;
     
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -719,11 +737,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       c => new Date(c.consumed_at) >= thisMonth
     ).length;
 
-    const lowStockCount = products.filter(p => p.stock_quantity < 10 && p.stock_quantity > 0).length;
-    const totalValue = products.reduce((sum, p) => sum + (p.unit_price * p.stock_quantity), 0);
+    const lowStockCount = filteredProducts.filter(p => p.stock_quantity < 10 && p.stock_quantity > 0).length;
+    const totalValue = await storage.getTotalInventoryValueBySector(sectorId);
 
     res.json({
-      totalProducts: products.length,
+      totalProducts: filteredProducts.length,
       lowStockCount,
       monthlyConsumptions,
       totalValue,
