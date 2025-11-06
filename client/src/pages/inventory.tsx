@@ -1,14 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, TrendingDown, TrendingUp, DollarSign, Download } from "lucide-react";
+import { Package, TrendingDown, TrendingUp, DollarSign, Download, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryKPIResponse } from "@shared/schema";
 
 export default function Inventory() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { data: inventoryData, isLoading } = useQuery<InventoryKPIResponse>({
     queryKey: ['/api/inventory/kpis'],
+    refetchInterval: 30000,
   });
 
   const handleDownloadReport = async (sectorId: number, sectorName: string) => {
@@ -90,16 +93,25 @@ export default function Inventory() {
                   <CardTitle className="text-lg md:text-xl" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
                   <CardDescription>Setor</CardDescription>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => handleDownloadReport(sector.sector_id, sector.sector_name)}
-                  data-testid={`button-download-report-${sector.sector_id}`}
-                  className="shrink-0"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar
-                </Button>
+                <div className="flex gap-2 shrink-0">
+                  <Button 
+                    size="sm" 
+                    variant="default" 
+                    onClick={() => navigate(`/sector/${sector.sector_id}`)}
+                    data-testid={`button-view-details-${sector.sector_id}`}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver Detalhes
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => handleDownloadReport(sector.sector_id, sector.sector_name)}
+                    data-testid={`button-download-report-${sector.sector_id}`}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">

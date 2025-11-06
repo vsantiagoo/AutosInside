@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,16 +26,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, FolderTree, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, FolderTree, Edit, Trash2, Loader2, Eye } from 'lucide-react';
 
 export default function AdminSectors() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSector, setEditingSector] = useState<Sector | null>(null);
   const [deletingSector, setDeletingSector] = useState<Sector | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: sectors, isLoading } = useQuery<Sector[]>({
     queryKey: ['/api/sectors'],
+    refetchInterval: 30000,
   });
 
   const form = useForm({
@@ -181,10 +184,20 @@ export default function AdminSectors() {
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <Button
+                      variant="default"
+                      size="icon"
+                      onClick={() => navigate(`/sector/${sector.id}`)}
+                      data-testid={`button-view-${sector.id}`}
+                      title="Ver detalhes"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(sector)}
                       data-testid={`button-edit-${sector.id}`}
+                      title="Editar"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -193,6 +206,7 @@ export default function AdminSectors() {
                       size="icon"
                       onClick={() => setDeletingSector(sector)}
                       data-testid={`button-delete-${sector.id}`}
+                      title="Excluir"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
