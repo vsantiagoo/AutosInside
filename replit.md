@@ -31,6 +31,13 @@ Preferred communication style: Simple, everyday language.
 ### Feature Specifications
 - **Login UX**: Password visibility toggle, case-insensitive matricula lookup, smart form validation (matricula auto-uppercase, password length), enhanced error messages, improved accessibility (ARIA labels, autocomplete, keyboard navigation).
 - **Food Station**: New `/food-station` route for quick consumption tracking with an inline list view, checkbox-based selection, real-time summary, and auto-logout. Displays products with available stock from the "FoodStation" sector. Records consumption timestamps in America/Sao_Paulo timezone. Fully responsive with stacked mobile layout and optimized desktop view.
+- **Enhanced Dashboard** (Admin-only): Comprehensive real-time dashboard with sector-based filtering at `/dashboard`. Features include:
+  - **Sector Filter**: Dropdown to filter Total Inventory Value and Low Stock Alerts by sector
+  - **KPI Cards**: Total Products, Low Stock Alerts, Monthly Consumptions, Total Inventory Value (all with BRL formatting)
+  - **Low Stock Alerts**: Real-time alerts for products below threshold, filterable by sector with product details
+  - **Top Consumed Items**: Ranked list of most consumed products with quantity, value, and consumption count
+  - **Recent Consumptions**: Grid layout of latest consumption records with user, product, and timestamp
+  - **Auto-Refresh**: All data auto-updates every 10-30 seconds via React Query refetchInterval
 - **Inventory Management**: New `/inventory` route (admin-only) displays comprehensive KPIs by sector including total products, total inventory value, low stock count, and out-of-stock count. API endpoint `/api/inventory/kpis` aggregates metrics across all sectors using SQL queries. Responsive grid layout (1 column mobile, 2 on tablet, 3 on desktop) with Material Design cards and Brazilian Real currency formatting. Each sector card includes an "Exportar" button to download detailed Excel reports.
 - **Sector Reports**: Admin users can generate and download comprehensive Excel reports for each sector via `/api/sectors/:id/export`. Reports include four sheets: Resumo (summary with KPIs), Produtos (all products with stock and financial data), Movimentações de Estoque (all stock transactions with user tracking), and Consumos (all consumption records). All data is formatted in Brazilian Portuguese with Real currency and localized dates. Automatic stock updates occur in real-time for all transactions (FoodStation consumptions and stock movements).
 - **Localization**: Complete Brazilian Portuguese translation for all user-facing text, currency (R$), and date formatting (dd/MM/yyyy HH:mm).

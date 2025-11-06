@@ -522,7 +522,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get low stock products
   app.get('/api/products/low-stock', authMiddleware, async (req, res) => {
-    const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+    const sectorIdParam = req.query.sector_id as string | undefined;
+    const sectorId = sectorIdParam && sectorIdParam !== '' && !isNaN(parseInt(sectorIdParam))
+      ? parseInt(sectorIdParam) 
+      : undefined;
     const products = await storage.getLowStockProductsBySector(sectorId);
     res.json(products);
   });
@@ -720,7 +723,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dashboard stats
   app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
-    const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+    const sectorIdParam = req.query.sector_id as string | undefined;
+    const sectorId = sectorIdParam && sectorIdParam !== '' && !isNaN(parseInt(sectorIdParam))
+      ? parseInt(sectorIdParam) 
+      : undefined;
     
     const products = await storage.getAllProducts();
     const consumptions = await storage.getAllConsumptions();

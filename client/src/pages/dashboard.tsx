@@ -14,7 +14,7 @@ import type {
   TopConsumedItem 
 } from '@shared/schema';
 import { format } from 'date-fns';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 interface DashboardStats {
   totalProducts: number;
@@ -33,8 +33,11 @@ export default function Dashboard() {
   });
 
   // Fetch dashboard stats with sector filter
+  const statsQueryKey = selectedSector !== 'all' 
+    ? [`/api/dashboard/stats?sector_id=${selectedSector}`] 
+    : ['/api/dashboard/stats'];
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ['/api/dashboard/stats', selectedSector !== 'all' ? { sector_id: selectedSector } : {}],
+    queryKey: statsQueryKey,
     refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
@@ -45,14 +48,17 @@ export default function Dashboard() {
   });
 
   // Fetch low stock products with sector filter
+  const lowStockQueryKey = selectedSector !== 'all'
+    ? [`/api/products/low-stock?sector_id=${selectedSector}`]
+    : ['/api/products/low-stock'];
   const { data: lowStockProducts, isLoading: lowStockLoading } = useQuery<ProductWithSector[]>({
-    queryKey: ['/api/products/low-stock', selectedSector !== 'all' ? { sector_id: selectedSector } : {}],
+    queryKey: lowStockQueryKey,
     refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   // Fetch top consumed items
   const { data: topItems, isLoading: topItemsLoading } = useQuery<TopConsumedItem[]>({
-    queryKey: ['/api/consumptions/top-items', { limit: 10 }],
+    queryKey: ['/api/consumptions/top-items?limit=10'],
     refetchInterval: 15000, // Auto-refresh every 15 seconds
   });
 
