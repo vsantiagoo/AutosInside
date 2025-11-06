@@ -24,8 +24,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: `better-sqlite3` for SQLite (`data.db`) with WAL mode. File-based storage for product photos (`uploads/`).
-- **Schema**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` tables. Products table includes aggregated transaction totals.
-- **Data Access**: Storage abstraction layer (`IStorage`), synchronous SQLite operations, type-safe queries with TypeScript interfaces, Zod for schema validation.
+- **Schema**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` tables. Products table includes aggregated transaction totals and expanded fields for comprehensive product tracking (category, unit_measure, sale_price, supplier, last_purchase_date, expiry_date, warranty_date, asset_number, status, min/max quantities). Stock transactions table includes user tracking, transaction types, and document origin for full traceability.
+- **Data Access**: Storage abstraction layer (`IStorage`), synchronous SQLite operations, type-safe queries with TypeScript interfaces, Zod for schema validation. New storage methods: getProductsBySector, getSectorPerformanceIndicators, getStockTransactionsBySector for sector-specific operations.
 - **Migrations**: SQL migrations in `server/migrations.sql` executed on startup. Database seeding for default admin and sample sectors.
 
 ### Feature Specifications
@@ -41,7 +41,14 @@ Preferred communication style: Simple, everyday language.
 - **Inventory Management**: New `/inventory` route (admin-only) displays comprehensive KPIs by sector including total products, total inventory value, low stock count, and out-of-stock count. API endpoint `/api/inventory/kpis` aggregates metrics across all sectors using SQL queries. Responsive grid layout (1 column mobile, 2 on tablet, 3 on desktop) with Material Design cards and Brazilian Real currency formatting. Each sector card includes an "Exportar" button to download detailed Excel reports.
 - **Sector Reports**: Admin users can generate and download comprehensive Excel reports for each sector via `/api/sectors/:id/export`. Reports include four sheets: Resumo (summary with KPIs), Produtos (all products with stock and financial data), Movimentações de Estoque (all stock transactions with user tracking), and Consumos (all consumption records). All data is formatted in Brazilian Portuguese with Real currency and localized dates. Automatic stock updates occur in real-time for all transactions (FoodStation consumptions and stock movements).
 - **Localization**: Complete Brazilian Portuguese translation for all user-facing text, currency (R$), and date formatting (dd/MM/yyyy HH:mm).
-- **Product Forms**: SKU field is nullable, full localization, enhanced error messages for product deletion (e.g., when products have related consumptions).
+- **Product Forms**: SKU field is nullable, full localization, enhanced error messages for product deletion (e.g., when products have related consumptions). Product schema expanded with 15+ new fields including category, unit of measure, financial data (sale price), supplier information, validity/warranty dates, asset tracking, and status management.
+- **Sector Details Page**: Comprehensive sector management at `/sector/:id` (admin-only) featuring:
+  - **KPI Cards**: Real-time metrics for total products, inventory value, low stock alerts, and out-of-stock items
+  - **Performance Indicators**: Stock turnover rate, coverage days, and stockout frequency with 30-day calculations
+  - **Product Management**: Full product listing with expanded details (SKU, category, unit measure, pricing, stock status, supplier). Inline product registration form with all fields (basic info, financial data, stock control, supplier/patrimony, dates, photo upload)
+  - **Transaction History**: Complete stock movement tracking with user attribution, transaction types, reasons, and document origins
+  - **Navigation**: Accessible from both Inventory page (via "Ver Detalhes" button) and Admin Sectors page (via eye icon)
+  - **Auto-Refresh**: All data refreshes every 15-30 seconds via React Query refetchInterval
 - **Monthly Consumption Limits**: Users can configure monthly spending limits with real-time tracking, progress bars, and automatic validation in FoodStation. Limits stored per user with enable/disable toggle.
 - **Consumption Reporting**: Users can view personal consumption history with date filtering (by month, custom range, or today). Monthly totals displayed with auto-applied current month filter.
 
