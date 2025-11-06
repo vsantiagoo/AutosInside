@@ -194,3 +194,12 @@ export type SectorReport = {
   consumptions: ConsumptionWithDetails[];
   summary: SectorReportSummary;
 };
+
+export type TopConsumedItem = {
+  product_id: number;
+  product_name: string;
+  sector_name: string | null;
+  total_qty: number;
+  total_value: number;
+  consumption_count: number;
+};

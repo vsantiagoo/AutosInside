@@ -15,6 +15,7 @@ import type {
   InsertStockTransaction,
   StockTransactionWithProduct,
   SectorReport,
+  TopConsumedItem,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -40,6 +41,7 @@ export interface IStorage {
   createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product>;
   bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]): Promise<number>;
   getLowStockProducts(): Promise<ProductWithSector[]>;
+  getLowStockProductsBySector(sectorId?: number): Promise<ProductWithSector[]>;
   updateProduct(id: number, product: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
 
@@ -54,11 +56,13 @@ export interface IStorage {
   getRecentConsumptions(limit: number): Promise<ConsumptionWithDetails[]>;
   getUserConsumptions(userId: number, startDate?: string, endDate?: string): Promise<ConsumptionWithDetails[]>;
   getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number>;
+  getTopConsumedItems(limit: number): Promise<TopConsumedItem[]>;
   createConsumption(consumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption>;
 
   // Inventory KPIs
   getInventoryKPIsBySector(): Promise<any[]>;
   getTotalInventoryValue(): Promise<number>;
+  getTotalInventoryValueBySector(sectorId?: number): Promise<number>;
   
   // Sector Reports
   getSectorReport(sectorId: number): Promise<SectorReport>;
@@ -217,6 +221,21 @@ class SqliteStorage implements IStorage {
       WHERE p.stock_quantity <= p.low_stock_threshold
       ORDER BY p.stock_quantity ASC
     `).all() as ProductWithSector[];
+  }
+
+  async getLowStockProductsBySector(sectorId?: number): Promise<ProductWithSector[]> {
+    if (sectorId !== undefined) {
+      return db.prepare(`
+        SELECT p.*, s.name as sector_name
+        FROM products p
+        LEFT JOIN sectors s ON p.sector_id = s.id
+        WHERE p.stock_quantity <= p.low_stock_threshold
+          AND p.sector_id = ?
+        ORDER BY p.stock_quantity ASC
+      `).all(sectorId) as ProductWithSector[];
+    } else {
+      return this.getLowStockProducts();
+    }
   }
 
   async updateProduct(id: number, updateData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>): Promise<Product | undefined> {
@@ -405,6 +424,24 @@ class SqliteStorage implements IStorage {
     return result.total;
   }
 
+  async getTopConsumedItems(limit: number): Promise<TopConsumedItem[]> {
+    return db.prepare(`
+      SELECT 
+        c.product_id,
+        p.name as product_name,
+        s.name as sector_name,
+        SUM(c.qty) as total_qty,
+        SUM(c.total_price) as total_value,
+        COUNT(*) as consumption_count
+      FROM consumptions c
+      LEFT JOIN products p ON c.product_id = p.id
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      GROUP BY c.product_id, p.name, s.name
+      ORDER BY total_qty DESC
+      LIMIT ?
+    `).all(limit) as TopConsumedItem[];
+  }
+
   async createConsumption(insertConsumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption> {
     // Start transaction
     const createCons = db.transaction(() => {
@@ -480,6 +517,19 @@ class SqliteStorage implements IStorage {
       FROM products
     `).get() as { total_value: number | null };
     return result.total_value || 0;
+  }
+
+  async getTotalInventoryValueBySector(sectorId?: number): Promise<number> {
+    if (sectorId !== undefined) {
+      const result = db.prepare(`
+        SELECT SUM(stock_quantity * unit_price) as total_value
+        FROM products
+        WHERE sector_id = ?
+      `).get(sectorId) as { total_value: number | null };
+      return result.total_value || 0;
+    } else {
+      return this.getTotalInventoryValue();
+    }
   }
 
   async getSectorReport(sectorId: number) {
