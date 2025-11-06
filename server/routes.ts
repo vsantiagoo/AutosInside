@@ -341,6 +341,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sector details and products
+  app.get('/api/sectors/:id', authMiddleware, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const sector = await storage.getSector(id);
+      
+      if (!sector) {
+        return res.status(404).json({ message: 'Setor não encontrado' });
+      }
+
+      res.json(sector);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Falha ao buscar setor' });
+    }
+  });
+
+  app.get('/api/sectors/:id/products', authMiddleware, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const products = await storage.getProductsBySector(id);
+      res.json(products);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Falha ao buscar produtos do setor' });
+    }
+  });
+
+  app.get('/api/sectors/:id/performance', authMiddleware, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const performance = await storage.getSectorPerformanceIndicators(id);
+      res.json(performance);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Falha ao buscar indicadores de desempenho' });
+    }
+  });
+
+  app.get('/api/sectors/:id/transactions', authMiddleware, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const transactions = await storage.getStockTransactionsBySector(id);
+      res.json(transactions);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Falha ao buscar movimentações' });
+    }
+  });
+
   // Products routes
   app.get('/api/products', authMiddleware, async (req, res) => {
     const products = await storage.getAllProducts();
