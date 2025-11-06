@@ -16,6 +16,8 @@ import type {
   StockTransactionWithProduct,
   SectorReport,
   TopConsumedItem,
+  SectorPerformanceIndicators,
+  ProductDetailedInfo,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -38,6 +40,7 @@ export interface IStorage {
   // Products
   getProduct(id: number): Promise<Product | undefined>;
   getAllProducts(): Promise<ProductWithSector[]>;
+  getProductsBySector(sectorId: number): Promise<ProductDetailedInfo[]>;
   createProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product>;
   bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]): Promise<number>;
   getLowStockProducts(): Promise<ProductWithSector[]>;
@@ -63,9 +66,11 @@ export interface IStorage {
   getInventoryKPIsBySector(): Promise<any[]>;
   getTotalInventoryValue(): Promise<number>;
   getTotalInventoryValueBySector(sectorId?: number): Promise<number>;
+  getSectorPerformanceIndicators(sectorId: number): Promise<SectorPerformanceIndicators>;
   
   // Sector Reports
   getSectorReport(sectorId: number): Promise<SectorReport>;
+  getStockTransactionsBySector(sectorId: number): Promise<StockTransactionWithProduct[]>;
 }
 
 class SqliteStorage implements IStorage {
@@ -298,6 +303,131 @@ class SqliteStorage implements IStorage {
     });
     
     return deleteTx();
+  }
+
+  async getProductsBySector(sectorId: number): Promise<ProductDetailedInfo[]> {
+    const products = db.prepare(`
+      SELECT 
+        p.*,
+        s.name as sector_name,
+        (p.stock_quantity * p.unit_price) as inventory_value,
+        CASE 
+          WHEN p.stock_quantity = 0 THEN 'Zerado'
+          WHEN p.stock_quantity <= COALESCE(p.low_stock_threshold, 10) THEN 'Baixo'
+          WHEN p.max_quantity IS NOT NULL AND p.stock_quantity > p.max_quantity THEN 'Excesso'
+          ELSE 'OK'
+        END as stock_status
+      FROM products p
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      WHERE p.sector_id = ?
+      ORDER BY p.name ASC
+    `).all(sectorId) as ProductDetailedInfo[];
+
+    // Calculate turnover and coverage for each product
+    return products.map(product => {
+      // Get total consumed in last 30 days
+      const consumption = db.prepare(`
+        SELECT COALESCE(SUM(qty), 0) as total_consumed
+        FROM consumptions
+        WHERE product_id = ?
+          AND consumed_at >= datetime('now', '-30 days')
+      `).get(product.id) as { total_consumed: number };
+
+      const turnover_rate = consumption.total_consumed > 0 
+        ? product.stock_quantity / consumption.total_consumed
+        : null;
+
+      const avg_daily_consumption = consumption.total_consumed / 30;
+      const coverage_days = avg_daily_consumption > 0
+        ? product.stock_quantity / avg_daily_consumption
+        : null;
+
+      return {
+        ...product,
+        turnover_rate,
+        coverage_days,
+      };
+    });
+  }
+
+  async getSectorPerformanceIndicators(sectorId: number): Promise<SectorPerformanceIndicators> {
+    const sector = await this.getSector(sectorId);
+    if (!sector) {
+      throw new Error(`Sector with ID ${sectorId} not found`);
+    }
+
+    // Get total products count
+    const productStats = db.prepare(`
+      SELECT 
+        COUNT(*) as total_products,
+        SUM(stock_quantity * unit_price) as total_inventory_value,
+        SUM(CASE WHEN stock_quantity <= COALESCE(low_stock_threshold, 10) AND stock_quantity > 0 THEN 1 ELSE 0 END) as low_stock_count,
+        SUM(CASE WHEN stock_quantity = 0 THEN 1 ELSE 0 END) as out_of_stock_count
+      FROM products
+      WHERE sector_id = ?
+    `).get(sectorId) as {
+      total_products: number;
+      total_inventory_value: number;
+      low_stock_count: number;
+      out_of_stock_count: number;
+    };
+
+    // Calculate stock turnover (last 30 days)
+    const consumptionStats = db.prepare(`
+      SELECT COALESCE(SUM(c.qty), 0) as total_consumed
+      FROM consumptions c
+      INNER JOIN products p ON c.product_id = p.id
+      WHERE p.sector_id = ?
+        AND c.consumed_at >= datetime('now', '-30 days')
+    `).get(sectorId) as { total_consumed: number };
+
+    const stock_turnover = productStats.total_inventory_value > 0
+      ? consumptionStats.total_consumed / productStats.total_inventory_value
+      : null;
+
+    // Calculate average daily consumption
+    const avg_daily_consumption = consumptionStats.total_consumed / 30;
+    const coverage_days = avg_daily_consumption > 0 && productStats.total_inventory_value > 0
+      ? productStats.total_inventory_value / avg_daily_consumption
+      : null;
+
+    // Calculate stockout frequency (products that ran out in last 30 days)
+    const stockoutStats = db.prepare(`
+      SELECT COUNT(DISTINCT product_id) as stockout_count
+      FROM stock_transactions st
+      INNER JOIN products p ON st.product_id = p.id
+      WHERE p.sector_id = ?
+        AND st.created_at >= datetime('now', '-30 days')
+        AND (
+          SELECT stock_quantity 
+          FROM products 
+          WHERE id = st.product_id
+        ) = 0
+    `).get(sectorId) as { stockout_count: number };
+
+    return {
+      sector_id: sectorId,
+      sector_name: sector.name,
+      total_products: productStats.total_products || 0,
+      total_inventory_value: productStats.total_inventory_value || 0,
+      low_stock_count: productStats.low_stock_count || 0,
+      out_of_stock_count: productStats.out_of_stock_count || 0,
+      stock_turnover,
+      coverage_days,
+      stockout_frequency: stockoutStats.stockout_count || 0,
+      immobilized_value: productStats.total_inventory_value || 0,
+    };
+  }
+
+  async getStockTransactionsBySector(sectorId: number): Promise<StockTransactionWithProduct[]> {
+    return db.prepare(`
+      SELECT st.*, p.name as product_name, u.full_name as user_name
+      FROM stock_transactions st
+      INNER JOIN products p ON st.product_id = p.id
+      LEFT JOIN users u ON st.user_id = u.id
+      WHERE p.sector_id = ?
+      ORDER BY st.created_at DESC
+    `).all(sectorId) as StockTransactionWithProduct[];
   }
 
   // Stock Transactions

@@ -70,6 +70,8 @@ export const productSchema = z.object({
   supplier: z.string().nullable(),
   last_purchase_date: z.string().nullable(),
   last_count_date: z.string().nullable(),
+  expiry_date: z.string().nullable(),
+  warranty_date: z.string().nullable(),
   asset_number: z.string().nullable(),
   status: z.string().nullable(),
   created_at: z.string(),
@@ -91,6 +93,8 @@ export const insertProductSchema = z.object({
   supplier: z.string().nullable().optional(),
   last_purchase_date: z.string().nullable().optional(),
   last_count_date: z.string().nullable().optional(),
+  expiry_date: z.string().nullable().optional(),
+  warranty_date: z.string().nullable().optional(),
   asset_number: z.string().nullable().optional(),
   status: z.enum(['Ativo', 'Inativo']).nullable().optional().default('Ativo'),
 });
@@ -106,6 +110,8 @@ export const stockTransactionSchema = z.object({
   transaction_type: z.string().nullable(),
   change: z.number(),
   reason: z.string().nullable(),
+  document_origin: z.string().nullable(),
+  notes: z.string().nullable(),
   created_at: z.string(),
 });
 
@@ -115,6 +121,8 @@ export const insertStockTransactionSchema = z.object({
   transaction_type: z.enum(['entrada', 'saida', 'ajuste', 'devolucao']).optional(),
   change: z.number().int().refine((val) => val !== 0, "Change cannot be zero"),
   reason: z.string().optional(),
+  document_origin: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export type StockTransaction = z.infer<typeof stockTransactionSchema>;
@@ -202,4 +210,27 @@ export type TopConsumedItem = {
   total_qty: number;
   total_value: number;
   consumption_count: number;
+};
+
+// Sector Details with Performance Indicators
+export type SectorPerformanceIndicators = {
+  sector_id: number;
+  sector_name: string;
+  total_products: number;
+  total_inventory_value: number;
+  low_stock_count: number;
+  out_of_stock_count: number;
+  stock_turnover: number | null; // Giro de estoque
+  coverage_days: number | null; // Cobertura de estoque (dias)
+  stockout_frequency: number; // Frequência de ruptura
+  immobilized_value: number; // Valor imobilizado
+};
+
+// Product Details with all information
+export type ProductDetailedInfo = Product & {
+  sector_name?: string;
+  inventory_value: number;
+  stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Excesso';
+  turnover_rate: number | null;
+  coverage_days: number | null;
 };
