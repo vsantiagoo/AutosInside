@@ -79,7 +79,7 @@ export default function Inventory() {
           </div>
         </CardHeader>
         <CardContent className="min-h-[60px] flex items-center">
-          <div className="text-3xl font-bold leading-none" data-testid="text-total-value">
+          <div className="text-3xl font-bold leading-none" style={{ whiteSpace: 'nowrap' }} data-testid="text-total-value">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValue)}
           </div>
         </CardContent>
@@ -120,44 +120,44 @@ export default function Inventory() {
             </CardHeader>
             <CardContent className="space-y-3">
               {/* Total de Produtos */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <Package className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Total de Produtos</span>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm font-medium truncate">Total de Produtos</span>
                 </div>
-                <span className="text-base font-bold" data-testid={`text-total-products-${sector.sector_id}`}>{sector.total_products}</span>
+                <span className="text-base font-bold flex-shrink-0" data-testid={`text-total-products-${sector.sector_id}`}>{sector.total_products}</span>
               </div>
 
               {/* Valor Total */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Valor Total</span>
+              <div className="flex items-center justify-between gap-3 py-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <DollarSign className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm font-medium truncate">Valor Total</span>
                 </div>
-                <span className="text-base font-bold" data-testid={`text-sector-value-${sector.sector_id}`}>
+                <span className="text-base font-bold flex-shrink-0 text-right whitespace-nowrap" data-testid={`text-sector-value-${sector.sector_id}`}>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sector.total_value || 0)}
                 </span>
               </div>
 
               {/* Estoque Baixo */}
               {sector.low_stock_count > 0 && (
-                <div className="flex items-center justify-between py-2 text-orange-600 dark:text-orange-400">
-                  <div className="flex items-center gap-2">
-                    <TrendingDown className="w-4 h-4" />
-                    <span className="text-sm font-medium">Estoque Baixo</span>
+                <div className="flex items-center justify-between gap-3 py-2 text-orange-600 dark:text-orange-400">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <TrendingDown className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-sm font-medium truncate">Estoque Baixo</span>
                   </div>
-                  <span className="text-base font-bold" data-testid={`text-low-stock-${sector.sector_id}`}>{sector.low_stock_count}</span>
+                  <span className="text-base font-bold flex-shrink-0" data-testid={`text-low-stock-${sector.sector_id}`}>{sector.low_stock_count}</span>
                 </div>
               )}
 
               {/* Sem Estoque */}
               {sector.out_of_stock_count > 0 && (
-                <div className="flex items-center justify-between py-2 text-destructive">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 rotate-180" />
-                    <span className="text-sm font-medium">Sem Estoque</span>
+                <div className="flex items-center justify-between gap-3 py-2 text-destructive">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <TrendingUp className="w-4 h-4 rotate-180 flex-shrink-0" />
+                    <span className="text-sm font-medium truncate">Sem Estoque</span>
                   </div>
-                  <span className="text-base font-bold" data-testid={`text-out-stock-${sector.sector_id}`}>{sector.out_of_stock_count}</span>
+                  <span className="text-base font-bold flex-shrink-0" data-testid={`text-out-stock-${sector.sector_id}`}>{sector.out_of_stock_count}</span>
                 </div>
               )}
             </CardContent>

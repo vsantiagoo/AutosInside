@@ -134,7 +134,7 @@ export default function Dashboard() {
               {statsLoading ? (
                 <Skeleton className="h-9 w-24" />
               ) : (
-                <div className="text-3xl font-bold leading-none">{stat.value}</div>
+                <div className="text-3xl font-bold leading-none" style={{ whiteSpace: 'nowrap' }}>{stat.value}</div>
               )}
             </CardContent>
           </Card>
@@ -231,18 +231,18 @@ export default function Dashboard() {
                       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-sm font-bold text-primary">#{index + 1}</span>
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="font-bold truncate">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground truncate">
                           {item.sector_name || 'Sem setor'} • {item.consumption_count} consumos
                         </p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-3">
-                      <p className="text-base font-bold">
+                    <div className="text-right flex-shrink-0 ml-3 min-w-[100px]">
+                      <p className="text-base font-bold whitespace-nowrap">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.total_value)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
                         Qtd: {item.total_qty}
                       </p>
                     </div>
@@ -279,17 +279,17 @@ export default function Dashboard() {
                   className="flex flex-col justify-between p-4 bg-muted/50 rounded-lg hover-elevate"
                   data-testid={`consumption-${consumption.id}`}
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-bold line-clamp-2">{consumption.product_name}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground mt-1 truncate">
                       {consumption.user_name} • Qtd: {consumption.qty}
                     </p>
                   </div>
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <p className="text-base font-bold text-primary">
+                  <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t">
+                    <p className="text-base font-bold text-primary whitespace-nowrap flex-shrink-0">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(consumption.total_price)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                       {format(new Date(consumption.consumed_at), 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
