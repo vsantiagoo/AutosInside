@@ -160,7 +160,8 @@ export default function FoodStation() {
   const totalValue = products
     ? Object.entries(selectedItems).reduce((sum, [productId, qty]) => {
         const product = products.find(p => p.id === parseInt(productId));
-        return sum + (product ? product.unit_price * qty : 0);
+        const price = product ? (product.sale_price ?? product.unit_price) : 0;
+        return sum + (price * qty);
       }, 0)
     : 0;
 
@@ -242,7 +243,8 @@ export default function FoodStation() {
               {availableProducts.map((product) => {
                 const quantity = selectedItems[product.id] || 0;
                 const isSelected = quantity > 0;
-                const itemTotal = product.unit_price * quantity;
+                const price = product.sale_price ?? product.unit_price;
+                const itemTotal = price * quantity;
 
                 return (
                   <div 
@@ -292,7 +294,7 @@ export default function FoodStation() {
                       {/* Price */}
                       <div className="text-left sm:text-right flex-shrink-0 order-1">
                         <p className="font-bold text-base sm:text-lg">
-                          R${product.unit_price.toFixed(2)}
+                          R${price.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           unitário

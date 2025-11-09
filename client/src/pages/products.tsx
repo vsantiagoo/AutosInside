@@ -215,7 +215,7 @@ export default function Products() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-2xl font-bold">R${product.unit_price.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">R${(product.sale_price ?? product.unit_price).toFixed(2)}</div>
                     <div className="text-sm text-muted-foreground">
                       Estoque: {product.stock_quantity}
                     </div>
@@ -278,7 +278,7 @@ export default function Products() {
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-xl font-bold">R${product.unit_price.toFixed(2)}</div>
+                    <div className="text-xl font-bold">R${(product.sale_price ?? product.unit_price).toFixed(2)}</div>
                     <div className="text-sm text-muted-foreground">Estoque: {product.stock_quantity}</div>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
