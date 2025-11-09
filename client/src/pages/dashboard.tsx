@@ -130,11 +130,11 @@ export default function Dashboard() {
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-h-[60px] flex items-center">
               {statsLoading ? (
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-9 w-24" />
               ) : (
-                <div className="text-2xl md:text-3xl font-bold">{stat.value}</div>
+                <div className="text-3xl font-bold leading-none">{stat.value}</div>
               )}
             </CardContent>
           </Card>
