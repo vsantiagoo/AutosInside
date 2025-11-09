@@ -657,12 +657,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Insufficient stock for this consumption' });
       }
 
+      // Use sale_price (customer-facing price) with fallback to unit_price
+      const price = product.sale_price ?? product.unit_price;
+      
       const consumption = await storage.createConsumption({
         user_id: req.user!.id, // Use authenticated user's ID
         product_id,
         qty,
-        unit_price: product.unit_price,
-        total_price: product.unit_price * qty,
+        unit_price: price,
+        total_price: price * qty,
       });
 
       res.json(consumption);

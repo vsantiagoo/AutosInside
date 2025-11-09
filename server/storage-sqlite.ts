@@ -306,12 +306,12 @@ class SqliteStorage implements IStorage {
   }
 
   async getProductsBySector(sectorId: number): Promise<ProductDetailedInfo[]> {
-    // Note: inventory_value uses unit_price (acquisition cost) per accounting standards
+    // Note: inventory_value uses sale_price (customer-facing price) with fallback to unit_price
     const products = db.prepare(`
       SELECT 
         p.*,
         s.name as sector_name,
-        (p.stock_quantity * p.unit_price) as inventory_value,
+        (p.stock_quantity * COALESCE(p.sale_price, p.unit_price)) as inventory_value,
         CASE 
           WHEN p.stock_quantity = 0 THEN 'Zerado'
           WHEN p.stock_quantity <= COALESCE(p.low_stock_threshold, 10) THEN 'Baixo'
