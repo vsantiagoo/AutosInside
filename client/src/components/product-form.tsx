@@ -27,7 +27,7 @@ import { useState, useEffect } from 'react';
 import { z } from 'zod';
 
 const productFormSchema = insertProductSchema.extend({
-  photo: z.instanceof(File).optional().or(z.literal('')),
+  photo: z.any().optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;

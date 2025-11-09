@@ -3,6 +3,9 @@
 ## Overview
 This is a full-stack inventory management system built with React, Express, and SQLite. It provides comprehensive tracking of products, stock transactions, and consumption records with role-based access control. The system features a Material Design-inspired interface optimized for data-intensive productivity workflows. Users can manage product catalogs, track stock movements, monitor employee consumption, and generate reports. The system supports a dual-mode authentication system for regular users (matricula only) and admin users (matricula + password), with role-based access control for managing users and organizational sectors. The application is fully localized in Brazilian Portuguese, including currency and date formatting.
 
+## Recent Changes
+- **2025-11-09**: Fixed photo upload issue in product form - Changed Zod validation from `z.instanceof(File)` to `z.any().optional()` to allow file uploads from browser FileList. Downstream validation via `instanceof File` check in onSubmit and backend multer middleware ensures security.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
