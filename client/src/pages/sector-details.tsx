@@ -331,6 +331,7 @@ export default function SectorDetails() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[80px]">Foto</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>SKU</TableHead>
                         <TableHead>Categoria</TableHead>
@@ -347,6 +348,21 @@ export default function SectorDetails() {
                     <TableBody>
                       {products.map((product) => (
                         <TableRow key={product.id} data-testid={`row-product-${product.id}`}>
+                          <TableCell>
+                            <div className="w-16 h-16 bg-muted rounded-md overflow-hidden flex-shrink-0">
+                              {product.photo_path ? (
+                                <img 
+                                  src={product.photo_path} 
+                                  alt={product.name} 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="w-6 h-6 text-muted-foreground opacity-30" />
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="font-medium">{product.name}</TableCell>
                           <TableCell>{product.sku || "-"}</TableCell>
                           <TableCell>{product.category || "-"}</TableCell>

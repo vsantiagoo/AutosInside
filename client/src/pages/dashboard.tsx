@@ -173,7 +173,22 @@ export default function Dashboard() {
                       data-testid={`alert-product-${product.id}`}
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                        <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden relative">
+                          {product.photo_path ? (
+                            <img 
+                              src={product.photo_path} 
+                              alt={product.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-6 h-6 text-muted-foreground opacity-30" />
+                            </div>
+                          )}
+                          <div className="absolute top-0 right-0 bg-orange-600 rounded-bl-md p-0.5">
+                            <AlertTriangle className="w-3 h-3 text-white" />
+                          </div>
+                        </div>
                         <div className="min-w-0">
                           <p className="font-bold truncate">{product.name}</p>
                           <p className="text-sm text-muted-foreground truncate">
@@ -228,8 +243,21 @@ export default function Dashboard() {
                     data-testid={`top-item-${item.product_id}`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-bold text-primary">#{index + 1}</span>
+                      <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden relative">
+                        {item.photo_path ? (
+                          <img 
+                            src={item.photo_path} 
+                            alt={item.product_name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-muted-foreground opacity-30" />
+                          </div>
+                        )}
+                        <div className="absolute top-0 right-0 bg-primary rounded-bl-md px-1.5 py-0.5">
+                          <span className="text-[10px] font-bold text-primary-foreground leading-none">#{index + 1}</span>
+                        </div>
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold truncate">{item.product_name}</p>

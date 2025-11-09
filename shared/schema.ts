@@ -156,11 +156,13 @@ export type ProductWithSector = Product & {
 export type ConsumptionWithDetails = Consumption & {
   user_name?: string;
   product_name?: string;
+  photo_path?: string | null;
 };
 
 export type StockTransactionWithProduct = StockTransaction & {
   product_name?: string;
   user_name?: string;
+  photo_path?: string | null;
 };
 
 // Inventory KPIs and Reports
@@ -210,6 +212,7 @@ export type TopConsumedItem = {
   total_qty: number;
   total_value: number;
   consumption_count: number;
+  photo_path?: string | null;
 };
 
 // Sector Details with Performance Indicators

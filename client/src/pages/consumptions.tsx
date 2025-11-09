@@ -178,8 +178,21 @@ export default function Consumptions() {
             <Card key={consumption.id} className="hover-elevate" data-testid={`consumption-${consumption.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <ShoppingCart className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden relative">
+                    {consumption.photo_path ? (
+                      <img 
+                        src={consumption.photo_path} 
+                        alt={consumption.product_name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-6 h-6 text-muted-foreground opacity-30" />
+                      </div>
+                    )}
+                    <div className="absolute top-0 right-0 bg-primary rounded-bl-md p-0.5">
+                      <ShoppingCart className="w-3 h-3 text-primary-foreground" />
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold">{consumption.product_name}</h3>

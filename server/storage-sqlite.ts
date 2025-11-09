@@ -509,7 +509,7 @@ class SqliteStorage implements IStorage {
 
   async getStockTransactionsBySector(sectorId: number): Promise<StockTransactionWithProduct[]> {
     return db.prepare(`
-      SELECT st.*, p.name as product_name, u.full_name as user_name
+      SELECT st.*, p.name as product_name, p.photo_path, u.full_name as user_name
       FROM stock_transactions st
       INNER JOIN products p ON st.product_id = p.id
       LEFT JOIN users u ON st.user_id = u.id
@@ -525,7 +525,7 @@ class SqliteStorage implements IStorage {
 
   async getAllStockTransactions(): Promise<StockTransactionWithProduct[]> {
     return db.prepare(`
-      SELECT st.*, p.name as product_name
+      SELECT st.*, p.name as product_name, p.photo_path
       FROM stock_transactions st
       LEFT JOIN products p ON st.product_id = p.id
       ORDER BY st.created_at DESC
@@ -576,7 +576,8 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
-        p.name as product_name
+        p.name as product_name,
+        p.photo_path
       FROM consumptions c
       LEFT JOIN users u ON c.user_id = u.id
       LEFT JOIN products p ON c.product_id = p.id
@@ -589,7 +590,8 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
-        p.name as product_name
+        p.name as product_name,
+        p.photo_path
       FROM consumptions c
       LEFT JOIN users u ON c.user_id = u.id
       LEFT JOIN products p ON c.product_id = p.id
@@ -603,7 +605,8 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
-        p.name as product_name
+        p.name as product_name,
+        p.photo_path
       FROM consumptions c
       LEFT JOIN users u ON c.user_id = u.id
       LEFT JOIN products p ON c.product_id = p.id
@@ -647,6 +650,7 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.product_id,
         p.name as product_name,
+        p.photo_path,
         s.name as sector_name,
         SUM(c.qty) as total_qty,
         SUM(c.total_price) as total_value,
@@ -654,7 +658,7 @@ class SqliteStorage implements IStorage {
       FROM consumptions c
       LEFT JOIN products p ON c.product_id = p.id
       LEFT JOIN sectors s ON p.sector_id = s.id
-      GROUP BY c.product_id, p.name, s.name
+      GROUP BY c.product_id, p.name, p.photo_path, s.name
       ORDER BY total_qty DESC
       LIMIT ?
     `).all(limit) as TopConsumedItem[];

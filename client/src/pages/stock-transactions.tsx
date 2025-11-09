@@ -135,16 +135,29 @@ export default function StockTransactions() {
             <Card key={transaction.id} className="hover-elevate" data-testid={`transaction-${transaction.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    transaction.change > 0 
-                      ? 'bg-green-100 dark:bg-green-950' 
-                      : 'bg-red-100 dark:bg-red-950'
-                  }`}>
-                    {transaction.change > 0 ? (
-                      <TrendingUp className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0 overflow-hidden relative">
+                    {transaction.photo_path ? (
+                      <img 
+                        src={transaction.photo_path} 
+                        alt={transaction.product_name} 
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <TrendingDown className="w-6 h-6 text-red-600" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-6 h-6 text-muted-foreground opacity-30" />
+                      </div>
                     )}
+                    <div className={`absolute top-0 right-0 rounded-bl-md p-0.5 ${
+                      transaction.change > 0 
+                        ? 'bg-green-600' 
+                        : 'bg-red-600'
+                    }`}>
+                      {transaction.change > 0 ? (
+                        <TrendingUp className="w-3 h-3 text-white" />
+                      ) : (
+                        <TrendingDown className="w-3 h-3 text-white" />
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold">{transaction.product_name}</h3>
