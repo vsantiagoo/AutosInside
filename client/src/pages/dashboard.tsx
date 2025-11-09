@@ -239,10 +239,10 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-3 min-w-[100px]">
-                      <p className="text-base font-bold whitespace-nowrap">
+                      <p className="text-base font-bold" style={{ whiteSpace: 'nowrap' }}>
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.total_value)}
                       </p>
-                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                      <p className="text-xs text-muted-foreground" style={{ whiteSpace: 'nowrap' }}>
                         Qtd: {item.total_qty}
                       </p>
                     </div>
@@ -286,10 +286,10 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t">
-                    <p className="text-base font-bold text-primary whitespace-nowrap flex-shrink-0">
+                    <p className="text-base font-bold text-primary flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(consumption.total_price)}
                     </p>
-                    <p className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                    <p className="text-xs text-muted-foreground flex-shrink-0" style={{ whiteSpace: 'nowrap' }}>
                       {format(new Date(consumption.consumed_at), 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>

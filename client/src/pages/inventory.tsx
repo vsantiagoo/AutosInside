@@ -134,7 +134,7 @@ export default function Inventory() {
                   <DollarSign className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm font-medium truncate">Valor Total</span>
                 </div>
-                <span className="text-base font-bold flex-shrink-0 text-right whitespace-nowrap" data-testid={`text-sector-value-${sector.sector_id}`}>
+                <span className="text-base font-bold flex-shrink-0 text-right" style={{ whiteSpace: 'nowrap' }} data-testid={`text-sector-value-${sector.sector_id}`}>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sector.total_value || 0)}
                 </span>
               </div>
