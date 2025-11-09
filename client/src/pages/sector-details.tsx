@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { 
   ArrowLeft, 
@@ -11,7 +11,8 @@ import {
   Calendar,
   AlertTriangle,
   BarChart3,
-  Pencil
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { 
@@ -40,12 +51,16 @@ import type {
 } from "@shared/schema";
 import { format } from "date-fns";
 import ProductForm from "@/components/product-form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function SectorDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductDetailedInfo | null>(null);
+  const [productToDelete, setProductToDelete] = useState<ProductDetailedInfo | null>(null);
   const sectorId = parseInt(id || "0");
 
   // Fetch sector
@@ -75,6 +90,46 @@ export default function SectorDetails() {
     enabled: !!sectorId,
     refetchInterval: 20000,
   });
+
+  // Delete product mutation
+  const deleteProductMutation = useMutation({
+    mutationFn: async ({ productId, productName }: { productId: number; productName: string }) => {
+      return { 
+        response: await apiRequest('DELETE', `/api/products/${productId}`),
+        productName 
+      };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sectors/${sectorId}/products`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sectors/${sectorId}/performance`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sectors/${sectorId}/transactions`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      
+      toast({
+        title: "Produto excluído",
+        description: `O produto "${data.productName}" foi excluído com sucesso.`,
+      });
+      setProductToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Erro ao excluir produto",
+        description: error.message || "Não foi possível excluir o produto.",
+      });
+    },
+  });
+
+  const handleDeleteProduct = () => {
+    if (productToDelete) {
+      deleteProductMutation.mutate({ 
+        productId: productToDelete.id,
+        productName: productToDelete.name 
+      });
+    }
+  };
 
   const kpiCards = [
     {
@@ -311,17 +366,27 @@ export default function SectorDetails() {
                           <TableCell>{getStockStatusBadge(product.stock_status)}</TableCell>
                           <TableCell>{product.supplier || "-"}</TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingProduct(product);
-                                setIsProductDialogOpen(true);
-                              }}
-                              data-testid={`button-edit-product-${product.id}`}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingProduct(product);
+                                  setIsProductDialogOpen(true);
+                                }}
+                                data-testid={`button-edit-product-${product.id}`}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setProductToDelete(product)}
+                                data-testid={`button-delete-product-${product.id}`}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -383,6 +448,30 @@ export default function SectorDetails() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Alert Dialog for Delete Confirmation */}
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o produto <strong>"{productToDelete?.name}"</strong>?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteProduct}
+              disabled={deleteProductMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteProductMutation.isPending ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
