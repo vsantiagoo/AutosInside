@@ -306,6 +306,7 @@ class SqliteStorage implements IStorage {
   }
 
   async getProductsBySector(sectorId: number): Promise<ProductDetailedInfo[]> {
+    // Note: inventory_value uses unit_price (acquisition cost) per accounting standards
     const products = db.prepare(`
       SELECT 
         p.*,
@@ -357,6 +358,7 @@ class SqliteStorage implements IStorage {
     }
 
     // Get total products count
+    // Note: total_inventory_value uses unit_price (acquisition cost) per accounting standards
     const productStats = db.prepare(`
       SELECT 
         COUNT(*) as total_products,
@@ -625,6 +627,7 @@ class SqliteStorage implements IStorage {
   }
 
   // Inventory KPIs
+  // Note: Inventory valuation uses unit_price (acquisition cost) per GAAP/IFRS accounting standards
   async getInventoryKPIsBySector(): Promise<any[]> {
     return db.prepare(`
       SELECT 
@@ -641,6 +644,7 @@ class SqliteStorage implements IStorage {
     `).all();
   }
 
+  // Note: Uses unit_price (acquisition cost) for proper inventory valuation per accounting standards
   async getTotalInventoryValue(): Promise<number> {
     const result = db.prepare(`
       SELECT SUM(stock_quantity * unit_price) as total_value
@@ -649,6 +653,7 @@ class SqliteStorage implements IStorage {
     return result.total_value || 0;
   }
 
+  // Note: Uses unit_price (acquisition cost) for proper inventory valuation per accounting standards
   async getTotalInventoryValueBySector(sectorId?: number): Promise<number> {
     if (sectorId !== undefined) {
       const result = db.prepare(`
@@ -717,6 +722,7 @@ class SqliteStorage implements IStorage {
     }
 
     // Calculate summary
+    // Note: totalValue uses unit_price (acquisition cost) per accounting standards
     const summary = {
       totalProducts: products.length,
       totalValue: products.reduce((sum, p) => sum + (p.stock_quantity * p.unit_price), 0),
