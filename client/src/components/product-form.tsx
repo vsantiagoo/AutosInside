@@ -36,9 +36,17 @@ interface ProductFormProps {
   product?: ProductWithSector | null;
   onSuccess: () => void;
   onCancel: () => void;
+  defaultSectorId?: number;
+  showSectorSelector?: boolean;
 }
 
-export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
+export function ProductForm({ 
+  product, 
+  onSuccess, 
+  onCancel, 
+  defaultSectorId,
+  showSectorSelector = true 
+}: ProductFormProps) {
   const { toast } = useToast();
   const [photoPreview, setPhotoPreview] = useState<string | null>(product?.photo_path || null);
 
@@ -49,12 +57,24 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
-      name: product?.name || '',
-      sector_id: product?.sector_id || undefined,
-      sku: product?.sku || '',
-      unit_price: product?.unit_price || 0,
-      stock_quantity: product?.stock_quantity || 0,
-      low_stock_threshold: product?.low_stock_threshold || 10,
+      name: product?.name ?? '',
+      sector_id: product?.sector_id ?? defaultSectorId ?? undefined,
+      sku: product?.sku ?? '',
+      category: product?.category ?? '',
+      unit_measure: product?.unit_measure ?? 'un',
+      unit_price: product?.unit_price ?? 0,
+      sale_price: product?.sale_price ?? null,
+      stock_quantity: product?.stock_quantity ?? 0,
+      min_quantity: product?.min_quantity ?? null,
+      max_quantity: product?.max_quantity ?? null,
+      low_stock_threshold: product?.low_stock_threshold ?? 10,
+      supplier: product?.supplier ?? '',
+      last_purchase_date: product?.last_purchase_date ?? null,
+      last_count_date: product?.last_count_date ?? null,
+      expiry_date: product?.expiry_date ?? null,
+      warranty_date: product?.warranty_date ?? null,
+      asset_number: product?.asset_number ?? '',
+      status: product?.status ?? ('Ativo' as const),
       photo: '',
     },
   });
@@ -124,11 +144,27 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   const onSubmit = async (data: ProductFormData) => {
     const formData = new FormData();
     formData.append('name', data.name);
-    if (data.sector_id) formData.append('sector_id', data.sector_id.toString());
+    if (data.sector_id !== null && data.sector_id !== undefined) 
+      formData.append('sector_id', data.sector_id.toString());
     if (data.sku && data.sku.trim() !== '') formData.append('sku', data.sku.trim());
+    if (data.category) formData.append('category', data.category);
+    if (data.unit_measure) formData.append('unit_measure', data.unit_measure);
     formData.append('unit_price', data.unit_price.toString());
+    if (data.sale_price !== null && data.sale_price !== undefined) 
+      formData.append('sale_price', data.sale_price.toString());
     formData.append('stock_quantity', data.stock_quantity.toString());
-    formData.append('low_stock_threshold', (data.low_stock_threshold || 10).toString());
+    if (data.min_quantity !== null && data.min_quantity !== undefined) 
+      formData.append('min_quantity', data.min_quantity.toString());
+    if (data.max_quantity !== null && data.max_quantity !== undefined) 
+      formData.append('max_quantity', data.max_quantity.toString());
+    formData.append('low_stock_threshold', (data.low_stock_threshold ?? 10).toString());
+    if (data.supplier) formData.append('supplier', data.supplier);
+    if (data.last_purchase_date) formData.append('last_purchase_date', data.last_purchase_date);
+    if (data.last_count_date) formData.append('last_count_date', data.last_count_date);
+    if (data.expiry_date) formData.append('expiry_date', data.expiry_date);
+    if (data.warranty_date) formData.append('warranty_date', data.warranty_date);
+    if (data.asset_number) formData.append('asset_number', data.asset_number);
+    if (data.status) formData.append('status', data.status);
     if (data.photo instanceof File) {
       formData.append('photo', data.photo);
     }
@@ -161,189 +197,471 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nome do Produto *</FormLabel>
-              <FormControl>
-                <Input placeholder="Digite o nome do produto" {...field} data-testid="input-name" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Informações Básicas */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Informações Básicas</h3>
           <FormField
             control={form.control}
-            name="sku"
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Código SKU</FormLabel>
+                <FormLabel>Nome do Produto *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Código do produto" {...field} value={field.value || ''} data-testid="input-sku" />
+                  <Input placeholder="Digite o nome do produto" {...field} data-testid="input-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="sector_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Setor</FormLabel>
-                <Select
-                  onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
-                  value={field.value?.toString() || "none"}
-                >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Código SKU</FormLabel>
                   <FormControl>
-                    <SelectTrigger data-testid="select-sector">
-                      <SelectValue placeholder="Selecione o setor" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Sem Setor</SelectItem>
-                    {sectors?.map((sector) => (
-                      <SelectItem key={sector.id} value={sector.id.toString()}>
-                        {sector.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="unit_price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Preço Unitário *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    data-testid="input-price"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="stock_quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Quantidade em Estoque *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    data-testid="input-quantity"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="low_stock_threshold"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Limite de Estoque Baixo</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="10"
-                  {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 10)}
-                  data-testid="input-threshold"
-                />
-              </FormControl>
-              <FormDescription>
-                Alerta quando o estoque cair abaixo deste nível
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="photo"
-          render={({ field: { value, ...field } }) => (
-            <FormItem>
-              <FormLabel>Foto do Produto</FormLabel>
-              <FormControl>
-                <div className="space-y-3">
-                  {photoPreview && (
-                    <div className="relative inline-block">
-                      <img
-                        src={photoPreview}
-                        alt="Pré-visualização"
-                        className="w-32 h-32 object-cover rounded-lg border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                        onClick={clearPhoto}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                      id="photo-upload"
-                      data-testid="input-photo"
-                      {...field}
+                    <Input 
+                      placeholder="Código do produto" 
+                      {...field} 
+                      value={field.value || ''} 
+                      data-testid="input-sku"
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase().trim())}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {photoPreview ? 'Alterar Foto' : 'Enviar Foto'}
-                    </Button>
-                  </div>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex justify-end gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending} data-testid="button-cancel">
+            {showSectorSelector && (
+              <FormField
+                control={form.control}
+                name="sector_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Setor</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                      value={field.value?.toString() || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-sector">
+                          <SelectValue placeholder="Selecione o setor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Sem Setor</SelectItem>
+                        {sectors?.map((sector) => (
+                          <SelectItem key={sector.id} value={sector.id.toString()}>
+                            {sector.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ex: Eletrônicos, Alimentação" {...field} value={field.value || ''} data-testid="input-category" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="unit_measure"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Unidade de Medida</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'un'}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-unit-measure">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="un">Unidade (un)</SelectItem>
+                      <SelectItem value="kg">Quilograma (kg)</SelectItem>
+                      <SelectItem value="g">Grama (g)</SelectItem>
+                      <SelectItem value="l">Litro (l)</SelectItem>
+                      <SelectItem value="ml">Mililitro (ml)</SelectItem>
+                      <SelectItem value="m">Metro (m)</SelectItem>
+                      <SelectItem value="cm">Centímetro (cm)</SelectItem>
+                      <SelectItem value="cx">Caixa (cx)</SelectItem>
+                      <SelectItem value="pct">Pacote (pct)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'Ativo'}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-status">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Ativo">Ativo</SelectItem>
+                      <SelectItem value="Inativo">Inativo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Informações Financeiras */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Informações Financeiras</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="unit_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preço de Custo (R$) *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      data-testid="input-unit-price"
+                    />
+                  </FormControl>
+                  <FormDescription>Preço de compra do fornecedor</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sale_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preço de Venda (R$)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                      data-testid="input-sale-price"
+                    />
+                  </FormControl>
+                  <FormDescription>Valor validado para cálculos de inventário</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Controle de Estoque */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Controle de Estoque</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="stock_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantidade Inicial *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      data-testid="input-stock-quantity"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="min_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantidade Mínima</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                      data-testid="input-min-quantity"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="max_quantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantidade Máxima</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      {...field}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                      data-testid="input-max-quantity"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="low_stock_threshold"
+              render={({ field }) => (
+                <FormItem className="md:col-span-3">
+                  <FormLabel>Limiar de Estoque Baixo</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="10"
+                      {...field}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === '' ? 10 : parseInt(val));
+                      }}
+                      data-testid="input-low-stock-threshold"
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Alertas serão gerados quando o estoque atingir este valor
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Fornecedor e Patrimônio */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Fornecedor e Patrimônio</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="supplier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fornecedor</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nome do fornecedor" {...field} value={field.value || ''} data-testid="input-supplier" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="asset_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número de Patrimônio</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Número do ativo" {...field} value={field.value || ''} data-testid="input-asset-number" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Datas */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Datas</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="last_purchase_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data da Última Compra</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      data-testid="input-last-purchase-date"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="expiry_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Validade</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      data-testid="input-expiry-date"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="warranty_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data de Garantia</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      data-testid="input-warranty-date"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="last_count_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data da Última Contagem</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value || ''}
+                      data-testid="input-last-count-date"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Foto do Produto */}
+        <div className="space-y-4">
+          <h3 className="font-semibold text-sm text-muted-foreground">Foto do Produto</h3>
+          <FormField
+            control={form.control}
+            name="photo"
+            render={({ field: { value, ...field } }) => (
+              <FormItem>
+                <FormLabel>Imagem</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    {photoPreview && (
+                      <div className="relative inline-block">
+                        <img
+                          src={photoPreview}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded-md"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6"
+                          onClick={clearPhoto}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoChange}
+                        className="flex-1"
+                        id="photo-upload"
+                        data-testid="input-photo"
+                        {...field}
+                      />
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </FormControl>
+                <FormDescription>
+                  Envie uma imagem do produto (opcional)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Botões */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isPending}
+            data-testid="button-cancel"
+          >
             Cancelar
           </Button>
           <Button type="submit" disabled={isPending} data-testid="button-submit">
