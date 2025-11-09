@@ -175,18 +175,37 @@ class SqliteStorage implements IStorage {
 
   async createProduct(insertProduct: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     const result = db.prepare(`
-      INSERT INTO products (name, sector_id, sku, unit_price, stock_quantity, total_in, total_out, photo_path, low_stock_threshold)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (
+        name, sector_id, sku, category, unit_measure,
+        unit_price, sale_price, stock_quantity, 
+        min_quantity, max_quantity, total_in, total_out,
+        photo_path, low_stock_threshold, supplier,
+        last_purchase_date, last_count_date, expiry_date,
+        warranty_date, asset_number, status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       insertProduct.name,
       insertProduct.sector_id,
       insertProduct.sku,
+      insertProduct.category,
+      insertProduct.unit_measure,
       insertProduct.unit_price,
+      insertProduct.sale_price,
       insertProduct.stock_quantity,
+      insertProduct.min_quantity,
+      insertProduct.max_quantity,
       insertProduct.total_in,
       insertProduct.total_out,
       insertProduct.photo_path,
-      insertProduct.low_stock_threshold || 10
+      insertProduct.low_stock_threshold || 10,
+      insertProduct.supplier,
+      insertProduct.last_purchase_date,
+      insertProduct.last_count_date,
+      insertProduct.expiry_date,
+      insertProduct.warranty_date,
+      insertProduct.asset_number,
+      insertProduct.status
     );
     
     return this.getProduct(result.lastInsertRowid as number) as Promise<Product>;
@@ -194,8 +213,15 @@ class SqliteStorage implements IStorage {
 
   async bulkCreateProducts(products: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]): Promise<number> {
     const insertStmt = db.prepare(`
-      INSERT INTO products (name, sector_id, sku, unit_price, stock_quantity, total_in, total_out, photo_path, low_stock_threshold)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (
+        name, sector_id, sku, category, unit_measure,
+        unit_price, sale_price, stock_quantity, 
+        min_quantity, max_quantity, total_in, total_out,
+        photo_path, low_stock_threshold, supplier,
+        last_purchase_date, last_count_date, expiry_date,
+        warranty_date, asset_number, status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertMany = db.transaction((productList: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]) => {
@@ -204,12 +230,24 @@ class SqliteStorage implements IStorage {
           product.name,
           product.sector_id,
           product.sku,
+          product.category,
+          product.unit_measure,
           product.unit_price,
+          product.sale_price,
           product.stock_quantity,
+          product.min_quantity,
+          product.max_quantity,
           product.total_in || 0,
           product.total_out || 0,
           product.photo_path || null,
-          product.low_stock_threshold || 10
+          product.low_stock_threshold || 10,
+          product.supplier,
+          product.last_purchase_date,
+          product.last_count_date,
+          product.expiry_date,
+          product.warranty_date,
+          product.asset_number,
+          product.status
         );
       }
     });
@@ -259,13 +297,33 @@ class SqliteStorage implements IStorage {
       fields.push('sku = ?');
       values.push(updateData.sku);
     }
+    if (updateData.category !== undefined) {
+      fields.push('category = ?');
+      values.push(updateData.category);
+    }
+    if (updateData.unit_measure !== undefined) {
+      fields.push('unit_measure = ?');
+      values.push(updateData.unit_measure);
+    }
     if (updateData.unit_price !== undefined) {
       fields.push('unit_price = ?');
       values.push(updateData.unit_price);
     }
+    if (updateData.sale_price !== undefined) {
+      fields.push('sale_price = ?');
+      values.push(updateData.sale_price);
+    }
     if (updateData.stock_quantity !== undefined) {
       fields.push('stock_quantity = ?');
       values.push(updateData.stock_quantity);
+    }
+    if (updateData.min_quantity !== undefined) {
+      fields.push('min_quantity = ?');
+      values.push(updateData.min_quantity);
+    }
+    if (updateData.max_quantity !== undefined) {
+      fields.push('max_quantity = ?');
+      values.push(updateData.max_quantity);
     }
     if (updateData.total_in !== undefined) {
       fields.push('total_in = ?');
@@ -282,6 +340,34 @@ class SqliteStorage implements IStorage {
     if (updateData.low_stock_threshold !== undefined) {
       fields.push('low_stock_threshold = ?');
       values.push(updateData.low_stock_threshold);
+    }
+    if (updateData.supplier !== undefined) {
+      fields.push('supplier = ?');
+      values.push(updateData.supplier);
+    }
+    if (updateData.last_purchase_date !== undefined) {
+      fields.push('last_purchase_date = ?');
+      values.push(updateData.last_purchase_date);
+    }
+    if (updateData.last_count_date !== undefined) {
+      fields.push('last_count_date = ?');
+      values.push(updateData.last_count_date);
+    }
+    if (updateData.expiry_date !== undefined) {
+      fields.push('expiry_date = ?');
+      values.push(updateData.expiry_date);
+    }
+    if (updateData.warranty_date !== undefined) {
+      fields.push('warranty_date = ?');
+      values.push(updateData.warranty_date);
+    }
+    if (updateData.asset_number !== undefined) {
+      fields.push('asset_number = ?');
+      values.push(updateData.asset_number);
+    }
+    if (updateData.status !== undefined) {
+      fields.push('status = ?');
+      values.push(updateData.status);
     }
 
     fields.push('updated_at = CURRENT_TIMESTAMP');

@@ -395,12 +395,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/products', authMiddleware, upload.single('photo'), async (req, res) => {
     try {
+      // Parse all fields from insertProductSchema
       const productData = {
         name: req.body.name,
         sector_id: req.body.sector_id ? parseInt(req.body.sector_id) : null,
         sku: req.body.sku || null,
+        category: req.body.category || null,
+        unit_measure: req.body.unit_measure || null,
         unit_price: parseFloat(req.body.unit_price) || 0,
+        sale_price: req.body.sale_price ? parseFloat(req.body.sale_price) : null,
         stock_quantity: parseInt(req.body.stock_quantity) || 0,
+        min_quantity: req.body.min_quantity ? parseInt(req.body.min_quantity) : null,
+        max_quantity: req.body.max_quantity ? parseInt(req.body.max_quantity) : null,
+        low_stock_threshold: req.body.low_stock_threshold ? parseInt(req.body.low_stock_threshold) : 10,
+        supplier: req.body.supplier || null,
+        asset_number: req.body.asset_number || null,
+        status: req.body.status || 'Ativo',
+        last_purchase_date: req.body.last_purchase_date || null,
+        expiry_date: req.body.expiry_date || null,
+        warranty_date: req.body.warranty_date || null,
       };
 
       insertProductSchema.parse(productData);
@@ -412,17 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         photo_path,
         total_in: productData.stock_quantity,
         total_out: 0,
-        low_stock_threshold: 10,
-        category: null,
-        unit_measure: null,
-        sale_price: null,
-        min_quantity: null,
-        max_quantity: null,
-        supplier: null,
-        last_purchase_date: null,
         last_count_date: null,
-        asset_number: null,
-        status: 'Ativo',
       });
 
       res.json(product);
@@ -446,13 +449,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Product not found' });
       }
 
-      const updateData: any = {
-        name: req.body.name,
-        sector_id: req.body.sector_id ? parseInt(req.body.sector_id) : null,
-        sku: req.body.sku || null,
-        unit_price: parseFloat(req.body.unit_price),
-        stock_quantity: parseInt(req.body.stock_quantity),
-      };
+      // Parse updatable fields - only include fields present in request to preserve existing values
+      const updateData: any = {};
+      
+      if (req.body.name !== undefined) updateData.name = req.body.name;
+      if (req.body.sector_id !== undefined) {
+        updateData.sector_id = req.body.sector_id ? parseInt(req.body.sector_id) : null;
+      }
+      if (req.body.sku !== undefined) updateData.sku = req.body.sku || null;
+      if (req.body.category !== undefined) updateData.category = req.body.category || null;
+      if (req.body.unit_measure !== undefined) updateData.unit_measure = req.body.unit_measure || null;
+      if (req.body.unit_price !== undefined) updateData.unit_price = parseFloat(req.body.unit_price);
+      if (req.body.sale_price !== undefined) {
+        updateData.sale_price = req.body.sale_price ? parseFloat(req.body.sale_price) : null;
+      }
+      if (req.body.stock_quantity !== undefined) updateData.stock_quantity = parseInt(req.body.stock_quantity);
+      if (req.body.min_quantity !== undefined) {
+        updateData.min_quantity = req.body.min_quantity ? parseInt(req.body.min_quantity) : null;
+      }
+      if (req.body.max_quantity !== undefined) {
+        updateData.max_quantity = req.body.max_quantity ? parseInt(req.body.max_quantity) : null;
+      }
+      if (req.body.low_stock_threshold !== undefined) {
+        updateData.low_stock_threshold = req.body.low_stock_threshold ? parseInt(req.body.low_stock_threshold) : null;
+      }
+      if (req.body.supplier !== undefined) updateData.supplier = req.body.supplier || null;
+      if (req.body.asset_number !== undefined) updateData.asset_number = req.body.asset_number || null;
+      if (req.body.status !== undefined) updateData.status = req.body.status || 'Ativo';
+      if (req.body.last_purchase_date !== undefined) updateData.last_purchase_date = req.body.last_purchase_date || null;
+      if (req.body.expiry_date !== undefined) updateData.expiry_date = req.body.expiry_date || null;
+      if (req.body.warranty_date !== undefined) updateData.warranty_date = req.body.warranty_date || null;
 
       if (req.file) {
         updateData.photo_path = `/uploads/${req.file.filename}`;
