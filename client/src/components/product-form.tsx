@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 
 const productFormSchema = insertProductSchema.extend({
@@ -38,6 +38,7 @@ interface ProductFormProps {
   onCancel: () => void;
   defaultSectorId?: number;
   showSectorSelector?: boolean;
+  additionalQueryKeys?: string[][];
 }
 
 export function ProductForm({ 
@@ -45,7 +46,8 @@ export function ProductForm({
   onSuccess, 
   onCancel, 
   defaultSectorId,
-  showSectorSelector = true 
+  showSectorSelector = true,
+  additionalQueryKeys = []
 }: ProductFormProps) {
   const { toast } = useToast();
   const [photoPreview, setPhotoPreview] = useState<string | null>(product?.photo_path || null);
@@ -79,6 +81,31 @@ export function ProductForm({
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      name: product?.name ?? '',
+      sector_id: product?.sector_id ?? defaultSectorId ?? undefined,
+      sku: product?.sku ?? '',
+      category: product?.category ?? '',
+      unit_measure: product?.unit_measure ?? 'un',
+      unit_price: product?.unit_price ?? 0,
+      sale_price: product?.sale_price ?? null,
+      stock_quantity: product?.stock_quantity ?? 0,
+      min_quantity: product?.min_quantity ?? null,
+      max_quantity: product?.max_quantity ?? null,
+      low_stock_threshold: product?.low_stock_threshold ?? 10,
+      supplier: product?.supplier ?? '',
+      last_purchase_date: product?.last_purchase_date ?? null,
+      last_count_date: product?.last_count_date ?? null,
+      expiry_date: product?.expiry_date ?? null,
+      warranty_date: product?.warranty_date ?? null,
+      asset_number: product?.asset_number ?? '',
+      status: product?.status ?? ('Ativo' as const),
+      photo: '',
+    });
+    setPhotoPreview(product?.photo_path || null);
+  }, [product, defaultSectorId, form]);
+
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const result = await fetch('/api/products', {
@@ -95,6 +122,10 @@ export function ProductForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      additionalQueryKeys.forEach(key => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
       toast({
         title: 'Produto criado',
         description: 'O produto foi criado com sucesso.',
@@ -126,6 +157,10 @@ export function ProductForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      additionalQueryKeys.forEach(key => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
       toast({
         title: 'Produto atualizado',
         description: 'O produto foi atualizado com sucesso.',
@@ -673,3 +708,5 @@ export function ProductForm({
     </Form>
   );
 }
+
+export default ProductForm;
