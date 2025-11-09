@@ -175,15 +175,15 @@ export default function Dashboard() {
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{product.name}</p>
+                          <p className="font-bold truncate">{product.name}</p>
                           <p className="text-sm text-muted-foreground truncate">
                             {product.sector_name || 'Sem setor'}
                           </p>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-3">
-                        <p className="font-semibold text-orange-600">
-                          {product.stock_quantity} unidades
+                        <p className="text-base font-bold text-orange-600">
+                          {product.stock_quantity}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Limite: {product.low_stock_threshold || 10}
@@ -232,14 +232,14 @@ export default function Dashboard() {
                         <span className="text-sm font-bold text-primary">#{index + 1}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium truncate">{item.product_name}</p>
+                        <p className="font-bold truncate">{item.product_name}</p>
                         <p className="text-sm text-muted-foreground truncate">
                           {item.sector_name || 'Sem setor'} • {item.consumption_count} consumos
                         </p>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-3">
-                      <p className="font-semibold">
+                      <p className="text-base font-bold">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.total_value)}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -280,13 +280,13 @@ export default function Dashboard() {
                   data-testid={`consumption-${consumption.id}`}
                 >
                   <div>
-                    <p className="font-medium line-clamp-2">{consumption.product_name}</p>
+                    <p className="font-bold line-clamp-2">{consumption.product_name}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {consumption.user_name} • Qtd: {consumption.qty}
                     </p>
                   </div>
                   <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <p className="font-semibold text-primary">
+                    <p className="text-base font-bold text-primary">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(consumption.total_price)}
                     </p>
                     <p className="text-xs text-muted-foreground">

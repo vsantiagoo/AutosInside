@@ -70,14 +70,16 @@ export default function Inventory() {
 
       {/* Valor Total do Inventário */}
       <Card data-testid="card-total-inventory-value">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex flex-wrap items-center gap-2">
-            <DollarSign className="w-5 h-5 text-primary" />
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
             Valor Total do Inventário
           </CardTitle>
+          <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950">
+            <DollarSign className="w-5 h-5 text-purple-600" />
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="text-3xl md:text-4xl font-bold text-primary" data-testid="text-total-value">
+        <CardContent className="min-h-[60px] flex items-center">
+          <div className="text-3xl font-bold leading-none" data-testid="text-total-value">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalValue)}
           </div>
         </CardContent>
@@ -87,73 +89,75 @@ export default function Inventory() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {kpis.map((sector: any) => (
           <Card key={sector.sector_id} className="hover-elevate" data-testid={`card-sector-${sector.sector_id}`}>
-            <CardHeader>
-              <div className="flex flex-wrap items-start justify-between gap-2">
+            <CardHeader className="pb-4">
+              <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg md:text-xl" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
-                  <CardDescription>Setor</CardDescription>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button 
-                    size="sm" 
-                    variant="default" 
-                    onClick={() => navigate(`/sector/${sector.sector_id}`)}
-                    data-testid={`button-view-details-${sector.sector_id}`}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver Detalhes
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => handleDownloadReport(sector.sector_id, sector.sector_name)}
-                    data-testid={`button-download-report-${sector.sector_id}`}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
+                  <CardTitle className="text-lg font-bold mb-1" data-testid={`text-sector-name-${sector.sector_id}`}>{sector.sector_name}</CardTitle>
+                  <CardDescription className="text-sm">Setor</CardDescription>
                 </div>
               </div>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  size="sm" 
+                  variant="default"
+                  className="flex-1 sm:flex-none"
+                  onClick={() => navigate(`/sector/${sector.sector_id}`)}
+                  data-testid={`button-view-details-${sector.sector_id}`}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Ver Detalhes
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleDownloadReport(sector.sector_id, sector.sector_name)}
+                  data-testid={`button-download-report-${sector.sector_id}`}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {/* Total de Produtos */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
                   <Package className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">Total de Produtos</span>
+                  <span className="text-sm font-medium">Total de Produtos</span>
                 </div>
-                <span className="font-semibold" data-testid={`text-total-products-${sector.sector_id}`}>{sector.total_products}</span>
+                <span className="text-base font-bold" data-testid={`text-total-products-${sector.sector_id}`}>{sector.total_products}</span>
               </div>
 
               {/* Valor Total */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">Valor Total</span>
+                  <span className="text-sm font-medium">Valor Total</span>
                 </div>
-                <span className="font-semibold" data-testid={`text-sector-value-${sector.sector_id}`}>
+                <span className="text-base font-bold" data-testid={`text-sector-value-${sector.sector_id}`}>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sector.total_value || 0)}
                 </span>
               </div>
 
               {/* Estoque Baixo */}
               {sector.low_stock_count > 0 && (
-                <div className="flex items-center justify-between text-orange-600 dark:text-orange-400">
+                <div className="flex items-center justify-between py-2 text-orange-600 dark:text-orange-400">
                   <div className="flex items-center gap-2">
                     <TrendingDown className="w-4 h-4" />
-                    <span className="text-sm">Estoque Baixo</span>
+                    <span className="text-sm font-medium">Estoque Baixo</span>
                   </div>
-                  <span className="font-semibold" data-testid={`text-low-stock-${sector.sector_id}`}>{sector.low_stock_count}</span>
+                  <span className="text-base font-bold" data-testid={`text-low-stock-${sector.sector_id}`}>{sector.low_stock_count}</span>
                 </div>
               )}
 
               {/* Sem Estoque */}
               {sector.out_of_stock_count > 0 && (
-                <div className="flex items-center justify-between text-destructive">
+                <div className="flex items-center justify-between py-2 text-destructive">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 rotate-180" />
-                    <span className="text-sm">Sem Estoque</span>
+                    <span className="text-sm font-medium">Sem Estoque</span>
                   </div>
-                  <span className="font-semibold" data-testid={`text-out-stock-${sector.sector_id}`}>{sector.out_of_stock_count}</span>
+                  <span className="text-base font-bold" data-testid={`text-out-stock-${sector.sector_id}`}>{sector.out_of_stock_count}</span>
                 </div>
               )}
             </CardContent>
