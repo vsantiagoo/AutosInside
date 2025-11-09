@@ -307,18 +307,20 @@ export default function Products() {
       )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}</DialogTitle>
             <DialogDescription>
               {editingProduct ? 'Atualizar informações do produto' : 'Criar um novo produto em seu inventário'}
             </DialogDescription>
           </DialogHeader>
-          <ProductForm
-            product={editingProduct}
-            onSuccess={() => setIsFormOpen(false)}
-            onCancel={() => setIsFormOpen(false)}
-          />
+          <div className="overflow-y-auto flex-1 pr-2">
+            <ProductForm
+              product={editingProduct}
+              onSuccess={() => setIsFormOpen(false)}
+              onCancel={() => setIsFormOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
