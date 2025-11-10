@@ -12,6 +12,10 @@ Preferred communication style: Simple, everyday language.
 - **UI/UX**: Shadcn/ui components on Radix UI, Tailwind CSS with a custom Material Design-inspired theme, Class Variance Authority (CVA), Roboto font. Material Design principles, HSL CSS variables for theming, elevation system, responsive grid layouts.
 - **State Management**: React Query for server state, React Context for authentication, React Hook Form with Zod for form state.
 - **Responsive Design**: Mobile-first approach with Tailwind breakpoints, ensuring full responsiveness across various devices (375px to 1440px+).
+- **Navigation Structure**: 
+  - **Admin Menu**: "Visão Geral FoodStation" replaces direct access to "Estação de Alimentos" in main menu
+  - **Reports Hub**: Centralized reports page (`/reports`) provides access to all reports via clickable cards (FoodStation Overview, Coffee Machine, General Inventory)
+  - **User Menu**: Regular users maintain access to "Estação de Alimentos" in main menu
 
 ### Backend Architecture
 - **Server**: Express.js on Node.js with TypeScript (ESM).
