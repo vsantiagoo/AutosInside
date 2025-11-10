@@ -59,11 +59,6 @@ export function AppSidebar() {
       icon: ShoppingCart,
     },
     {
-      title: "Relatórios",
-      url: "/reports",
-      icon: BarChart3,
-    },
-    {
       title: "Estação de Alimentos",
       url: "/food-station",
       icon: UtensilsCrossed,
@@ -100,6 +95,11 @@ export function AppSidebar() {
       title: "Setores",
       url: "/admin/sectors",
       icon: FolderTree,
+    },
+    {
+      title: "Relatórios",
+      url: "/reports",
+      icon: BarChart3,
     },
   ] : [];
 
