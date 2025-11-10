@@ -338,32 +338,6 @@ export type SectorMonthlyReport = {
   }[];
 };
 
-// General Inventory Report
-export type GeneralInventoryReport = {
-  generatedAt: string;
-  sectors: {
-    sector: Sector;
-    totalProducts: number;
-    totalValue: number;
-    lowStockCount: number;
-    outOfStockCount: number;
-  }[];
-  overallStats: {
-    totalProducts: number;
-    totalValue: number;
-    totalLowStock: number;
-    totalOutOfStock: number;
-    averageTurnover: number | null;
-  };
-  topConsumedItems: TopConsumedItem[];
-  criticalAlerts: {
-    productId: number;
-    productName: string;
-    sectorName: string;
-    alertType: 'out_of_stock' | 'low_stock' | 'expiring_soon';
-    message: string;
-  }[];
-};
 
 // Query Parameters Schemas
 export const reportDateRangeSchema = z.object({
@@ -530,3 +504,107 @@ export const cleaningReportQuerySchema = z.object({
 });
 
 export type CleaningReportQuery = z.infer<typeof cleaningReportQuerySchema>;
+
+// ============================================
+// COFFEE MACHINE SECTOR REPORT
+// ============================================
+
+export type CoffeeMachineProductReport = {
+  product_id: number;
+  product_name: string;
+  category: string | null;
+  opening_stock: number;
+  entries: number;
+  exits: number;
+  current_stock: number;
+  weekly_avg_consumption: number;
+  biweekly_avg_consumption: number;
+  consumption_frequency: 'high' | 'medium' | 'low';
+  suggested_reorder_cadence: 'weekly' | 'biweekly' | 'monthly';
+  unit_price: number;
+  photo_path: string | null;
+};
+
+export type CoffeeMachineReportKPIs = {
+  total_products: number;
+  total_exits: number;
+  total_value_exits: number;
+  high_frequency_items: number;
+  avg_weekly_consumption: number;
+};
+
+export type CoffeeMachineReport = {
+  sector: Sector;
+  period: {
+    start: string;
+    end: string;
+    cadence: 'weekly' | 'biweekly';
+    weeks: number;
+  };
+  kpis: CoffeeMachineReportKPIs;
+  products: CoffeeMachineProductReport[];
+  topConsumed: {
+    product_id: number;
+    product_name: string;
+    total_qty: number;
+    frequency: 'high' | 'medium' | 'low';
+    photo_path: string | null;
+  }[];
+  generatedAt: string;
+};
+
+export const coffeeMachineReportQuerySchema = z.object({
+  sectorId: z.number().optional(),
+  cadence: z.enum(['weekly', 'biweekly']).optional().default('weekly'),
+  weeks: z.number().optional().default(4), // Number of weeks to analyze
+});
+
+export type CoffeeMachineReportQuery = z.infer<typeof coffeeMachineReportQuerySchema>;
+
+// ============================================
+// GENERAL INVENTORY REPORT
+// ============================================
+
+export type GeneralInventoryProduct = {
+  product_id: number;
+  product_name: string;
+  sector_id: number;
+  sector_name: string;
+  category: string | null;
+  current_stock: number;
+  unit_price: number;
+  total_value: number;
+  stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Crítico';
+  photo_path: string | null;
+};
+
+export type GeneralInventoryBySector = {
+  sector_id: number;
+  sector_name: string;
+  total_products: number;
+  total_value: number;
+  products: GeneralInventoryProduct[];
+};
+
+export type GeneralInventoryKPIs = {
+  total_products: number;
+  total_sectors: number;
+  total_inventory_value: number;
+  low_stock_items: number;
+  out_of_stock_items: number;
+};
+
+export type GeneralInventoryReport = {
+  kpis: GeneralInventoryKPIs;
+  bySector: GeneralInventoryBySector[];
+  allProducts: GeneralInventoryProduct[];
+  generatedAt: string;
+};
+
+export const generalInventoryQuerySchema = z.object({
+  sectorId: z.number().optional(),
+  keyword: z.string().optional(),
+  includeOutOfStock: z.boolean().optional().default(true),
+});
+
+export type GeneralInventoryQuery = z.infer<typeof generalInventoryQuerySchema>;
