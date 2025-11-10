@@ -60,8 +60,8 @@ export function AppSidebar() {
       icon: ShoppingCart,
     },
     {
-      title: "Estação de Alimentos",
-      url: "/food-station",
+      title: "Visão Geral FoodStation",
+      url: "/foodstation-overview",
       icon: UtensilsCrossed,
     },
   ];
@@ -101,21 +101,6 @@ export function AppSidebar() {
       title: "Relatórios",
       url: "/reports",
       icon: BarChart3,
-    },
-    {
-      title: "Visão Geral FoodStation",
-      url: "/foodstation-overview",
-      icon: UtensilsCrossed,
-    },
-    {
-      title: "Máquina de Café",
-      url: "/coffee-machine-report",
-      icon: Coffee,
-    },
-    {
-      title: "Inventário Geral",
-      url: "/general-inventory",
-      icon: Package,
     },
   ] : [];
 
