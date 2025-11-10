@@ -237,3 +237,142 @@ export type ProductDetailedInfo = Product & {
   turnover_rate: number | null;
   coverage_days: number | null;
 };
+
+// ============================================
+// REPORTING MODULE SCHEMAS
+// ============================================
+
+// Predictive Analysis for Restock Recommendations
+export type PredictiveAnalysis = {
+  productId: number;
+  productName: string;
+  currentStock: number;
+  minQuantity: number | null;
+  maxQuantity: number | null;
+  last15DaysConsumption: number[]; // Daily consumption for last 15 days
+  averageDailyConsumption: number;
+  consumptionTrend: 'increasing' | 'stable' | 'decreasing';
+  predicted15DaysConsumption: number;
+  recommendedReorder: number;
+  confidenceLevel: 'high' | 'medium' | 'low';
+  stockoutRisk: 'high' | 'medium' | 'low';
+  photoPath: string | null;
+};
+
+// Daily Consumption Total for User Report
+export type DailyConsumptionTotal = {
+  date: string; // YYYY-MM-DD
+  totalValue: number;
+  itemCount: number;
+};
+
+// User Consumption Report (FoodStation)
+export type UserConsumptionReport = {
+  user: User;
+  consumptions: ConsumptionWithDetails[];
+  dailyTotals: DailyConsumptionTotal[];
+  monthlyTotal: number;
+  period: {
+    start: string;
+    end: string;
+  };
+};
+
+// Restock Prediction Report (FoodStation)
+export type RestockPredictionReport = {
+  sector: Sector;
+  products: PredictiveAnalysis[];
+  generatedAt: string;
+  periodAnalyzed: {
+    start: string;
+    end: string;
+  };
+  periodProjected: {
+    start: string;
+    end: string;
+  };
+  totalRecommendedItems: number;
+  highRiskItems: number;
+};
+
+// Product Stock Snapshot (for monthly/weekly reports)
+export type ProductStockSnapshot = {
+  productId: number;
+  productName: string;
+  quantity: number;
+  value: number;
+  photoPath: string | null;
+};
+
+// Purchase Recommendation
+export type PurchaseRecommendation = {
+  productId: number;
+  productName: string;
+  currentStock: number;
+  recommendedQuantity: number;
+  estimatedCost: number;
+  priority: 'high' | 'medium' | 'low';
+  photoPath: string | null;
+};
+
+// Sector Monthly Report (Cleaning, Coffee Machine, etc.)
+export type SectorMonthlyReport = {
+  sector: Sector;
+  period: {
+    start: string;
+    end: string;
+    cadence: 'monthly' | 'biweekly' | 'weekly';
+  };
+  openingStock: ProductStockSnapshot[];
+  closingStock: ProductStockSnapshot[];
+  totalConsumption: number;
+  totalItemsConsumed: number;
+  recommendedPurchases: PurchaseRecommendation[];
+  frequencyAnalysis?: {
+    productId: number;
+    productName: string;
+    restockFrequency: number; // times per period
+    averageDailyUsage: number;
+  }[];
+};
+
+// General Inventory Report
+export type GeneralInventoryReport = {
+  generatedAt: string;
+  sectors: {
+    sector: Sector;
+    totalProducts: number;
+    totalValue: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+  }[];
+  overallStats: {
+    totalProducts: number;
+    totalValue: number;
+    totalLowStock: number;
+    totalOutOfStock: number;
+    averageTurnover: number | null;
+  };
+  topConsumedItems: TopConsumedItem[];
+  criticalAlerts: {
+    productId: number;
+    productName: string;
+    sectorName: string;
+    alertType: 'out_of_stock' | 'low_stock' | 'expiring_soon';
+    message: string;
+  }[];
+};
+
+// Query Parameters Schemas
+export const reportDateRangeSchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  month: z.string().optional(), // YYYY-MM format
+});
+
+export const sectorReportCadenceSchema = z.object({
+  cadence: z.enum(['monthly', 'biweekly', 'weekly']).default('monthly'),
+});
+
+export type ReportDateRange = z.infer<typeof reportDateRangeSchema>;
+export type SectorReportCadence = z.infer<typeof sectorReportCadenceSchema>;

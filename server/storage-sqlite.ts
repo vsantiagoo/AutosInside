@@ -18,6 +18,11 @@ import type {
   TopConsumedItem,
   SectorPerformanceIndicators,
   ProductDetailedInfo,
+  UserConsumptionReport,
+  RestockPredictionReport,
+  SectorMonthlyReport,
+  GeneralInventoryReport,
+  DailyConsumptionTotal,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -71,6 +76,12 @@ export interface IStorage {
   // Sector Reports
   getSectorReport(sectorId: number): Promise<SectorReport>;
   getStockTransactionsBySector(sectorId: number): Promise<StockTransactionWithProduct[]>;
+  
+  // Reporting Module - New methods for analytics and predictions
+  getConsumptionsBySectorAndDateRange(sectorId: number, startDate: string, endDate: string): Promise<ConsumptionWithDetails[]>;
+  getDailyConsumptionTotals(userId: number, startDate: string, endDate: string): Promise<DailyConsumptionTotal[]>;
+  getProductConsumptionHistory(productId: number, days: number): Promise<{date: string; qty: number}[]>;
+  getGeneralInventoryStats(): Promise<any>;
 }
 
 class SqliteStorage implements IStorage {
@@ -842,6 +853,110 @@ class SqliteStorage implements IStorage {
       stockTransactions,
       consumptions,
       summary,
+    };
+  }
+
+  // ============================================
+  // REPORTING MODULE METHODS
+  // ============================================
+
+  async getConsumptionsBySectorAndDateRange(
+    sectorId: number,
+    startDate: string,
+    endDate: string
+  ): Promise<ConsumptionWithDetails[]> {
+    const consumptions = db.prepare(`
+      SELECT 
+        c.*,
+        u.full_name as user_name,
+        p.name as product_name,
+        p.photo_path
+      FROM consumptions c
+      LEFT JOIN users u ON c.user_id = u.id
+      LEFT JOIN products p ON c.product_id = p.id
+      WHERE p.sector_id = ?
+        AND c.consumed_at >= ?
+        AND c.consumed_at <= ?
+      ORDER BY c.consumed_at DESC
+    `).all(sectorId, startDate, endDate) as ConsumptionWithDetails[];
+    
+    return consumptions;
+  }
+
+  async getDailyConsumptionTotals(
+    userId: number,
+    startDate: string,
+    endDate: string
+  ): Promise<DailyConsumptionTotal[]> {
+    const totals = db.prepare(`
+      SELECT 
+        DATE(consumed_at) as date,
+        SUM(total_price) as totalValue,
+        COUNT(*) as itemCount
+      FROM consumptions
+      WHERE user_id = ?
+        AND consumed_at >= ?
+        AND consumed_at <= ?
+      GROUP BY DATE(consumed_at)
+      ORDER BY date
+    `).all(userId, startDate, endDate) as DailyConsumptionTotal[];
+    
+    return totals;
+  }
+
+  async getProductConsumptionHistory(
+    productId: number,
+    days: number
+  ): Promise<{date: string; qty: number}[]> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString();
+    
+    const history = db.prepare(`
+      SELECT 
+        DATE(consumed_at) as date,
+        SUM(qty) as qty
+      FROM consumptions
+      WHERE product_id = ?
+        AND consumed_at >= ?
+      GROUP BY DATE(consumed_at)
+      ORDER BY date
+    `).all(productId, startDateStr) as {date: string; qty: number}[];
+    
+    return history;
+  }
+
+  async getGeneralInventoryStats(): Promise<any> {
+    // Get all sectors with their stats
+    const sectorStats = db.prepare(`
+      SELECT 
+        s.id as sector_id,
+        s.name as sector_name,
+        COUNT(DISTINCT p.id) as total_products,
+        SUM(p.stock_quantity * p.unit_price) as total_value,
+        SUM(CASE WHEN p.stock_quantity <= COALESCE(p.low_stock_threshold, 10) 
+                 AND p.stock_quantity > 0 THEN 1 ELSE 0 END) as low_stock_count,
+        SUM(CASE WHEN p.stock_quantity = 0 THEN 1 ELSE 0 END) as out_of_stock_count
+      FROM sectors s
+      LEFT JOIN products p ON s.id = p.sector_id
+      GROUP BY s.id, s.name
+      ORDER BY s.name
+    `).all();
+    
+    // Get overall totals
+    const overallStats = db.prepare(`
+      SELECT 
+        COUNT(*) as total_products,
+        SUM(stock_quantity * unit_price) as total_value,
+        SUM(CASE WHEN stock_quantity <= COALESCE(low_stock_threshold, 10) 
+                 AND stock_quantity > 0 THEN 1 ELSE 0 END) as total_low_stock,
+        SUM(CASE WHEN stock_quantity = 0 THEN 1 ELSE 0 END) as total_out_of_stock
+      FROM products
+    `).get();
+    
+    return {
+      sectorStats,
+      overallStats,
     };
   }
 }
