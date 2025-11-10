@@ -35,7 +35,7 @@ const getStatusBadge = (status: 'OK' | 'Baixo' | 'Zerado' | 'Crítico') => {
 };
 
 export default function GeneralInventory() {
-  const [selectedSector, setSelectedSector] = useState<string>('');
+  const [selectedSector, setSelectedSector] = useState<string>('all');
   const [keyword, setKeyword] = useState('');
   const [includeOutOfStock, setIncludeOutOfStock] = useState(true);
   const [debouncedKeyword, setDebouncedKeyword] = useState('');
@@ -62,7 +62,7 @@ export default function GeneralInventory() {
     queryKey: ['/api/reports/inventory/general-new', selectedSector, debouncedKeyword, includeOutOfStock],
     queryFn: async () => {
       const params = new URLSearchParams({
-        ...(selectedSector && { sectorId: selectedSector }),
+        ...(selectedSector && selectedSector !== 'all' && { sectorId: selectedSector }),
         ...(debouncedKeyword && { keyword: debouncedKeyword }),
         includeOutOfStock: String(includeOutOfStock),
       });
@@ -206,7 +206,7 @@ export default function GeneralInventory() {
                   <SelectValue placeholder="Todos os setores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os setores</SelectItem>
+                  <SelectItem value="all">Todos os setores</SelectItem>
                   {sectors.map((sector: any) => (
                     <SelectItem key={sector.id} value={sector.id.toString()}>
                       {sector.name}
