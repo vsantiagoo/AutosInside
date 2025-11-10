@@ -157,6 +157,7 @@ export type ProductWithSector = Product & {
 
 export type ConsumptionWithDetails = Consumption & {
   user_name?: string;
+  user_matricula?: string;
   product_name?: string;
   photo_path?: string | null;
 };
@@ -608,3 +609,96 @@ export const generalInventoryQuerySchema = z.object({
 });
 
 export type GeneralInventoryQuery = z.infer<typeof generalInventoryQuerySchema>;
+
+// ============================================
+// FOODSTATION CONSUMPTION CONTROL REPORT
+// ============================================
+
+export type FoodStationConsumptionControlRecord = {
+  consumption_id: number;
+  matricula: string;
+  user_name: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  consumed_at: string;
+  photo_path: string | null;
+};
+
+export type FoodStationConsumptionControlReport = {
+  userId: number | null;
+  userName: string | null;
+  records: FoodStationConsumptionControlRecord[];
+  monthlyTotal: number;
+  totalItems: number;
+  period: {
+    start: string;
+    end: string;
+  };
+  generatedAt: string;
+};
+
+export const foodStationConsumptionControlQuerySchema = z.object({
+  userId: z.number().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
+export type FoodStationConsumptionControlQuery = z.infer<typeof foodStationConsumptionControlQuerySchema>;
+
+// ============================================
+// SECTOR PRODUCT MANAGEMENT REPORT
+// ============================================
+
+export type SectorProductManagementProduct = {
+  product_id: number;
+  product_name: string;
+  category: string | null;
+  current_stock: number;
+  total_entries: number;
+  total_exits: number;
+  unit_price: number;
+  total_value: number;
+  avg_daily_consumption_30d: number;
+  predicted_consumption_30d: number;
+  recommended_reorder: number;
+  days_until_stockout: number | null;
+  next_order_date: string | null;
+  stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Crítico';
+  photo_path: string | null;
+};
+
+export type SectorProductManagementKPIs = {
+  total_products: number;
+  total_entries: number;
+  total_exits: number;
+  total_inventory_value: number;
+  total_reorder_value: number;
+};
+
+export type SectorProductManagementReport = {
+  sector: Sector;
+  kpis: SectorProductManagementKPIs;
+  products: SectorProductManagementProduct[];
+  topExits: {
+    product_id: number;
+    product_name: string;
+    total_qty: number;
+    total_value: number;
+    photo_path: string | null;
+  }[];
+  period: {
+    start: string;
+    end: string;
+    days: number;
+  };
+  generatedAt: string;
+};
+
+export const sectorProductManagementQuerySchema = z.object({
+  sectorId: z.number(),
+  days: z.number().optional().default(30),
+});
+
+export type SectorProductManagementQuery = z.infer<typeof sectorProductManagementQuerySchema>;

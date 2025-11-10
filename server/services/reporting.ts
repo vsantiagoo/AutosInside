@@ -398,91 +398,6 @@ export async function generateSectorMonthlyReport(
   };
 }
 
-// ============================================
-// GENERAL INVENTORY REPORT
-// ============================================
-
-/**
- * Generate General Inventory Overview Report
- */
-export async function generateGeneralInventoryReport(): Promise<GeneralInventoryReport> {
-  const stats = await storage.getGeneralInventoryStats();
-  const allSectors = await storage.getAllSectors();
-  const topConsumed = await storage.getTopConsumedItems(10);
-  const allProducts = await storage.getAllProducts();
-
-  // Build sector summaries
-  const sectors = stats.sectorStats.map((s: any) => ({
-    sector: allSectors.find(sec => sec.id === s.sector_id) || { id: s.sector_id, name: s.sector_name },
-    totalProducts: s.total_products || 0,
-    totalValue: s.total_value || 0,
-    lowStockCount: s.low_stock_count || 0,
-    outOfStockCount: s.out_of_stock_count || 0,
-  }));
-
-  // Critical alerts
-  const criticalAlerts: any[] = [];
-  
-  // Out of stock alerts
-  allProducts
-    .filter(p => p.stock_quantity === 0)
-    .forEach(p => {
-      criticalAlerts.push({
-        productId: p.id,
-        productName: p.name,
-        sectorName: p.sector_name || 'N/A',
-        alertType: 'out_of_stock' as const,
-        message: `Produto sem estoque`,
-      });
-    });
-
-  // Low stock alerts
-  allProducts
-    .filter(p => p.stock_quantity > 0 && p.stock_quantity <= (p.low_stock_threshold || 10))
-    .forEach(p => {
-      criticalAlerts.push({
-        productId: p.id,
-        productName: p.name,
-        sectorName: p.sector_name || 'N/A',
-        alertType: 'low_stock' as const,
-        message: `Estoque baixo: ${p.stock_quantity} unidades`,
-      });
-    });
-
-  // Expiring soon (within 30 days)
-  const thirtyDaysFromNow = new Date();
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-  
-  allProducts
-    .filter(p => p.expiry_date && new Date(p.expiry_date) <= thirtyDaysFromNow)
-    .forEach(p => {
-      criticalAlerts.push({
-        productId: p.id,
-        productName: p.name,
-        sectorName: p.sector_name || 'N/A',
-        alertType: 'expiring_soon' as const,
-        message: `Validade próxima: ${new Date(p.expiry_date!).toLocaleDateString('pt-BR')}`,
-      });
-    });
-
-  // Sort alerts by priority
-  const alertPriority: Record<string, number> = { out_of_stock: 0, expiring_soon: 1, low_stock: 2 };
-  criticalAlerts.sort((a, b) => (alertPriority[a.alertType] || 0) - (alertPriority[b.alertType] || 0));
-
-  return {
-    generatedAt: new Date().toISOString(),
-    sectors,
-    overallStats: {
-      totalProducts: stats.overallStats.total_products || 0,
-      totalValue: stats.overallStats.total_value || 0,
-      totalLowStock: stats.overallStats.total_low_stock || 0,
-      totalOutOfStock: stats.overallStats.total_out_of_stock || 0,
-      averageTurnover: null, // Can be enhanced later
-    },
-    topConsumedItems: topConsumed,
-    criticalAlerts,
-  };
-}
 
 // ============================================
 // NEW REPORTS - FOODSTATION & CLEANING
@@ -1108,6 +1023,218 @@ export async function generateGeneralInventoryReportNew(
     },
     bySector,
     allProducts,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// ============================================
+// FOODSTATION CONSUMPTION CONTROL REPORT
+// ============================================
+
+/**
+ * Generate FoodStation Consumption Control Report
+ * Shows detailed consumption records for a user with filtering
+ */
+export async function generateFoodStationConsumptionControlReport(
+  userId?: number,
+  startDate?: string,
+  endDate?: string
+): Promise<import('@shared/schema').FoodStationConsumptionControlReport> {
+  // Default to current month if no dates provided
+  const now = new Date();
+  const start = startDate || new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const end = endDate || new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+  // Get consumptions for the period
+  let consumptions: any[];
+  let userName: string | null = null;
+  
+  if (userId) {
+    const user = await storage.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    userName = user.full_name;
+    consumptions = await storage.getUserConsumptions(userId, start, end);
+  } else {
+    // Get all consumptions in period (for admin overview)
+    consumptions = await storage.getConsumptionsByPeriod(start, end);
+  }
+
+  // Transform to report format
+  const records: import('@shared/schema').FoodStationConsumptionControlRecord[] = consumptions.map(c => ({
+    consumption_id: c.id,
+    matricula: c.user_matricula || '',
+    user_name: c.user_name || '',
+    product_name: c.product_name || '',
+    quantity: c.qty,
+    unit_price: c.unit_price,
+    total_price: c.total_price,
+    consumed_at: c.consumed_at,
+    photo_path: c.photo_path || null,
+  }));
+
+  // Calculate totals
+  const monthlyTotal = records.reduce((sum, r) => sum + r.total_price, 0);
+  const totalItems = records.reduce((sum, r) => sum + r.quantity, 0);
+
+  return {
+    userId: userId || null,
+    userName,
+    records,
+    monthlyTotal,
+    totalItems,
+    period: {
+      start,
+      end,
+    },
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// ============================================
+// SECTOR PRODUCT MANAGEMENT REPORT
+// ============================================
+
+/**
+ * Generate Sector Product Management Report
+ * Shows entries, exits, top products, and reorder predictions for a sector
+ */
+export async function generateSectorProductManagementReport(
+  sectorId: number,
+  days: number = 30
+): Promise<import('@shared/schema').SectorProductManagementReport> {
+  // Get sector
+  const sector = await storage.getSector(sectorId);
+  if (!sector) {
+    throw new Error('Sector not found');
+  }
+
+  // Get products for sector
+  const products = await storage.getProductsBySector(sectorId);
+  
+  // Calculate period
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+
+  // Get stock transactions for the period
+  const transactions = await storage.getStockTransactionsByPeriod(
+    startDate.toISOString(),
+    endDate.toISOString()
+  );
+
+  // Get consumptions for the period
+  const consumptions = await storage.getConsumptionsByPeriod(
+    startDate.toISOString(),
+    endDate.toISOString()
+  );
+
+  // Process each product
+  const productReports: import('@shared/schema').SectorProductManagementProduct[] = [];
+  let totalEntries = 0;
+  let totalExits = 0;
+  let totalInventoryValue = 0;
+  let totalReorderValue = 0;
+
+  for (const product of products) {
+    // Calculate entries (positive transactions)
+    const productEntries = transactions
+      .filter(t => t.product_id === product.id && t.change > 0)
+      .reduce((sum, t) => sum + t.change, 0);
+
+    // Calculate exits (negative transactions + consumptions)
+    const productExitsFromTransactions = transactions
+      .filter(t => t.product_id === product.id && t.change < 0)
+      .reduce((sum, t) => sum + Math.abs(t.change), 0);
+    
+    const productExitsFromConsumptions = consumptions
+      .filter(c => c.product_id === product.id)
+      .reduce((sum, c) => sum + c.qty, 0);
+    
+    const productExits = productExitsFromTransactions + productExitsFromConsumptions;
+
+    // Calculate daily consumption average
+    const avgDailyConsumption = productExits / days;
+
+    // Predict next 30 days consumption
+    const predicted30DaysConsumption = avgDailyConsumption * 30;
+
+    // Calculate days until stockout
+    const daysUntilStockout = avgDailyConsumption > 0 
+      ? Math.floor(product.stock_quantity / avgDailyConsumption)
+      : null;
+
+    // Calculate next order date
+    const nextOrderDate = daysUntilStockout !== null && daysUntilStockout < 60
+      ? new Date(Date.now() + (daysUntilStockout - 7) * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
+    // Calculate recommended reorder (with 20% buffer)
+    const recommendedReorder = Math.ceil(predicted30DaysConsumption * 1.2);
+
+    // Determine stock status
+    const stockStatus = getStockStatus(
+      product.stock_quantity,
+      product.low_stock_threshold,
+      product.max_quantity
+    );
+
+    const productValue = product.stock_quantity * product.unit_price;
+    const reorderValue = recommendedReorder * product.unit_price;
+
+    totalEntries += productEntries;
+    totalExits += productExits;
+    totalInventoryValue += productValue;
+    totalReorderValue += reorderValue;
+
+    productReports.push({
+      product_id: product.id,
+      product_name: product.name,
+      category: product.category,
+      current_stock: product.stock_quantity,
+      total_entries: productEntries,
+      total_exits: productExits,
+      unit_price: product.unit_price,
+      total_value: productValue,
+      avg_daily_consumption_30d: avgDailyConsumption,
+      predicted_consumption_30d: predicted30DaysConsumption,
+      recommended_reorder: recommendedReorder,
+      days_until_stockout: daysUntilStockout,
+      next_order_date: nextOrderDate,
+      stock_status: stockStatus,
+      photo_path: product.photo_path,
+    });
+  }
+
+  // Get top 5 products by exits
+  const topExits = productReports
+    .sort((a, b) => b.total_exits - a.total_exits)
+    .slice(0, 5)
+    .map(p => ({
+      product_id: p.product_id,
+      product_name: p.product_name,
+      total_qty: p.total_exits,
+      total_value: p.total_exits * p.unit_price,
+      photo_path: p.photo_path,
+    }));
+
+  return {
+    sector,
+    kpis: {
+      total_products: products.length,
+      total_entries: totalEntries,
+      total_exits: totalExits,
+      total_inventory_value: totalInventoryValue,
+      total_reorder_value: totalReorderValue,
+    },
+    products: productReports,
+    topExits,
+    period: {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+      days,
+    },
     generatedAt: new Date().toISOString(),
   };
 }

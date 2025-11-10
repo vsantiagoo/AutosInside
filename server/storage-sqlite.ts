@@ -56,6 +56,7 @@ export interface IStorage {
   // Stock Transactions
   getStockTransaction(id: number): Promise<StockTransaction | undefined>;
   getAllStockTransactions(): Promise<StockTransactionWithProduct[]>;
+  getStockTransactionsByPeriod(startDate: string, endDate: string): Promise<StockTransactionWithProduct[]>;
   createStockTransaction(transaction: Omit<StockTransaction, 'id' | 'created_at'>): Promise<StockTransaction>;
 
   // Consumptions
@@ -63,6 +64,7 @@ export interface IStorage {
   getAllConsumptions(): Promise<ConsumptionWithDetails[]>;
   getRecentConsumptions(limit: number): Promise<ConsumptionWithDetails[]>;
   getUserConsumptions(userId: number, startDate?: string, endDate?: string): Promise<ConsumptionWithDetails[]>;
+  getConsumptionsByPeriod(startDate: string, endDate: string): Promise<ConsumptionWithDetails[]>;
   getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number>;
   getTopConsumedItems(limit: number): Promise<TopConsumedItem[]>;
   createConsumption(consumption: Omit<Consumption, 'id' | 'consumed_at'>): Promise<Consumption>;
@@ -564,11 +566,24 @@ class SqliteStorage implements IStorage {
 
   async getAllStockTransactions(): Promise<StockTransactionWithProduct[]> {
     return db.prepare(`
-      SELECT st.*, p.name as product_name, p.photo_path
+      SELECT st.*, p.name as product_name, p.photo_path, u.full_name as user_name
       FROM stock_transactions st
       LEFT JOIN products p ON st.product_id = p.id
+      LEFT JOIN users u ON st.user_id = u.id
       ORDER BY st.created_at DESC
     `).all() as StockTransactionWithProduct[];
+  }
+
+  async getStockTransactionsByPeriod(startDate: string, endDate: string): Promise<StockTransactionWithProduct[]> {
+    return db.prepare(`
+      SELECT st.*, p.name as product_name, p.photo_path, u.full_name as user_name
+      FROM stock_transactions st
+      LEFT JOIN products p ON st.product_id = p.id
+      LEFT JOIN users u ON st.user_id = u.id
+      WHERE date(st.created_at) >= date(?)
+        AND date(st.created_at) <= date(?)
+      ORDER BY st.created_at DESC
+    `).all(startDate, endDate) as StockTransactionWithProduct[];
   }
 
   async createStockTransaction(insertTransaction: Omit<StockTransaction, 'id' | 'created_at'>): Promise<StockTransaction> {
@@ -615,6 +630,7 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
+        u.matricula as user_matricula,
         p.name as product_name,
         p.photo_path
       FROM consumptions c
@@ -629,6 +645,7 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
+        u.matricula as user_matricula,
         p.name as product_name,
         p.photo_path
       FROM consumptions c
@@ -644,6 +661,7 @@ class SqliteStorage implements IStorage {
       SELECT 
         c.*,
         u.full_name as user_name,
+        u.matricula as user_matricula,
         p.name as product_name,
         p.photo_path
       FROM consumptions c
@@ -666,6 +684,23 @@ class SqliteStorage implements IStorage {
     query += ` ORDER BY c.consumed_at DESC`;
 
     return db.prepare(query).all(...params) as ConsumptionWithDetails[];
+  }
+
+  async getConsumptionsByPeriod(startDate: string, endDate: string): Promise<ConsumptionWithDetails[]> {
+    return db.prepare(`
+      SELECT 
+        c.*,
+        u.full_name as user_name,
+        u.matricula as user_matricula,
+        p.name as product_name,
+        p.photo_path
+      FROM consumptions c
+      LEFT JOIN users u ON c.user_id = u.id
+      LEFT JOIN products p ON c.product_id = p.id
+      WHERE date(c.consumed_at) >= date(?)
+        AND date(c.consumed_at) <= date(?)
+      ORDER BY c.consumed_at DESC
+    `).all(startDate, endDate) as ConsumptionWithDetails[];
   }
 
   async getUserMonthlyTotal(userId: number, year: number, month: number): Promise<number> {
@@ -841,7 +876,9 @@ class SqliteStorage implements IStorage {
         SELECT 
           c.*,
           u.full_name as user_name,
-          p.name as product_name
+          u.matricula as user_matricula,
+          p.name as product_name,
+          p.photo_path
         FROM consumptions c
         LEFT JOIN users u ON c.user_id = u.id
         LEFT JOIN products p ON c.product_id = p.id

@@ -985,12 +985,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     generateUserConsumptionReport,
     generateRestockPredictionReport,
     generateSectorMonthlyReport,
-    generateGeneralInventoryReport,
     generateFoodStationConsumptionsReport,
     generateFoodStationOverviewReport,
     generateCleaningSectorReport,
     generateCoffeeMachineReport,
     generateGeneralInventoryReportNew,
+    generateFoodStationConsumptionControlReport,
+    generateSectorProductManagementReport,
   } = await import('./services/reporting');
 
   // User Consumption Report (FoodStation)
@@ -1045,7 +1046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // General Inventory Report
   app.get('/api/reports/inventory/general', authMiddleware, async (req, res) => {
     try {
-      const report = await generateGeneralInventoryReport();
+      const report = await generateGeneralInventoryReportNew();
       res.json(report);
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to generate general inventory report' });
@@ -1153,6 +1154,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(report);
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to generate general inventory report' });
+    }
+  });
+
+  // FoodStation Consumption Control Report
+  app.get('/api/reports/foodstation/consumption-control', authMiddleware, async (req, res) => {
+    try {
+      // Validate query parameters
+      const querySchema = z.object({
+        userId: z.coerce.number().positive().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      });
+
+      const validationResult = querySchema.safeParse(req.query);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid query parameters', 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { userId, startDate, endDate } = validationResult.data;
+      const report = await generateFoodStationConsumptionControlReport(userId, startDate, endDate);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate FoodStation consumption control report' });
+    }
+  });
+
+  // Sector Product Management Report
+  app.get('/api/reports/sector-management', authMiddleware, async (req, res) => {
+    try {
+      // Validate query parameters
+      const querySchema = z.object({
+        sectorId: z.coerce.number().positive(),
+        days: z.coerce.number().positive().optional().default(30),
+      });
+
+      const validationResult = querySchema.safeParse(req.query);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid query parameters', 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { sectorId, days } = validationResult.data;
+      const report = await generateSectorProductManagementReport(sectorId, days);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate sector product management report' });
     }
   });
 
