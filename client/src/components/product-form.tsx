@@ -366,6 +366,32 @@ export function ProductForm({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="visible_to_users"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      data-testid="checkbox-visible-to-users"
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Visível para Usuários
+                    </FormLabel>
+                    <FormDescription>
+                      Quando desmarcado, o produto não aparecerá no FoodStation para usuários, mas continuará sendo contabilizado nos relatórios
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 

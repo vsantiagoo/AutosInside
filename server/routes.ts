@@ -389,7 +389,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Products routes
   app.get('/api/products', authMiddleware, async (req, res) => {
-    const products = await storage.getAllProducts();
+    const allProducts = await storage.getAllProducts();
+    
+    // Filter products based on user role
+    // Admin users see all products
+    // Regular users only see products marked as visible_to_users
+    const products = req.user?.role === 'admin' 
+      ? allProducts 
+      : allProducts.filter((p: any) => p.visible_to_users);
+    
     res.json(products);
   });
 
@@ -411,6 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         supplier: req.body.supplier || null,
         asset_number: req.body.asset_number || null,
         status: req.body.status || 'Ativo',
+        visible_to_users: req.body.visible_to_users !== undefined ? req.body.visible_to_users === 'true' || req.body.visible_to_users === true : true,
         last_purchase_date: req.body.last_purchase_date || null,
         expiry_date: req.body.expiry_date || null,
         warranty_date: req.body.warranty_date || null,
@@ -476,6 +485,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.supplier !== undefined) updateData.supplier = req.body.supplier || null;
       if (req.body.asset_number !== undefined) updateData.asset_number = req.body.asset_number || null;
       if (req.body.status !== undefined) updateData.status = req.body.status || 'Ativo';
+      if (req.body.visible_to_users !== undefined) {
+        updateData.visible_to_users = req.body.visible_to_users === 'true' || req.body.visible_to_users === true;
+      }
       if (req.body.last_purchase_date !== undefined) updateData.last_purchase_date = req.body.last_purchase_date || null;
       if (req.body.expiry_date !== undefined) updateData.expiry_date = req.body.expiry_date || null;
       if (req.body.warranty_date !== undefined) updateData.warranty_date = req.body.warranty_date || null;
