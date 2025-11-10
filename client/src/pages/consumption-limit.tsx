@@ -54,10 +54,10 @@ export default function ConsumptionLimit() {
   const handleSave = () => {
     const limit = monthlyLimit ? parseFloat(monthlyLimit) : null;
     
-    if (limitEnabled && (limit === null || limit <= 0)) {
+    if (limitEnabled && (limit === null || limit < 0.01)) {
       toast({
         title: "Valor inválido",
-        description: "Por favor, insira um valor válido para o limite mensal.",
+        description: "Por favor, insira um valor de pelo menos R$ 0.01 para o limite mensal.",
         variant: "destructive",
       });
       return;
@@ -170,15 +170,15 @@ export default function ConsumptionLimit() {
               <Input
                 id="monthly-limit"
                 type="number"
-                step="0.01"
-                min="0"
-                placeholder="Ex: 500.00"
+                step="any"
+                min="0.01"
+                placeholder="Ex: 10.00 ou 500.00"
                 value={monthlyLimit}
                 onChange={(e) => setMonthlyLimit(e.target.value)}
                 data-testid="input-monthly-limit"
               />
               <p className="text-sm text-muted-foreground">
-                Insira o valor máximo que você deseja gastar por mês
+                Insira qualquer valor desejado (mínimo R$ 0.01)
               </p>
             </div>
           )}

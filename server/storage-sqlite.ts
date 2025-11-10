@@ -74,18 +74,30 @@ export interface IStorage {
 }
 
 class SqliteStorage implements IStorage {
+  // Helper to convert SQLite integers to booleans for User objects
+  private normalizeUser(rawUser: any): User {
+    if (!rawUser) return rawUser;
+    return {
+      ...rawUser,
+      limit_enabled: Boolean(rawUser.limit_enabled),
+    };
+  }
+
   // Users
   async getUser(id: number): Promise<User | undefined> {
-    return db.prepare('SELECT * FROM users WHERE id = ?').get(id) as User | undefined;
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+    return user ? this.normalizeUser(user) : undefined;
   }
 
   async getUserByMatricula(matricula: string): Promise<User | undefined> {
     // Case-insensitive matricula lookup
-    return db.prepare('SELECT * FROM users WHERE LOWER(matricula) = LOWER(?)').get(matricula) as User | undefined;
+    const user = db.prepare('SELECT * FROM users WHERE LOWER(matricula) = LOWER(?)').get(matricula);
+    return user ? this.normalizeUser(user) : undefined;
   }
 
   async getAllUsers(): Promise<User[]> {
-    return db.prepare('SELECT * FROM users ORDER BY created_at DESC').all() as User[];
+    const users = db.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
+    return users.map(u => this.normalizeUser(u));
   }
 
   async createUser(insertUser: InsertUser & { password_hash: string | null }): Promise<User> {
