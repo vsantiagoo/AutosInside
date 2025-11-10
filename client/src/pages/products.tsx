@@ -50,7 +50,19 @@ export default function Products() {
       await apiRequest('DELETE', `/api/products/${id}`);
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a produtos
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      
+      // Invalidar TODAS as queries de setores
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/sectors/');
+        }
+      });
+      
       toast({
         title: 'Produto excluído',
         description: 'O produto foi excluído com sucesso.',

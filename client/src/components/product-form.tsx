@@ -120,12 +120,24 @@ export function ProductForm({
       return result.json();
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a produtos
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      
+      // Invalidar TODAS as queries de setores (usa predicate para pegar todos os setores)
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/sectors/');
+        }
+      });
+      
+      // Invalidar queries adicionais específicas
       additionalQueryKeys.forEach(key => {
         queryClient.invalidateQueries({ queryKey: key });
       });
+      
       toast({
         title: 'Produto criado',
         description: 'O produto foi criado com sucesso.',
@@ -155,12 +167,24 @@ export function ProductForm({
       return result.json();
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a produtos
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      
+      // Invalidar TODAS as queries de setores (usa predicate para pegar todos os setores)
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0];
+          return typeof key === 'string' && key.startsWith('/api/sectors/');
+        }
+      });
+      
+      // Invalidar queries adicionais específicas
       additionalQueryKeys.forEach(key => {
         queryClient.invalidateQueries({ queryKey: key });
       });
+      
       toast({
         title: 'Produto atualizado',
         description: 'O produto foi atualizado com sucesso.',
@@ -375,18 +399,18 @@ export function ProductForm({
                   <FormControl>
                     <input
                       type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      data-testid="checkbox-visible-to-users"
+                      checked={!field.value}
+                      onChange={(e) => field.onChange(!e.target.checked)}
+                      data-testid="checkbox-hide-from-foodstation"
                       className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Visível para Usuários
+                      Ocultar do FoodStation
                     </FormLabel>
                     <FormDescription>
-                      Quando desmarcado, o produto não aparecerá no FoodStation para usuários, mas continuará sendo contabilizado nos relatórios
+                      Quando marcado, o produto não aparecerá no FoodStation para usuários, mas continuará sendo contabilizado nos relatórios
                     </FormDescription>
                   </div>
                 </FormItem>
