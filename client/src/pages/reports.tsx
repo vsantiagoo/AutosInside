@@ -198,7 +198,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Products Table */}
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -329,7 +329,7 @@ export default function ReportsPage() {
                     </div>
 
                     {/* Consumptions Table */}
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -458,7 +458,7 @@ export default function ReportsPage() {
                         <h3 className="text-lg font-semibold mb-3" data-testid="text-recommendations-title">
                           Recomendações de Compra
                         </h3>
-                        <div className="rounded-md border mb-6">
+                        <div className="rounded-md border overflow-x-auto mb-6">
                           <Table>
                             <TableHeader>
                               <TableRow>
