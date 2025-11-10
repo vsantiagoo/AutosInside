@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,11 @@ import {
   CheckCircle2,
   XCircle,
   Calendar,
-  Package
+  Package,
+  Coffee,
+  UtensilsCrossed,
+  FileBarChart,
+  ArrowRight
 } from 'lucide-react';
 import type { 
   RestockPredictionReport, 
@@ -26,6 +31,7 @@ import type {
 } from '@shared/schema';
 
 export default function ReportsPage() {
+  const navigate = useNavigate();
   const [selectedSector, setSelectedSector] = useState<string>('');
   const [selectedCadence, setSelectedCadence] = useState<'monthly' | 'biweekly' | 'weekly'>('monthly');
 
@@ -102,6 +108,30 @@ export default function ReportsPage() {
     return <Badge variant="outline" data-testid={`badge-priority-low`}>Baixa</Badge>;
   };
 
+  const reportCards = [
+    {
+      title: "Visão Geral FoodStation",
+      description: "Análise completa com KPIs, produtos mais consumidos e previsão de reposição",
+      icon: UtensilsCrossed,
+      path: "/foodstation-overview",
+      color: "text-orange-500",
+    },
+    {
+      title: "Máquina de Café",
+      description: "Monitoramento semanal/quinzenal com análise de frequência de consumo",
+      icon: Coffee,
+      path: "/coffee-machine-report",
+      color: "text-amber-600",
+    },
+    {
+      title: "Inventário Geral",
+      description: "Visão consolidada de todos os produtos com filtros, gráficos e exportação",
+      icon: FileBarChart,
+      path: "/general-inventory",
+      color: "text-blue-500",
+    },
+  ];
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-card p-4 sm:p-6">
@@ -109,11 +139,36 @@ export default function ReportsPage() {
           Relatórios
         </h1>
         <p className="text-sm text-muted-foreground mt-1" data-testid="text-page-description">
-          Análise preditiva e relatórios de consumo
+          Central de relatórios e análises do sistema
         </p>
       </div>
 
       <div className="flex-1 overflow-auto p-4 sm:p-6">
+        {/* Report Cards Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4" data-testid="text-reports-section">
+            Relatórios Disponíveis
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reportCards.map((report) => (
+              <Card 
+                key={report.path} 
+                className="hover-elevate cursor-pointer transition-all"
+                onClick={() => navigate(report.path)}
+                data-testid={`card-report-${report.path.replace('/', '')}`}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <report.icon className={`h-8 w-8 ${report.color}`} />
+                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <CardTitle className="mt-4">{report.title}</CardTitle>
+                  <CardDescription>{report.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
         <Tabs defaultValue="foodstation-restock" className="w-full">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 mb-6" data-testid="tabs-reports">
             <TabsTrigger value="foodstation-restock" data-testid="tab-foodstation-restock">
