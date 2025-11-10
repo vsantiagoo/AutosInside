@@ -77,6 +77,7 @@ export function ProductForm({
       warranty_date: product?.warranty_date ?? null,
       asset_number: product?.asset_number ?? '',
       status: product?.status ?? ('Ativo' as const),
+      visible_to_users: product?.visible_to_users ?? true,
       photo: '',
     },
   });
@@ -101,6 +102,7 @@ export function ProductForm({
       warranty_date: product?.warranty_date ?? null,
       asset_number: product?.asset_number ?? '',
       status: product?.status ?? ('Ativo' as const),
+      visible_to_users: product?.visible_to_users ?? true,
       photo: '',
     });
     setPhotoPreview(product?.photo_path || null);
@@ -224,6 +226,7 @@ export function ProductForm({
     if (data.warranty_date) formData.append('warranty_date', data.warranty_date);
     if (data.asset_number) formData.append('asset_number', data.asset_number);
     if (data.status) formData.append('status', data.status);
+    formData.append('visible_to_users', data.visible_to_users?.toString() ?? 'true');
     if (data.photo instanceof File) {
       formData.append('photo', data.photo);
     }
