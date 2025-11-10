@@ -10,7 +10,8 @@ import {
   FileText,
   DollarSign,
   Warehouse,
-  BarChart3
+  BarChart3,
+  Coffee
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -105,6 +106,16 @@ export function AppSidebar() {
       title: "Visão Geral FoodStation",
       url: "/foodstation-overview",
       icon: UtensilsCrossed,
+    },
+    {
+      title: "Máquina de Café",
+      url: "/coffee-machine-report",
+      icon: Coffee,
+    },
+    {
+      title: "Inventário Geral",
+      url: "/general-inventory",
+      icon: Package,
     },
   ] : [];
 
