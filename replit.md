@@ -39,6 +39,10 @@ Preferred communication style: Simple, everyday language.
 - **Monthly Consumption Limits**: Users can configure monthly spending limits with real-time tracking, progress bars, and automatic validation in FoodStation.
 - **Consumption Reporting**: Users can view personal consumption history with date filtering and monthly totals.
 - **Product Visibility Control**: Admins can hide products from regular users' FoodStation view while maintaining full reporting integrity. The feature uses **inverted checkbox logic**: when "Ocultar do FoodStation" is **checked**, the product is **hidden** (`visible_to_users=false`); when **unchecked**, it is **visible** (`visible_to_users=true`). The default is unchecked (visible). Hidden products are excluded from `/api/products` for regular users but always included for admins. All reports intentionally exclude visibility filtering for accurate analytics. React Query cache invalidation uses predicate matching to synchronize product changes across all screens (Products, Sectors, Inventory, Dashboard).
+- **Advanced Reporting Module** (Admin-only):
+  - **FoodStation Overview Report** (`/foodstation-overview`): Comprehensive analysis with KPIs (total exits, top consumed items, restock value, high-risk items), top 5 consumed products visualization, and predictive restock table using 15-day consumption averages with 20% safety buffer. Includes period filtering (7/15/30 days) and auto-refresh every 30 seconds.
+  - **FoodStation Consumptions Report** (API): Customizable detailed consumption report with support for grouping by user/product/date and field selection via `/api/reports/foodstation/consumptions`.
+  - **Cleaning Sector Report** (API): Bimonthly control report with opening/closing stock snapshots, purchase calculations, and month-over-month comparison via `/api/reports/sector/cleaning`.
 
 ## External Dependencies
 - **Third-Party Libraries**:

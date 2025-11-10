@@ -21,6 +21,7 @@ import AdminSectors from "@/pages/admin-sectors";
 import Inventory from "@/pages/inventory";
 import SectorDetails from "@/pages/sector-details";
 import Reports from "@/pages/reports";
+import FoodStationOverview from "@/pages/foodstation-overview";
 import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
@@ -119,6 +120,7 @@ function AppRouter() {
                 <Route path="/inventory" element={<ProtectedRoute adminOnly={true}><Inventory /></ProtectedRoute>} />
                 <Route path="/sector/:id" element={<ProtectedRoute adminOnly={true}><SectorDetails /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute adminOnly={true}><Reports /></ProtectedRoute>} />
+                <Route path="/foodstation-overview" element={<ProtectedRoute adminOnly={true}><FoodStationOverview /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
               </Routes>
             </div>

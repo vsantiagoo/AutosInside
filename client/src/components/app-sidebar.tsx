@@ -101,6 +101,11 @@ export function AppSidebar() {
       url: "/reports",
       icon: BarChart3,
     },
+    {
+      title: "Visão Geral FoodStation",
+      url: "/foodstation-overview",
+      icon: UtensilsCrossed,
+    },
   ] : [];
 
   return (
