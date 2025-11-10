@@ -98,6 +98,7 @@ export const insertProductSchema = z.object({
   warranty_date: z.string().nullable().optional(),
   asset_number: z.string().nullable().optional(),
   status: z.enum(['Ativo', 'Inativo']).nullable().optional().default('Ativo'),
+  visible_to_users: z.boolean().default(true),
 });
 
 export type Product = z.infer<typeof productSchema>;

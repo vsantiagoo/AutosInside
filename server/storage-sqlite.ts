@@ -94,6 +94,15 @@ class SqliteStorage implements IStorage {
     };
   }
 
+  // Helper to convert SQLite integers to booleans for Product objects
+  private normalizeProduct(rawProduct: any): Product {
+    if (!rawProduct) return rawProduct;
+    return {
+      ...rawProduct,
+      visible_to_users: Boolean(rawProduct.visible_to_users),
+    };
+  }
+
   // Users
   async getUser(id: number): Promise<User | undefined> {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
@@ -184,7 +193,8 @@ class SqliteStorage implements IStorage {
 
   // Products
   async getProduct(id: number): Promise<Product | undefined> {
-    return db.prepare('SELECT * FROM products WHERE id = ?').get(id) as Product | undefined;
+    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+    return product ? this.normalizeProduct(product) : undefined;
   }
 
   async getAllProducts(): Promise<ProductWithSector[]> {
@@ -204,9 +214,9 @@ class SqliteStorage implements IStorage {
         min_quantity, max_quantity, total_in, total_out,
         photo_path, low_stock_threshold, supplier,
         last_purchase_date, last_count_date, expiry_date,
-        warranty_date, asset_number, status
+        warranty_date, asset_number, status, visible_to_users
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       insertProduct.name,
       insertProduct.sector_id,
@@ -228,7 +238,8 @@ class SqliteStorage implements IStorage {
       insertProduct.expiry_date,
       insertProduct.warranty_date,
       insertProduct.asset_number,
-      insertProduct.status
+      insertProduct.status,
+      insertProduct.visible_to_users ? 1 : 0
     );
     
     return this.getProduct(result.lastInsertRowid as number) as Promise<Product>;
@@ -242,9 +253,9 @@ class SqliteStorage implements IStorage {
         min_quantity, max_quantity, total_in, total_out,
         photo_path, low_stock_threshold, supplier,
         last_purchase_date, last_count_date, expiry_date,
-        warranty_date, asset_number, status
+        warranty_date, asset_number, status, visible_to_users
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertMany = db.transaction((productList: Omit<Product, 'id' | 'created_at' | 'updated_at'>[]) => {
@@ -270,7 +281,8 @@ class SqliteStorage implements IStorage {
           product.expiry_date,
           product.warranty_date,
           product.asset_number,
-          product.status
+          product.status,
+          product.visible_to_users ? 1 : 0
         );
       }
     });
@@ -391,6 +403,10 @@ class SqliteStorage implements IStorage {
     if (updateData.status !== undefined) {
       fields.push('status = ?');
       values.push(updateData.status);
+    }
+    if (updateData.visible_to_users !== undefined) {
+      fields.push('visible_to_users = ?');
+      values.push(updateData.visible_to_users ? 1 : 0);
     }
 
     fields.push('updated_at = CURRENT_TIMESTAMP');
