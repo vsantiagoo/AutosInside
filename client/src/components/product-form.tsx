@@ -642,7 +642,7 @@ export function ProductForm({
           <FormField
             control={form.control}
             name="photo"
-            render={({ field: { value, ...field } }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Imagem</FormLabel>
                 <FormControl>
@@ -673,7 +673,6 @@ export function ProductForm({
                         className="flex-1"
                         id="photo-upload"
                         data-testid="input-photo"
-                        {...field}
                       />
                       <Upload className="w-4 h-4 text-muted-foreground" />
                     </div>
