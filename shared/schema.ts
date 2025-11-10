@@ -74,6 +74,7 @@ export const productSchema = z.object({
   warranty_date: z.string().nullable(),
   asset_number: z.string().nullable(),
   status: z.string().nullable(),
+  visible_to_users: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
 });

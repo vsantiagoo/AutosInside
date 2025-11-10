@@ -49,6 +49,7 @@ addColumnIfNotExists('products', 'last_purchase_date', 'TEXT');
 addColumnIfNotExists('products', 'last_count_date', 'TEXT');
 addColumnIfNotExists('products', 'asset_number', 'TEXT');
 addColumnIfNotExists('products', 'status', 'TEXT DEFAULT "Ativo"');
+addColumnIfNotExists('products', 'visible_to_users', 'INTEGER NOT NULL DEFAULT 1');
 
 // Add new columns to stock_transactions table
 addColumnIfNotExists('stock_transactions', 'user_id', 'INTEGER REFERENCES users(id)');
