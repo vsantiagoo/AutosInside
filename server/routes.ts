@@ -988,6 +988,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     generateFoodStationConsumptionsReport,
     generateFoodStationOverviewReport,
     generateCleaningSectorReport,
+    generateCoffeeMachineReport,
+    generateGeneralInventoryReportNew,
   } = await import('./services/reporting');
 
   // User Consumption Report (FoodStation)
@@ -1094,6 +1096,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(report);
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to generate cleaning sector report' });
+    }
+  });
+
+  // ============================================
+  // COFFEE MACHINE & GENERAL INVENTORY REPORTS
+  // ============================================
+
+  // Coffee Machine Report (Weekly/Biweekly)
+  app.get('/api/reports/sector/coffee', authMiddleware, async (req, res) => {
+    try {
+      // Validate query parameters
+      const querySchema = z.object({
+        sectorId: z.coerce.number().positive().optional(),
+        cadence: z.enum(['weekly', 'biweekly']).optional().default('weekly'),
+        weeks: z.coerce.number().positive().int().min(1).max(52).optional().default(4),
+      });
+
+      const validationResult = querySchema.safeParse(req.query);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid query parameters', 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { sectorId, cadence, weeks } = validationResult.data;
+      const report = await generateCoffeeMachineReport(sectorId, cadence, weeks);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate coffee machine report' });
+    }
+  });
+
+  // General Inventory Report (Refactored with Filters)
+  app.get('/api/reports/inventory/general-new', authMiddleware, async (req, res) => {
+    try {
+      // Validate query parameters
+      const querySchema = z.object({
+        sectorId: z.coerce.number().positive().optional(),
+        keyword: z.string().min(1).optional(),
+        includeOutOfStock: z.coerce.boolean().optional().default(true),
+      });
+
+      const validationResult = querySchema.safeParse(req.query);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid query parameters', 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { sectorId, keyword, includeOutOfStock } = validationResult.data;
+      const report = await generateGeneralInventoryReportNew(sectorId, keyword, includeOutOfStock);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate general inventory report' });
     }
   });
 

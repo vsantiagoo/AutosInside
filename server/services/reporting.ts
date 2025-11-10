@@ -864,3 +864,250 @@ export async function generateCleaningSectorReport(
     generatedAt: new Date().toISOString(),
   };
 }
+
+// ============================================
+// COFFEE MACHINE REPORT
+// ============================================
+
+/**
+ * Generate Coffee Machine Sector Report
+ * Weekly or biweekly monitoring with consumption frequency analysis
+ */
+export async function generateCoffeeMachineReport(
+  sectorId?: number,
+  cadence: 'weekly' | 'biweekly' = 'weekly',
+  weeks: number = 4
+): Promise<import('@shared/schema').CoffeeMachineReport> {
+  // Find coffee machine sector
+  const allSectors = await storage.getAllSectors();
+  let sector;
+  
+  if (sectorId) {
+    sector = allSectors.find(s => s.id === sectorId);
+    if (!sector) {
+      throw new Error('Sector not found');
+    }
+  } else {
+    sector = allSectors.find(s => s.name.toLowerCase().includes('café') || s.name.toLowerCase().includes('coffee'));
+    if (!sector) {
+      throw new Error('Coffee Machine sector not found');
+    }
+  }
+
+  // Calculate period
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - (weeks * 7));
+
+  // Get all products in sector
+  const products = await storage.getProductsBySector(sector.id);
+
+  // Get all stock transactions and consumptions for the period
+  const allTransactions = await storage.getStockTransactionsBySector(sector.id);
+  const allConsumptions = await storage.getConsumptionsBySectorAndDateRange(
+    sector.id,
+    startDate.toISOString(),
+    endDate.toISOString()
+  );
+
+  // Calculate metrics for each product
+  const productReports = await Promise.all(
+    products.map(async (product) => {
+      const productTransactions = allTransactions.filter(st => st.product_id === product.id);
+      const periodTransactions = productTransactions.filter(t => {
+        const tDate = new Date(t.created_at);
+        return tDate >= startDate && tDate <= endDate;
+      });
+
+      const periodConsumptions = allConsumptions.filter(c => c.product_id === product.id);
+
+      // Calculate entries and exits
+      const entries = periodTransactions
+        .filter((t: any) => t.change > 0)
+        .reduce((sum: number, t: any) => sum + t.change, 0);
+      
+      const exits = periodConsumptions.reduce((sum: number, c: any) => sum + c.qty, 0);
+
+      // Calculate opening and closing stock
+      const closingStock = product.stock_quantity;
+      const openingStock = closingStock - entries + exits;
+
+      // Calculate weekly and biweekly averages
+      const weeklyAvg = exits / weeks;
+      const biweeklyAvg = exits / (weeks / 2);
+
+      // Determine consumption frequency based on weekly average
+      let consumptionFrequency: 'high' | 'medium' | 'low';
+      if (weeklyAvg >= 10) consumptionFrequency = 'high';
+      else if (weeklyAvg >= 5) consumptionFrequency = 'medium';
+      else consumptionFrequency = 'low';
+
+      // Suggest reorder cadence based on consumption pattern
+      let suggestedReorderCadence: 'weekly' | 'biweekly' | 'monthly';
+      if (consumptionFrequency === 'high') suggestedReorderCadence = 'weekly';
+      else if (consumptionFrequency === 'medium') suggestedReorderCadence = 'biweekly';
+      else suggestedReorderCadence = 'monthly';
+
+      return {
+        product_id: product.id,
+        product_name: product.name,
+        category: product.category,
+        opening_stock: openingStock,
+        entries,
+        exits,
+        current_stock: closingStock,
+        weekly_avg_consumption: weeklyAvg,
+        biweekly_avg_consumption: biweeklyAvg,
+        consumption_frequency: consumptionFrequency,
+        suggested_reorder_cadence: suggestedReorderCadence,
+        unit_price: product.unit_price,
+        photo_path: product.photo_path,
+      };
+    })
+  );
+
+  // Calculate KPIs
+  const totalExits = productReports.reduce((sum, p) => sum + p.exits, 0);
+  const totalValueExits = productReports.reduce((sum, p) => sum + (p.exits * p.unit_price), 0);
+  const highFrequencyItems = productReports.filter(p => p.consumption_frequency === 'high').length;
+  const avgWeeklyConsumption = totalExits / weeks;
+
+  // Get top consumed items
+  const topConsumed = productReports
+    .map(p => ({
+      product_id: p.product_id,
+      product_name: p.product_name,
+      total_qty: p.exits,
+      frequency: p.consumption_frequency,
+      photo_path: p.photo_path,
+    }))
+    .sort((a, b) => b.total_qty - a.total_qty)
+    .slice(0, 5);
+
+  return {
+    sector,
+    period: {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+      cadence,
+      weeks,
+    },
+    kpis: {
+      total_products: productReports.length,
+      total_exits: totalExits,
+      total_value_exits: totalValueExits,
+      high_frequency_items: highFrequencyItems,
+      avg_weekly_consumption: avgWeeklyConsumption,
+    },
+    products: productReports,
+    topConsumed,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// ============================================
+// GENERAL INVENTORY REPORT (REFACTORED)
+// ============================================
+
+/**
+ * Helper function to determine stock status
+ */
+function getStockStatus(
+  currentStock: number,
+  lowStockThreshold: number | null,
+  maxQuantity: number | null
+): 'OK' | 'Baixo' | 'Zerado' | 'Crítico' {
+  if (currentStock === 0) return 'Zerado';
+  if (lowStockThreshold && currentStock <= lowStockThreshold) return 'Baixo';
+  if (maxQuantity && currentStock > maxQuantity) return 'Crítico';
+  return 'OK';
+}
+
+/**
+ * Generate General Inventory Report (REFACTORED)
+ * Consolidates all products from all sectors with filtering
+ */
+export async function generateGeneralInventoryReportNew(
+  sectorId?: number,
+  keyword?: string,
+  includeOutOfStock: boolean = true
+): Promise<import('@shared/schema').GeneralInventoryReport> {
+  // Fetch all products with sector information
+  let allProductsRaw = await storage.getAllProducts();
+
+  // Filter products with valid sector_id (not null)
+  allProductsRaw = allProductsRaw.filter(p => p.sector_id !== null);
+
+  // Apply sector filter
+  if (sectorId) {
+    allProductsRaw = allProductsRaw.filter(p => p.sector_id === sectorId);
+  }
+
+  // Apply keyword filter (search in product name and category)
+  if (keyword) {
+    const keywordLower = keyword.toLowerCase();
+    allProductsRaw = allProductsRaw.filter(p => 
+      p.name.toLowerCase().includes(keywordLower) ||
+      (p.category && p.category.toLowerCase().includes(keywordLower))
+    );
+  }
+
+  // Apply out-of-stock filter
+  if (!includeOutOfStock) {
+    allProductsRaw = allProductsRaw.filter(p => p.stock_quantity > 0);
+  }
+
+  // Transform to GeneralInventoryProduct format
+  const allProducts: import('@shared/schema').GeneralInventoryProduct[] = allProductsRaw.map(p => ({
+    product_id: p.id,
+    product_name: p.name,
+    sector_id: p.sector_id!,  // Safe after filtering
+    sector_name: p.sector_name || 'N/A',
+    category: p.category,
+    current_stock: p.stock_quantity,
+    unit_price: p.unit_price,
+    total_value: p.stock_quantity * p.unit_price,
+    stock_status: getStockStatus(p.stock_quantity, p.low_stock_threshold, p.max_quantity),
+    photo_path: p.photo_path,
+  }));
+
+  // Group by sector
+  const bySectorMap = new Map<number, import('@shared/schema').GeneralInventoryBySector>();
+  
+  for (const product of allProducts) {
+    const existing = bySectorMap.get(product.sector_id);
+    if (existing) {
+      existing.total_products += 1;
+      existing.total_value += product.total_value;
+      existing.products.push(product);
+    } else {
+      bySectorMap.set(product.sector_id, {
+        sector_id: product.sector_id,
+        sector_name: product.sector_name,
+        total_products: 1,
+        total_value: product.total_value,
+        products: [product],
+      });
+    }
+  }
+
+  const bySector = Array.from(bySectorMap.values());
+
+  // Calculate KPIs
+  const totalInventoryValue = allProducts.reduce((sum, p) => sum + p.total_value, 0);
+  const lowStockItems = allProducts.filter(p => p.stock_status === 'Baixo').length;
+  const outOfStockItems = allProducts.filter(p => p.stock_status === 'Zerado').length;
+
+  return {
+    kpis: {
+      total_products: allProducts.length,
+      total_sectors: bySector.length,
+      total_inventory_value: totalInventoryValue,
+      low_stock_items: lowStockItems,
+      out_of_stock_items: outOfStockItems,
+    },
+    bySector,
+    allProducts,
+    generatedAt: new Date().toISOString(),
+  };
+}
