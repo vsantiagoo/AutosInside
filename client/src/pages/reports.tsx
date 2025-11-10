@@ -21,7 +21,8 @@ import {
   Coffee,
   UtensilsCrossed,
   FileBarChart,
-  ArrowRight
+  ArrowRight,
+  Users
 } from 'lucide-react';
 import type { 
   RestockPredictionReport, 
@@ -129,6 +130,20 @@ export default function ReportsPage() {
       icon: FileBarChart,
       path: "/general-inventory",
       color: "text-blue-500",
+    },
+    {
+      title: "Controle de Consumo FoodStation",
+      description: "Relatório detalhado de consumos por usuário com filtro de período e totalizações",
+      icon: Users,
+      path: "/foodstation-consumption-control",
+      color: "text-green-500",
+    },
+    {
+      title: "Gestão de Produtos por Setor",
+      description: "Movimentação, previsões e recomendações de pedido para todos os setores",
+      icon: Package,
+      path: "/sector-management-report",
+      color: "text-purple-500",
     },
   ];
 

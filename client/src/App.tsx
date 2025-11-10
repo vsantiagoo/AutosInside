@@ -24,6 +24,8 @@ import Reports from "@/pages/reports";
 import FoodStationOverview from "@/pages/foodstation-overview";
 import CoffeeMachineReport from "@/pages/coffee-machine-report";
 import GeneralInventory from "@/pages/general-inventory";
+import FoodStationConsumptionControl from "@/pages/foodstation-consumption-control";
+import SectorManagementReport from "@/pages/sector-management-report";
 import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
@@ -125,6 +127,8 @@ function AppRouter() {
                 <Route path="/foodstation-overview" element={<ProtectedRoute adminOnly={true}><FoodStationOverview /></ProtectedRoute>} />
                 <Route path="/coffee-machine-report" element={<ProtectedRoute adminOnly={true}><CoffeeMachineReport /></ProtectedRoute>} />
                 <Route path="/general-inventory" element={<ProtectedRoute adminOnly={true}><GeneralInventory /></ProtectedRoute>} />
+                <Route path="/foodstation-consumption-control" element={<ProtectedRoute adminOnly={true}><FoodStationConsumptionControl /></ProtectedRoute>} />
+                <Route path="/sector-management-report" element={<ProtectedRoute adminOnly={true}><SectorManagementReport /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
               </Routes>
             </div>
