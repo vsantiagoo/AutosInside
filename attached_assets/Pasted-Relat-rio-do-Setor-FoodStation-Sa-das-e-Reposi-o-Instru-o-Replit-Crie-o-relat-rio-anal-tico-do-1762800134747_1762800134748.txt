@@ -1,0 +1,180 @@
+Relatório do Setor FoodStation (Saídas e Reposição)
+
+Instrução Replit:
+Crie o relatório analítico do Setor FoodStation, focado em saídas, itens mais consumidos e previsão de reposição.
+
+Detalhamento técnico e funcional:
+
+Exibir:
+
+Lista de todos os produtos cadastrados no setor FoodStation.
+
+Quantidade total de saídas por item no mês.
+
+Estoque atual e estoque mínimo configurado.
+
+Gráfico mostrando os itens mais consumidos.
+
+Calcular automaticamente:
+
+Média de consumo dos últimos 15 dias.
+
+Previsão de reposição para os próximos 15 dias.
+
+Sugestão automática: “Recomenda-se pedido de X unidades de [item]”.
+
+Filtros:
+
+Por período de tempo (últimos 7, 15 ou 30 dias).
+
+Exportação:
+
+Excel e PDF.
+
+Incluir cards de resumo:
+
+Total de saídas do mês.
+
+Top 5 produtos mais consumidos.
+
+Valor total estimado para reposição.
+
+🧴 PROMPT 3 — Relatório do Setor de Limpeza
+
+Instrução Replit:
+Crie o relatório completo do Setor de Limpeza, com análise de entradas, saídas e previsão mensal de compras.
+
+Detalhamento técnico e funcional:
+
+Controle realizado duas vezes ao mês:
+
+Início do mês → registrar estoque inicial e entradas.
+
+Final do mês → registrar saídas e estoque final.
+
+O sistema deve:
+
+Calcular o consumo total mensal de cada item.
+
+Exibir quantidade exata a ser comprada para o próximo mês.
+
+Comparar com o mês anterior (opcional).
+
+Filtros:
+
+Por período, item ou categoria.
+
+Exportar:
+
+Excel e PDF.
+
+Campos exibidos:
+
+Nome do produto
+
+Quantidade inicial
+
+Entradas
+
+Saídas
+
+Quantidade final
+
+Quantidade a comprar
+
+☕ PROMPT 4 — Relatório do Setor da Máquina de Café
+
+Instrução Replit:
+Crie o relatório de controle e previsão de insumos da Máquina de Café, com monitoramento semanal e quinzenal.
+
+Detalhamento técnico e funcional:
+
+Controle periódico:
+
+Início e fim de cada semana OU quinzena.
+
+Exibir:
+
+Entradas, saídas e estoque atual.
+
+Itens com maior frequência de consumo.
+
+O sistema deve:
+
+Calcular consumo médio semanal e quinzenal.
+
+Sugerir itens com reposição semanal ou quinzenal.
+
+Gráfico: produtos mais utilizados.
+
+Exportar:
+
+Excel e PDF.
+
+Campos exibidos:
+
+Nome do item
+
+Quantidade inicial
+
+Entradas
+
+Saídas
+
+Estoque atual
+
+Frequência de reposição recomendada
+
+📦 PROMPT 5 — Relatório Geral de Inventário
+
+Instrução Replit:
+Crie o Relatório Geral de Inventário, consolidando todos os produtos e insumos dos setores cadastrados.
+
+Detalhamento técnico e funcional:
+
+Exibir todos os itens, com:
+
+Nome do item
+
+Setor
+
+Quantidade atual
+
+Valor unitário
+
+Valor total do item
+
+Calcular:
+
+Valor total do inventário completo.
+
+Permitir filtros:
+
+Por setor (FoodStation, Limpeza, Escritório, Café, etc).
+
+Por item ou palavra-chave.
+
+Botões:
+
+Exportar para Excel
+
+Exportar para PDF
+
+Adicionar gráfico de pizza (por setor) e gráfico de barras (por valor total).
+
+⚙️ PROMPT FINAL — Integração de Relatórios
+
+Após gerar todas as telas acima, peça ao Replit:
+
+“Integre todos os relatórios em um único módulo chamado Central de Relatórios, com menu lateral esquerdo listando:
+
+Consumo de Usuários
+
+FoodStation
+
+Limpeza
+
+Máquina de Café
+
+Inventário Geral
+Cada tela deve estar conectada ao banco de dados existente e compartilhar o mesmo design padrão (tema, cabeçalho e botões).”

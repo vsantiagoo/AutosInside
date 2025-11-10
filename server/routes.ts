@@ -985,6 +985,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     generateRestockPredictionReport,
     generateSectorMonthlyReport,
     generateGeneralInventoryReport,
+    generateFoodStationConsumptionsReport,
+    generateFoodStationOverviewReport,
+    generateCleaningSectorReport,
   } = await import('./services/reporting');
 
   // User Consumption Report (FoodStation)
@@ -1043,6 +1046,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(report);
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to generate general inventory report' });
+    }
+  });
+
+  // ============================================
+  // NEW REPORTS - FOODSTATION & CLEANING
+  // ============================================
+
+  // FoodStation Consumptions Report (Customizable)
+  app.get('/api/reports/foodstation/consumptions', authMiddleware, async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      const groupBy = (req.query.groupBy as 'user' | 'product' | 'date' | 'none') || 'none';
+
+      const report = await generateFoodStationConsumptionsReport(startDate, endDate, groupBy);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate FoodStation consumptions report' });
+    }
+  });
+
+  // FoodStation Overview Report (with Prediction)
+  app.get('/api/reports/foodstation/overview', authMiddleware, async (req, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string) : 30;
+      const report = await generateFoodStationOverviewReport(days);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate FoodStation overview report' });
+    }
+  });
+
+  // Cleaning Sector Report (Bimonthly)
+  app.get('/api/reports/sector/cleaning', authMiddleware, async (req, res) => {
+    try {
+      const month = req.query.month as string; // YYYY-MM
+      const cadence = (req.query.cadence as 'first_half' | 'second_half' | 'full_month') || 'full_month';
+      const sectorId = req.query.sectorId ? parseInt(req.query.sectorId as string) : undefined;
+      const compareWithPrevious = req.query.compareWithPrevious === 'true';
+
+      if (!month) {
+        return res.status(400).json({ message: 'Month parameter (YYYY-MM) is required' });
+      }
+
+      const report = await generateCleaningSectorReport(month, cadence, sectorId, compareWithPrevious);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate cleaning sector report' });
     }
   });
 

@@ -378,3 +378,155 @@ export const sectorReportCadenceSchema = z.object({
 
 export type ReportDateRange = z.infer<typeof reportDateRangeSchema>;
 export type SectorReportCadence = z.infer<typeof sectorReportCadenceSchema>;
+
+// ============================================
+// NEW REPORTS - FOODSTATION & CLEANING
+// ============================================
+
+// FoodStation Consumption Report (Customizable)
+export type FoodStationConsumptionRecord = {
+  consumption_id: number;
+  matricula: string;
+  user_name: string;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+  total_value: number;
+  consumed_at: string;
+  sector_name: string;
+};
+
+export type FoodStationConsumptionSummary = {
+  matricula: string;
+  user_name: string;
+  total_consumed_value: number;
+  total_items: number;
+  consumption_count: number;
+};
+
+export type FoodStationConsumptionReport = {
+  records: FoodStationConsumptionRecord[];
+  summary?: FoodStationConsumptionSummary[];
+  period: {
+    start: string;
+    end: string;
+  };
+  generatedAt: string;
+};
+
+export const foodStationConsumptionQuerySchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  fields: z.string().optional(), // comma-separated: matricula,user_name,total_value
+  groupBy: z.enum(['user', 'product', 'date', 'none']).optional().default('none'),
+});
+
+export type FoodStationConsumptionQuery = z.infer<typeof foodStationConsumptionQuerySchema>;
+
+// FoodStation Overview Report (with Prediction)
+export type FoodStationProductOverview = {
+  product_id: number;
+  product_name: string;
+  category: string | null;
+  current_stock: number;
+  min_stock: number | null;
+  unit_price: number;
+  total_exits_month: number;
+  total_value_exits_month: number;
+  avg_daily_consumption_15d: number;
+  predicted_consumption_15d: number;
+  recommended_reorder: number;
+  stock_status: 'OK' | 'Baixo' | 'Zerado' | 'Crítico';
+  stockout_risk: 'high' | 'medium' | 'low';
+  days_until_stockout: number | null;
+  photo_path: string | null;
+};
+
+export type FoodStationOverviewKPIs = {
+  total_exits_month: number;
+  total_value_month: number;
+  unique_products_consumed: number;
+  total_restock_value: number;
+  high_risk_items: number;
+};
+
+export type FoodStationOverviewReport = {
+  kpis: FoodStationOverviewKPIs;
+  products: FoodStationProductOverview[];
+  topConsumed: {
+    product_id: number;
+    product_name: string;
+    total_qty: number;
+    total_value: number;
+    photo_path: string | null;
+  }[];
+  period: {
+    start: string;
+    end: string;
+    days: number;
+  };
+  generatedAt: string;
+};
+
+export const foodStationOverviewQuerySchema = z.object({
+  days: z.enum(['7', '15', '30']).optional().default('30'),
+});
+
+export type FoodStationOverviewQuery = z.infer<typeof foodStationOverviewQuerySchema>;
+
+// Cleaning Sector Report (Bimonthly)
+export type CleaningProductSnapshot = {
+  product_id: number;
+  product_name: string;
+  category: string | null;
+  opening_stock: number;
+  entries: number;
+  exits: number;
+  closing_stock: number;
+  consumption_total: number;
+  unit_price: number;
+  consumption_value: number;
+  recommended_purchase: number;
+  estimated_cost: number;
+  photo_path: string | null;
+};
+
+export type CleaningReportComparison = {
+  product_id: number;
+  product_name: string;
+  current_month_consumption: number;
+  previous_month_consumption: number;
+  variance: number;
+  variance_percent: number;
+};
+
+export type CleaningReportSummary = {
+  total_products: number;
+  total_consumption_value: number;
+  total_items_consumed: number;
+  total_purchase_value: number;
+  total_entries: number;
+  total_exits: number;
+};
+
+export type CleaningSectorReport = {
+  sector: Sector;
+  period: {
+    start: string;
+    end: string;
+    cadence: 'first_half' | 'second_half' | 'full_month';
+  };
+  products: CleaningProductSnapshot[];
+  comparison?: CleaningReportComparison[];
+  summary: CleaningReportSummary;
+  generatedAt: string;
+};
+
+export const cleaningReportQuerySchema = z.object({
+  month: z.string(), // YYYY-MM format
+  cadence: z.enum(['first_half', 'second_half', 'full_month']).optional().default('full_month'),
+  sectorId: z.number().optional(),
+  compareWithPrevious: z.boolean().optional().default(false),
+});
+
+export type CleaningReportQuery = z.infer<typeof cleaningReportQuerySchema>;
