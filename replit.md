@@ -38,7 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Sector Details Page**: Comprehensive sector management at `/sector/:id` (admin-only) with real-time KPIs, performance indicators, product management (creation/editing via dialog), and transaction history. Auto-refreshes data every 15-30 seconds.
 - **Monthly Consumption Limits**: Users can configure monthly spending limits with real-time tracking, progress bars, and automatic validation in FoodStation.
 - **Consumption Reporting**: Users can view personal consumption history with date filtering and monthly totals.
-- **Product Visibility Control**: Admins can hide products from regular users while maintaining full reporting integrity. Reports intentionally exclude visibility filtering for accurate analytics.
+- **Product Visibility Control**: Admins can hide products from regular users' FoodStation view while maintaining full reporting integrity. The feature uses **inverted checkbox logic**: when "Ocultar do FoodStation" is **checked**, the product is **hidden** (`visible_to_users=false`); when **unchecked**, it is **visible** (`visible_to_users=true`). The default is unchecked (visible). Hidden products are excluded from `/api/products` for regular users but always included for admins. All reports intentionally exclude visibility filtering for accurate analytics. React Query cache invalidation uses predicate matching to synchronize product changes across all screens (Products, Sectors, Inventory, Dashboard).
 
 ## External Dependencies
 - **Third-Party Libraries**:
