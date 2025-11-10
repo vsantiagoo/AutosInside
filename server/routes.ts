@@ -963,6 +963,287 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // REPORTING MODULE ROUTES
+  // ============================================
+
+  // Import reporting service
+  const {
+    generateUserConsumptionReport,
+    generateRestockPredictionReport,
+    generateSectorMonthlyReport,
+    generateGeneralInventoryReport,
+  } = await import('./services/reporting');
+
+  // User Consumption Report (FoodStation)
+  app.get('/api/reports/foodstation/consumption', authMiddleware, async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : req.user!.id;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const report = await generateUserConsumptionReport(userId, startDate, endDate);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate user consumption report' });
+    }
+  });
+
+  // Restock Prediction Report (FoodStation)
+  app.get('/api/reports/foodstation/restock', authMiddleware, async (req, res) => {
+    try {
+      // Find FoodStation sector
+      const sectors = await storage.getAllSectors();
+      const foodStationSector = sectors.find(s => s.name.toLowerCase().includes('foodstation'));
+      
+      if (!foodStationSector) {
+        return res.status(404).json({ message: 'FoodStation sector not found' });
+      }
+
+      const report = await generateRestockPredictionReport(foodStationSector.id);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate restock prediction report' });
+    }
+  });
+
+  // Sector Monthly/Weekly Report (Cleaning, Coffee, etc.)
+  app.get('/api/reports/sector/:id/monthly', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = parseInt(req.params.id);
+      const cadence = (req.query.cadence as 'monthly' | 'biweekly' | 'weekly') || 'monthly';
+
+      if (isNaN(sectorId)) {
+        return res.status(400).json({ message: 'Invalid sector ID' });
+      }
+
+      const report = await generateSectorMonthlyReport(sectorId, cadence);
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate sector monthly report' });
+    }
+  });
+
+  // General Inventory Report
+  app.get('/api/reports/inventory/general', authMiddleware, async (req, res) => {
+    try {
+      const report = await generateGeneralInventoryReport();
+      res.json(report);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to generate general inventory report' });
+    }
+  });
+
+  // Export User Consumption Report to Excel
+  app.get('/api/reports/foodstation/consumption/export', authMiddleware, async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : req.user!.id;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const report = await generateUserConsumptionReport(userId, startDate, endDate);
+
+      const workbook = new ExcelJS.Workbook();
+      
+      // Summary sheet
+      const summarySheet = workbook.addWorksheet('Resumo');
+      summarySheet.columns = [
+        { header: 'Campo', key: 'field', width: 30 },
+        { header: 'Valor', key: 'value', width: 30 },
+      ];
+      
+      summarySheet.addRows([
+        { field: 'Usuário', value: report.user.full_name },
+        { field: 'Matrícula', value: report.user.matricula },
+        { field: 'Período', value: `${new Date(report.period.start).toLocaleDateString('pt-BR')} - ${new Date(report.period.end).toLocaleDateString('pt-BR')}` },
+        { field: 'Total Consumido', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.monthlyTotal) },
+        { field: 'Total de Itens', value: report.consumptions.length },
+      ]);
+
+      // Consumptions sheet
+      const consumptionsSheet = workbook.addWorksheet('Consumos');
+      consumptionsSheet.columns = [
+        { header: 'Data/Hora', key: 'consumed_at', width: 20 },
+        { header: 'Produto', key: 'product_name', width: 30 },
+        { header: 'Quantidade', key: 'qty', width: 12 },
+        { header: 'Preço Unitário', key: 'unit_price', width: 15 },
+        { header: 'Preço Total', key: 'total_price', width: 15 },
+      ];
+      
+      consumptionsSheet.addRows(report.consumptions.map(c => ({
+        consumed_at: new Date(c.consumed_at).toLocaleString('pt-BR'),
+        product_name: c.product_name,
+        qty: c.qty,
+        unit_price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.unit_price),
+        total_price: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.total_price),
+      })));
+
+      // Daily totals sheet
+      const dailySheet = workbook.addWorksheet('Totais Diários');
+      dailySheet.columns = [
+        { header: 'Data', key: 'date', width: 15 },
+        { header: 'Total', key: 'totalValue', width: 15 },
+        { header: 'Itens', key: 'itemCount', width: 10 },
+      ];
+      
+      dailySheet.addRows(report.dailyTotals.map(d => ({
+        date: new Date(d.date).toLocaleDateString('pt-BR'),
+        totalValue: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(d.totalValue),
+        itemCount: d.itemCount,
+      })));
+
+      const fileName = `Consumo_${report.user.matricula}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to export consumption report' });
+    }
+  });
+
+  // Export Restock Prediction Report to Excel
+  app.get('/api/reports/foodstation/restock/export', authMiddleware, async (req, res) => {
+    try {
+      const sectors = await storage.getAllSectors();
+      const foodStationSector = sectors.find(s => s.name.toLowerCase().includes('foodstation'));
+      
+      if (!foodStationSector) {
+        return res.status(404).json({ message: 'FoodStation sector not found' });
+      }
+
+      const report = await generateRestockPredictionReport(foodStationSector.id);
+
+      const workbook = new ExcelJS.Workbook();
+      
+      // Summary sheet
+      const summarySheet = workbook.addWorksheet('Resumo');
+      summarySheet.columns = [
+        { header: 'Campo', key: 'field', width: 30 },
+        { header: 'Valor', key: 'value', width: 30 },
+      ];
+      
+      summarySheet.addRows([
+        { field: 'Setor', value: report.sector.name },
+        { field: 'Data de Geração', value: new Date(report.generatedAt).toLocaleString('pt-BR') },
+        { field: 'Período Analisado', value: `${new Date(report.periodAnalyzed.start).toLocaleDateString('pt-BR')} - ${new Date(report.periodAnalyzed.end).toLocaleDateString('pt-BR')}` },
+        { field: 'Período Projetado', value: `${new Date(report.periodProjected.start).toLocaleDateString('pt-BR')} - ${new Date(report.periodProjected.end).toLocaleDateString('pt-BR')}` },
+        { field: 'Itens Recomendados', value: report.totalRecommendedItems },
+        { field: 'Itens Alto Risco', value: report.highRiskItems },
+      ]);
+
+      // Predictions sheet
+      const predictionsSheet = workbook.addWorksheet('Previsões');
+      predictionsSheet.columns = [
+        { header: 'Produto', key: 'productName', width: 30 },
+        { header: 'Estoque Atual', key: 'currentStock', width: 15 },
+        { header: 'Consumo Médio/Dia', key: 'averageDaily', width: 18 },
+        { header: 'Tendência', key: 'trend', width: 15 },
+        { header: 'Consumo Previsto 15d', key: 'predicted', width: 20 },
+        { header: 'Recomendação Compra', key: 'recommended', width: 20 },
+        { header: 'Risco Ruptura', key: 'risk', width: 15 },
+        { header: 'Confiança', key: 'confidence', width: 12 },
+      ];
+      
+      predictionsSheet.addRows(report.products.map(p => ({
+        productName: p.productName,
+        currentStock: p.currentStock,
+        averageDaily: p.averageDailyConsumption.toFixed(2),
+        trend: p.consumptionTrend === 'increasing' ? 'Crescente' : p.consumptionTrend === 'decreasing' ? 'Decrescente' : 'Estável',
+        predicted: p.predicted15DaysConsumption,
+        recommended: p.recommendedReorder,
+        risk: p.stockoutRisk === 'high' ? 'Alto' : p.stockoutRisk === 'medium' ? 'Médio' : 'Baixo',
+        confidence: p.confidenceLevel === 'high' ? 'Alta' : p.confidenceLevel === 'medium' ? 'Média' : 'Baixa',
+      })));
+
+      const fileName = `Reposicao_FoodStation_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to export restock report' });
+    }
+  });
+
+  // Export Sector Monthly Report to Excel
+  app.get('/api/reports/sector/:id/monthly/export', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = parseInt(req.params.id);
+      const cadence = (req.query.cadence as 'monthly' | 'biweekly' | 'weekly') || 'monthly';
+
+      if (isNaN(sectorId)) {
+        return res.status(400).json({ message: 'Invalid sector ID' });
+      }
+
+      const report = await generateSectorMonthlyReport(sectorId, cadence);
+
+      const workbook = new ExcelJS.Workbook();
+      
+      // Summary sheet
+      const summarySheet = workbook.addWorksheet('Resumo');
+      summarySheet.columns = [
+        { header: 'Campo', key: 'field', width: 30 },
+        { header: 'Valor', key: 'value', width: 30 },
+      ];
+      
+      const cadenceLabel = cadence === 'monthly' ? 'Mensal' : cadence === 'biweekly' ? 'Quinzenal' : 'Semanal';
+      
+      summarySheet.addRows([
+        { field: 'Setor', value: report.sector.name },
+        { field: 'Cadência', value: cadenceLabel },
+        { field: 'Período', value: `${new Date(report.period.start).toLocaleDateString('pt-BR')} - ${new Date(report.period.end).toLocaleDateString('pt-BR')}` },
+        { field: 'Consumo Total', value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(report.totalConsumption) },
+        { field: 'Itens Consumidos', value: report.totalItemsConsumed },
+      ]);
+
+      // Purchase recommendations sheet
+      const purchasesSheet = workbook.addWorksheet('Recomendações de Compra');
+      purchasesSheet.columns = [
+        { header: 'Produto', key: 'productName', width: 30 },
+        { header: 'Estoque Atual', key: 'currentStock', width: 15 },
+        { header: 'Quantidade Recomendada', key: 'recommended', width: 22 },
+        { header: 'Custo Estimado', key: 'cost', width: 18 },
+        { header: 'Prioridade', key: 'priority', width: 12 },
+      ];
+      
+      purchasesSheet.addRows(report.recommendedPurchases.map(r => ({
+        productName: r.productName,
+        currentStock: r.currentStock,
+        recommended: r.recommendedQuantity,
+        cost: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.estimatedCost),
+        priority: r.priority === 'high' ? 'Alta' : r.priority === 'medium' ? 'Média' : 'Baixa',
+      })));
+
+      // Frequency analysis sheet (if available)
+      if (report.frequencyAnalysis && report.frequencyAnalysis.length > 0) {
+        const frequencySheet = workbook.addWorksheet('Análise de Frequência');
+        frequencySheet.columns = [
+          { header: 'Produto', key: 'productName', width: 30 },
+          { header: 'Frequência de Reposição', key: 'frequency', width: 25 },
+          { header: 'Uso Médio Diário', key: 'dailyUsage', width: 20 },
+        ];
+        
+        frequencySheet.addRows(report.frequencyAnalysis.map(f => ({
+          productName: f.productName,
+          frequency: (f.restockFrequency * 100).toFixed(1) + '%',
+          dailyUsage: f.averageDailyUsage.toFixed(2),
+        })));
+      }
+
+      const fileName = `Relatorio_${report.sector.name.replace(/\s+/g, '_')}_${cadence}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to export sector monthly report' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
