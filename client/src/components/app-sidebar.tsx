@@ -9,7 +9,8 @@ import {
   UtensilsCrossed,
   FileText,
   DollarSign,
-  Warehouse
+  Warehouse,
+  BarChart3
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -56,6 +57,11 @@ export function AppSidebar() {
       title: "Consumos",
       url: "/consumptions",
       icon: ShoppingCart,
+    },
+    {
+      title: "Relatórios",
+      url: "/reports",
+      icon: BarChart3,
     },
     {
       title: "Estação de Alimentos",
