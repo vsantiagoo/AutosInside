@@ -11,9 +11,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { FoodStationConsumptionExportOptions } from '@shared/schema';
+import type { FoodStationConsumptionExportOptions, ExportFormat } from '@shared/schema';
 
 interface ExportDialogProps {
   onExport: (options: FoodStationConsumptionExportOptions) => Promise<void>;
@@ -33,9 +35,11 @@ export default function ExportDialog({
   endDate,
 }: ExportDialogProps) {
   const [open, setOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('consolidated');
 
   const handleExport = async () => {
     const options: FoodStationConsumptionExportOptions = {
+      format: exportFormat,
       filters: {
         userId,
         startDate,
@@ -69,11 +73,45 @@ export default function ExportDialog({
             Exportar Relatório para Excel
           </DialogTitle>
           <DialogDescription data-testid="text-dialog-description">
-            O arquivo Excel será gerado com uma linha por usuário contendo: Matrícula, Nome Completo, Valor Total Mensal e Período.
+            Escolha o formato de exportação desejado.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Export Format Selection */}
+          <div>
+            <Label className="text-sm font-medium">Formato de Exportação</Label>
+            <RadioGroup 
+              value={exportFormat} 
+              onValueChange={(value) => setExportFormat(value as ExportFormat)}
+              className="mt-2 space-y-3"
+              data-testid="radio-group-export-format"
+            >
+              <div className="flex items-start space-x-3">
+                <RadioGroupItem value="consolidated" id="consolidated" data-testid="radio-consolidated" />
+                <div className="flex-1">
+                  <Label htmlFor="consolidated" className="cursor-pointer font-medium">
+                    Consolidado
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Uma linha por usuário com: Matrícula, Nome Completo, Valor Total Mensal e Período.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <RadioGroupItem value="detailed" id="detailed" data-testid="radio-detailed" />
+                <div className="flex-1">
+                  <Label htmlFor="detailed" className="cursor-pointer font-medium">
+                    Detalhado
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Uma linha por consumo com: Matrícula, Nome, Item, Valor Unitário, Data de Consumo e outras informações.
+                  </p>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Filter Summary */}
           <div>
             <p className="text-sm font-medium mb-2">Filtros Aplicados:</p>
@@ -96,12 +134,6 @@ export default function ExportDialog({
             </div>
           </div>
 
-          {/* Export Format Info */}
-          <div className="rounded-md bg-muted/50 p-3">
-            <p className="text-xs text-muted-foreground">
-              <strong>Formato de Exportação:</strong> Uma linha por usuário com matrícula, nome completo, valor total mensal e período do relatório.
-            </p>
-          </div>
         </div>
 
         <DialogFooter>

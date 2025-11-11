@@ -708,7 +708,11 @@ export type SectorProductManagementQuery = z.infer<typeof sectorProductManagemen
 // FOODSTATION CONSUMPTION EXPORT
 // ============================================
 
+export const exportFormatEnum = z.enum(['consolidated', 'detailed']);
+export type ExportFormat = z.infer<typeof exportFormatEnum>;
+
 export const foodStationConsumptionExportSchema = z.object({
+  format: exportFormatEnum.default('consolidated'),
   filters: z.object({
     userId: z.number().optional(),
     startDate: z.string().optional(),
