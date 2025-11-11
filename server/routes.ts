@@ -16,6 +16,7 @@ import {
   insertProductSchema,
   insertStockTransactionSchema,
   insertConsumptionSchema,
+  foodStationConsumptionExportSchema,
   type User,
   type Product,
 } from "@shared/schema";
@@ -997,6 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     generateGeneralInventoryReportNew,
     generateFoodStationConsumptionControlReport,
     generateSectorProductManagementReport,
+    generateFoodStationConsumptionWorkbook,
   } = await import('./services/reporting');
 
   // User Consumption Report (FoodStation)
@@ -1185,6 +1187,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(report);
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Failed to generate FoodStation consumption control report' });
+    }
+  });
+
+  // Export FoodStation Consumption Control Report to Excel
+  app.post('/api/reports/foodstation/consumption-control/export', authMiddleware, async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = foodStationConsumptionExportSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid export options', 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const exportOptions = validationResult.data;
+      
+      // Extract filter parameters from body, fallback to authenticated user for userId
+      const userId = exportOptions.userId;
+      const startDate = exportOptions.startDate;
+      const endDate = exportOptions.endDate;
+
+      // Generate the report
+      const report = await generateFoodStationConsumptionControlReport(userId, startDate, endDate);
+
+      // Generate Excel workbook
+      const workbook = await generateFoodStationConsumptionWorkbook(report, exportOptions);
+
+      // Set response headers for file download
+      const startFormatted = report.period.start.split('T')[0];
+      const endFormatted = report.period.end.split('T')[0];
+      const fileName = `Relatorio_Consumo_FoodStation_${startFormatted}_${endFormatted}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+      // Stream workbook to response
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to export FoodStation consumption report' });
     }
   });
 
