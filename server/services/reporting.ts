@@ -1265,7 +1265,9 @@ export async function generateSectorProductManagementReport(
 
 /**
  * Generate Excel Workbook for FoodStation Consumption Control Report
- * Consolidated view: ONE row per user with total monthly consumption
+ * Supports two formats:
+ * - Consolidated: ONE row per user with total monthly consumption
+ * - Detailed: ONE row per consumption with all transaction details
  */
 export async function generateFoodStationConsumptionWorkbook(
   report: import('@shared/schema').FoodStationConsumptionControlReport,
@@ -1285,49 +1287,127 @@ export async function generateFoodStationConsumptionWorkbook(
     });
   };
 
+  const formatDateTime = (isoDate: string): string => {
+    const date = new Date(isoDate);
+    return date.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const periodStart = formatDate(report.period.start);
   const periodEnd = formatDate(report.period.end);
   const periodFormatted = `${periodStart} a ${periodEnd}`;
 
-  // Create Consolidated Sheet (ONE row per user)
-  const sheet = workbook.addWorksheet('Relatório FoodStation');
-  
-  // Define columns
-  sheet.columns = [
-    { header: 'Matrícula', key: 'matricula', width: 15 },
-    { header: 'Nome Completo', key: 'nome', width: 35 },
-    { header: 'Valor Total Mensal', key: 'valorTotal', width: 20 },
-    { header: 'Período', key: 'periodo', width: 30 },
-  ];
-
-  // Add ONE row per user using monthlyTotals
-  report.monthlyTotals.forEach((userTotal, index) => {
-    const rowNumber = index + 2; // +2 because row 1 is header
-    const row = sheet.addRow({
-      matricula: userTotal.matricula,
-      nome: userTotal.user_name,
-      valorTotal: userTotal.monthly_total,
-      periodo: periodFormatted,
+  if (options.format === 'detailed') {
+    // DETAILED FORMAT: One row per consumption
+    const sheet = workbook.addWorksheet('Consumos Detalhados');
+    
+    // Row 1: Period banner (manually created)
+    const periodRow = sheet.getRow(1);
+    periodRow.getCell(1).value = `Período: ${periodFormatted}`;
+    periodRow.getCell(1).font = { bold: true, size: 12 };
+    periodRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+    periodRow.getCell(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE3F2FD' }, // Light blue
+    };
+    periodRow.height = 25;
+    sheet.mergeCells('A1:G1');
+    
+    // Row 2: Headers
+    const headerRow = sheet.getRow(2);
+    const headers = ['Matrícula', 'Nome', 'Item', 'Quantidade', 'Valor Unitário', 'Valor Total', 'Data de Consumo'];
+    headers.forEach((header, index) => {
+      const cell = headerRow.getCell(index + 1);
+      cell.value = header;
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4CAF50' }, // Green
+      };
     });
 
-    // Apply currency format to the valor total cell
-    const valorCell = sheet.getCell(`C${rowNumber}`);
-    valorCell.numFmt = '"R$ "#,##0.00';
-  });
+    // Set column widths
+    sheet.getColumn(1).width = 12;  // Matrícula
+    sheet.getColumn(2).width = 25;  // Nome
+    sheet.getColumn(3).width = 30;  // Item
+    sheet.getColumn(4).width = 12;  // Quantidade
+    sheet.getColumn(5).width = 15;  // Valor Unitário
+    sheet.getColumn(6).width = 15;  // Valor Total
+    sheet.getColumn(7).width = 20;  // Data de Consumo
 
-  // Style header row
-  sheet.getRow(1).font = { bold: true };
-  sheet.getRow(1).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FF4CAF50' }, // Green
-  };
-  sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    // Add one row per consumption record (starting from row 3)
+    report.records.forEach((record, index) => {
+      const rowNumber = index + 3; // Row 1 is period, row 2 is header, data starts at row 3
+      const dataRow = sheet.getRow(rowNumber);
+      
+      dataRow.getCell(1).value = record.matricula;
+      dataRow.getCell(2).value = record.user_name;
+      dataRow.getCell(3).value = record.product_name;
+      dataRow.getCell(4).value = record.quantity;
+      dataRow.getCell(5).value = record.unit_price;
+      dataRow.getCell(6).value = record.total_value; // Use schema field
+      dataRow.getCell(7).value = formatDateTime(record.consumed_at);
 
-  // Center align Matrícula and Valor Total columns
-  sheet.getColumn('matricula').alignment = { horizontal: 'center' };
-  sheet.getColumn('valorTotal').alignment = { horizontal: 'right' };
-  sheet.getColumn('periodo').alignment = { horizontal: 'center' };
+      // Apply currency format to price columns
+      dataRow.getCell(5).numFmt = '"R$ "#,##0.00';
+      dataRow.getCell(6).numFmt = '"R$ "#,##0.00';
+      
+      // Alignment for this row
+      dataRow.getCell(1).alignment = { horizontal: 'center' };
+      dataRow.getCell(4).alignment = { horizontal: 'center' };
+      dataRow.getCell(5).alignment = { horizontal: 'right' };
+      dataRow.getCell(6).alignment = { horizontal: 'right' };
+      dataRow.getCell(7).alignment = { horizontal: 'center' };
+    });
+  } else {
+    // CONSOLIDATED FORMAT: One row per user
+    const sheet = workbook.addWorksheet('Relatório FoodStation');
+    
+    // Define columns
+    sheet.columns = [
+      { header: 'Matrícula', key: 'matricula', width: 15 },
+      { header: 'Nome Completo', key: 'nome', width: 35 },
+      { header: 'Valor Total Mensal', key: 'valorTotal', width: 20 },
+      { header: 'Período', key: 'periodo', width: 30 },
+    ];
+
+    // Add ONE row per user using monthlyTotals
+    report.monthlyTotals.forEach((userTotal, index) => {
+      const rowNumber = index + 2; // +2 because row 1 is header
+      sheet.addRow({
+        matricula: userTotal.matricula,
+        nome: userTotal.user_name,
+        valorTotal: userTotal.monthly_total,
+        periodo: periodFormatted,
+      });
+
+      // Apply currency format to the valor total cell
+      const valorCell = sheet.getCell(`C${rowNumber}`);
+      valorCell.numFmt = '"R$ "#,##0.00';
+    });
+
+    // Style header row
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4CAF50' }, // Green
+    };
+    sheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    // Center align Matrícula and Valor Total columns
+    sheet.getColumn('matricula').alignment = { horizontal: 'center' };
+    sheet.getColumn('valorTotal').alignment = { horizontal: 'right' };
+    sheet.getColumn('periodo').alignment = { horizontal: 'center' };
+  }
 
   return workbook;
 }
