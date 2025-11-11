@@ -1271,7 +1271,7 @@ export async function generateFoodStationConsumptionWorkbook(
   report: import('@shared/schema').FoodStationConsumptionControlReport,
   options: import('@shared/schema').FoodStationConsumptionExportOptions
 ): Promise<any> {
-  const ExcelJS = await import('exceljs');
+  const { default: ExcelJS } = await import('exceljs');
   const workbook = new ExcelJS.Workbook();
 
   // Determine which fields to include

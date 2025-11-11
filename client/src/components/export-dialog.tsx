@@ -78,9 +78,11 @@ export default function ExportDialog({
   const handleExport = async () => {
     const options: FoodStationConsumptionExportOptions = {
       type,
-      userId,
-      startDate,
-      endDate,
+      filters: {
+        userId,
+        startDate,
+        endDate,
+      },
       ...(type === 'custom' && { fields: selectedFields }),
     };
 
@@ -104,7 +106,7 @@ export default function ExportDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-testid="button-export-dialog">
+        <Button data-testid="button-export-excel">
           <Download className="mr-2 h-4 w-4" />
           Exportar Excel
         </Button>
@@ -147,7 +149,7 @@ export default function ExportDialog({
             <Label className="text-sm font-medium">Tipo de Relatório</Label>
             <RadioGroup value={type} onValueChange={handleTypeChange}>
               <div className="flex items-start space-x-2">
-                <RadioGroupItem value="complete" id="type-complete" data-testid="radio-type-complete" />
+                <RadioGroupItem value="complete" id="type-complete" data-testid="radio-complete" />
                 <div className="flex-1">
                   <Label
                     htmlFor="type-complete"
@@ -161,7 +163,7 @@ export default function ExportDialog({
                 </div>
               </div>
               <div className="flex items-start space-x-2">
-                <RadioGroupItem value="custom" id="type-custom" data-testid="radio-type-custom" />
+                <RadioGroupItem value="custom" id="type-custom" data-testid="radio-custom" />
                 <div className="flex-1">
                   <Label
                     htmlFor="type-custom"
@@ -193,7 +195,7 @@ export default function ExportDialog({
                       id={`field-${field}`}
                       checked={selectedFields.includes(field)}
                       onCheckedChange={() => handleFieldToggle(field)}
-                      data-testid={`checkbox-field-${field}`}
+                      data-testid={`checkbox-${field}`}
                     />
                     <Label
                       htmlFor={`field-${field}`}
