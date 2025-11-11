@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar as CalendarIcon, Users, DollarSign, ShoppingBag, FileText } from 'lucide-react';
-import type { FoodStationConsumptionControlReport, User } from '@shared/schema';
+import ExportDialog from '@/components/export-dialog';
+import type { FoodStationConsumptionControlReport, FoodStationConsumptionExportOptions, User } from '@shared/schema';
 import { cn } from '@/lib/utils';
 
 export default function FoodStationConsumptionControlPage() {
@@ -63,6 +64,51 @@ export default function FoodStationConsumptionControlPage() {
     },
     enabled: !!appliedFilters.startDate && !!appliedFilters.endDate,
     refetchInterval: 30000,
+  });
+
+  // Export mutation
+  const exportMutation = useMutation({
+    mutationFn: async (options: FoodStationConsumptionExportOptions) => {
+      const res = await fetch('/api/reports/foodstation/consumption-control/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to export report');
+      }
+
+      // Get filename from Content-Disposition header
+      const contentDisposition = res.headers.get('Content-Disposition');
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch ? filenameMatch[1] : 'relatorio.xlsx';
+
+      // Download file
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Arquivo gerado',
+        description: 'O relatório foi exportado com sucesso',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao exportar',
+        description: error.message || 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    },
   });
 
   useEffect(() => {
@@ -191,13 +237,24 @@ export default function FoodStationConsumptionControlPage() {
               </Popover>
             </div>
 
-            <Button 
-              onClick={handleFilter} 
-              className="min-w-[120px]"
-              data-testid="button-filter"
-            >
-              Filtrar
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleFilter} 
+                className="min-w-[120px]"
+                data-testid="button-filter"
+              >
+                Filtrar
+              </Button>
+              
+              <ExportDialog
+                onExport={exportMutation.mutateAsync}
+                isPending={exportMutation.isPending}
+                userId={appliedFilters.userId !== 'all' ? parseInt(appliedFilters.userId) : undefined}
+                userName={appliedFilters.userId !== 'all' ? users.find(u => u.id.toString() === appliedFilters.userId)?.full_name : undefined}
+                startDate={appliedFilters.startDate}
+                endDate={appliedFilters.endDate}
+              />
+            </div>
           </div>
         </div>
       </div>
