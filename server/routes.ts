@@ -1204,10 +1204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const exportOptions = validationResult.data;
       
-      // Extract filter parameters from body, fallback to authenticated user for userId
-      const userId = exportOptions.userId;
-      const startDate = exportOptions.startDate;
-      const endDate = exportOptions.endDate;
+      // Extract filter parameters from filters object
+      const userId = exportOptions.filters.userId;
+      const startDate = exportOptions.filters.startDate;
+      const endDate = exportOptions.filters.endDate;
 
       // Generate the report
       const report = await generateFoodStationConsumptionControlReport(userId, startDate, endDate);
