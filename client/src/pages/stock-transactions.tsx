@@ -107,10 +107,10 @@ export default function StockTransactions() {
   // Build query params from filters
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
-    if (selectedSector) params.append('sector_id', selectedSector);
-    if (selectedProduct) params.append('product_id', selectedProduct);
-    if (selectedType) params.append('transaction_type', selectedType);
-    if (selectedUser) params.append('user_id', selectedUser);
+    if (selectedSector && selectedSector !== 'all') params.append('sector_id', selectedSector);
+    if (selectedProduct && selectedProduct !== 'all') params.append('product_id', selectedProduct);
+    if (selectedType && selectedType !== 'all') params.append('transaction_type', selectedType);
+    if (selectedUser && selectedUser !== 'all') params.append('user_id', selectedUser);
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
     return params.toString();
@@ -146,7 +146,7 @@ export default function StockTransactions() {
   // Filter products by selected sector
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    if (!selectedSector) return products;
+    if (!selectedSector || selectedSector === 'all') return products;
     return products.filter(p => p.sector_id === parseInt(selectedSector));
   }, [products, selectedSector]);
 
@@ -232,15 +232,19 @@ export default function StockTransactions() {
   };
 
   const clearFilters = () => {
-    setSelectedSector('');
-    setSelectedProduct('');
-    setSelectedType('');
-    setSelectedUser('');
+    setSelectedSector('all');
+    setSelectedProduct('all');
+    setSelectedType('all');
+    setSelectedUser('all');
     setStartDate('');
     setEndDate('');
   };
 
-  const hasActiveFilters = selectedSector || selectedProduct || selectedType || selectedUser || startDate || endDate;
+  const hasActiveFilters = (selectedSector && selectedSector !== 'all') || 
+                           (selectedProduct && selectedProduct !== 'all') || 
+                           (selectedType && selectedType !== 'all') || 
+                           (selectedUser && selectedUser !== 'all') || 
+                           startDate || endDate;
 
   const getTypeVariant = (type: string | null): "default" | "destructive" | "secondary" | "outline" => {
     const typeConfig = transactionTypes.find(t => t.value === type);
@@ -311,7 +315,7 @@ export default function StockTransactions() {
                     <SelectValue placeholder="Todos os setores" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os setores</SelectItem>
+                    <SelectItem value="all">Todos os setores</SelectItem>
                     {sectors?.map((sector) => (
                       <SelectItem key={sector.id} value={sector.id.toString()}>
                         {sector.name}
@@ -332,7 +336,7 @@ export default function StockTransactions() {
                     <SelectValue placeholder="Todos os produtos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os produtos</SelectItem>
+                    <SelectItem value="all">Todos os produtos</SelectItem>
                     {(selectedSector ? filteredProducts : products)?.map((product) => (
                       <SelectItem key={product.id} value={product.id.toString()}>
                         {product.name}
@@ -349,7 +353,7 @@ export default function StockTransactions() {
                     <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os tipos</SelectItem>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
                     {transactionTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
@@ -366,7 +370,7 @@ export default function StockTransactions() {
                     <SelectValue placeholder="Todos os usuários" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos os usuários</SelectItem>
+                    <SelectItem value="all">Todos os usuários</SelectItem>
                     {users?.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.full_name}
