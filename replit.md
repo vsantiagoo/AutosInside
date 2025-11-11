@@ -6,6 +6,32 @@ This is a full-stack inventory management system for tracking products, stock tr
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates (November 11, 2025)
+
+### Stock Management System with Automatic Updates
+Implemented comprehensive stock movement tracking across all sectors with automatic propagation to Inventory, Products, and Reports:
+
+**Backend**:
+- **Schema Extensions** (`shared/schema.ts`): Added `StockSnapshot` type (complete product stock status with flags for low_stock/out_of_stock/needs_purchase), `StockMovementFilters` for dynamic transaction filtering, extended `StockTransactionWithProduct` with sector information
+- **Storage Layer** (`server/storage-sqlite.ts`): New methods `getStockTransactionsWithFilters()`, `getStockSnapshots()`, `getPurchaseRecommendations()` with parameterized SQL queries, boolean normalization, and priority calculation
+- **API Endpoints** (`server/routes.ts`): 
+  - `GET /api/stock-movements` - List movements with filters (sector, product, type, date range, user)
+  - `POST /api/stock-movements` - Create movement with stock validation (prevents negative stock)
+  - `GET /api/stock-snapshots` - Get complete stock status snapshots
+  - `GET /api/purchase-recommendations` - Get prioritized purchase recommendations
+- **Atomic Updates**: `createStockTransaction` uses SQLite transactions to atomically update `stock_quantity`, `total_in`, `total_out` ensuring data consistency
+
+**Automatic Propagation**: When stock transactions are created via POST /api/stock-movements, the atomic update to products table ensures that all views (Inventory KPIs, Product listings, Dashboard stats, Reports) automatically see updated data on next query/refetch.
+
+**Purchase Recommendations Logic**:
+- **High Priority**: Stock = 0 OR ≤ 50% of min_quantity
+- **Medium Priority**: Stock ≤ min_quantity
+- **Low Priority**: Other cases
+- **Recommended Quantity**: max(min_quantity - current_stock, 0)
+- **Estimated Cost**: recommended_quantity × unit_price
+
+**Frontend Integration** (Planned): Shared `useStockInsights(sectorId)` hook and widgets for Dashboard, Inventory, and Products pages with automatic cache invalidation on mutations.
+
 ## System Architecture
 ### Frontend Architecture
 - **Frameworks**: React 18 with TypeScript, Vite, React Router, TanStack Query.
