@@ -1465,6 +1465,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // STOCK MANAGEMENT ENDPOINTS
+  // ============================================
+
+  // Get stock movements with filters
+  app.get('/api/stock-movements', authMiddleware, async (req, res) => {
+    try {
+      const filters: any = {};
+      
+      if (req.query.sector_id) filters.sector_id = parseInt(req.query.sector_id as string);
+      if (req.query.product_id) filters.product_id = parseInt(req.query.product_id as string);
+      if (req.query.transaction_type) filters.transaction_type = req.query.transaction_type as string;
+      if (req.query.user_id) filters.user_id = parseInt(req.query.user_id as string);
+      if (req.query.start_date) filters.start_date = req.query.start_date as string;
+      if (req.query.end_date) filters.end_date = req.query.end_date as string;
+
+      const movements = await storage.getStockTransactionsWithFilters(filters);
+      res.json(movements);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Falha ao buscar movimentações de estoque' });
+    }
+  });
+
+  // Create new stock movement
+  app.post('/api/stock-movements', authMiddleware, async (req, res) => {
+    try {
+      const validatedData = insertStockTransactionSchema.parse(req.body);
+      
+      // Get product to validate stock
+      const product = await storage.getProduct(validatedData.product_id);
+      if (!product) {
+        return res.status(404).json({ message: 'Produto não encontrado' });
+      }
+
+      // Validate that exit doesn't exceed stock
+      if (validatedData.change < 0) {
+        const newStock = product.stock_quantity + validatedData.change;
+        if (newStock < 0) {
+          return res.status(400).json({ 
+            message: `Estoque insuficiente. Estoque atual: ${product.stock_quantity}, Tentativa de saída: ${Math.abs(validatedData.change)}` 
+          });
+        }
+      }
+
+      const transaction = await storage.createStockTransaction({
+        product_id: validatedData.product_id,
+        user_id: validatedData.user_id || req.user!.id,
+        transaction_type: validatedData.transaction_type || null,
+        change: validatedData.change,
+        reason: validatedData.reason || null,
+        document_origin: validatedData.document_origin || null,
+        notes: validatedData.notes || null,
+      });
+
+      res.status(201).json(transaction);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      }
+      res.status(500).json({ message: error.message || 'Falha ao criar movimentação' });
+    }
+  });
+
+  // Get stock snapshots (all products or by sector)
+  app.get('/api/stock-snapshots', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+      const snapshots = await storage.getStockSnapshots(sectorId);
+      res.json(snapshots);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Falha ao buscar snapshots de estoque' });
+    }
+  });
+
+  // Get purchase recommendations
+  app.get('/api/purchase-recommendations', authMiddleware, async (req, res) => {
+    try {
+      const sectorId = req.query.sector_id ? parseInt(req.query.sector_id as string) : undefined;
+      const recommendations = await storage.getPurchaseRecommendations(sectorId);
+      res.json(recommendations);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Falha ao buscar recomendações de compra' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

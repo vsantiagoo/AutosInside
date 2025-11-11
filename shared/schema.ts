@@ -166,7 +166,40 @@ export type StockTransactionWithProduct = StockTransaction & {
   product_name?: string;
   user_name?: string;
   photo_path?: string | null;
+  sector_id?: number | null;
+  sector_name?: string;
 };
+
+// Stock Snapshot - Complete stock status for a product
+export type StockSnapshot = {
+  product_id: number;
+  product_name: string;
+  sector_id: number | null;
+  sector_name: string | null;
+  current_stock: number;
+  min_quantity: number | null;
+  low_stock_threshold: number | null;
+  total_in: number;
+  total_out: number;
+  unit_price: number;
+  inventory_value: number;
+  is_low_stock: boolean;
+  is_out_of_stock: boolean;
+  needs_purchase: boolean;
+  photo_path?: string | null;
+};
+
+// Stock Movement Filters
+export const stockMovementFiltersSchema = z.object({
+  sector_id: z.number().optional(),
+  product_id: z.number().optional(),
+  transaction_type: z.enum(['entrada', 'saida', 'ajuste', 'devolucao']).optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  user_id: z.number().optional(),
+});
+
+export type StockMovementFilters = z.infer<typeof stockMovementFiltersSchema>;
 
 // Inventory KPIs and Reports
 export type InventoryKPI = {

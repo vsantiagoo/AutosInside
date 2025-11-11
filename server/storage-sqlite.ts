@@ -23,6 +23,9 @@ import type {
   SectorMonthlyReport,
   GeneralInventoryReport,
   DailyConsumptionTotal,
+  StockSnapshot,
+  StockMovementFilters,
+  PurchaseRecommendation,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -57,7 +60,12 @@ export interface IStorage {
   getStockTransaction(id: number): Promise<StockTransaction | undefined>;
   getAllStockTransactions(): Promise<StockTransactionWithProduct[]>;
   getStockTransactionsByPeriod(startDate: string, endDate: string): Promise<StockTransactionWithProduct[]>;
+  getStockTransactionsWithFilters(filters: StockMovementFilters): Promise<StockTransactionWithProduct[]>;
   createStockTransaction(transaction: Omit<StockTransaction, 'id' | 'created_at'>): Promise<StockTransaction>;
+  
+  // Stock Management
+  getStockSnapshots(sectorId?: number): Promise<StockSnapshot[]>;
+  getPurchaseRecommendations(sectorId?: number): Promise<PurchaseRecommendation[]>;
 
   // Consumptions
   getConsumption(id: number): Promise<Consumption | undefined>;
@@ -618,6 +626,161 @@ class SqliteStorage implements IStorage {
 
     const txId = createTx();
     return this.getStockTransaction(txId) as Promise<StockTransaction>;
+  }
+
+  async getStockTransactionsWithFilters(filters: StockMovementFilters): Promise<StockTransactionWithProduct[]> {
+    let query = `
+      SELECT 
+        st.*, 
+        p.name as product_name, 
+        p.photo_path,
+        p.sector_id,
+        s.name as sector_name,
+        u.full_name as user_name
+      FROM stock_transactions st
+      LEFT JOIN products p ON st.product_id = p.id
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      LEFT JOIN users u ON st.user_id = u.id
+      WHERE 1=1
+    `;
+    
+    const params: any[] = [];
+
+    if (filters.sector_id !== undefined) {
+      query += ` AND p.sector_id = ?`;
+      params.push(filters.sector_id);
+    }
+
+    if (filters.product_id !== undefined) {
+      query += ` AND st.product_id = ?`;
+      params.push(filters.product_id);
+    }
+
+    if (filters.transaction_type) {
+      query += ` AND st.transaction_type = ?`;
+      params.push(filters.transaction_type);
+    }
+
+    if (filters.user_id !== undefined) {
+      query += ` AND st.user_id = ?`;
+      params.push(filters.user_id);
+    }
+
+    if (filters.start_date) {
+      query += ` AND date(st.created_at) >= date(?)`;
+      params.push(filters.start_date);
+    }
+
+    if (filters.end_date) {
+      query += ` AND date(st.created_at) <= date(?)`;
+      params.push(filters.end_date);
+    }
+
+    query += ` ORDER BY st.created_at DESC`;
+
+    return db.prepare(query).all(...params) as StockTransactionWithProduct[];
+  }
+
+  async getStockSnapshots(sectorId?: number): Promise<StockSnapshot[]> {
+    let query = `
+      SELECT 
+        p.id as product_id,
+        p.name as product_name,
+        p.sector_id,
+        s.name as sector_name,
+        p.stock_quantity as current_stock,
+        p.min_quantity,
+        p.low_stock_threshold,
+        p.total_in,
+        p.total_out,
+        p.unit_price,
+        (p.stock_quantity * p.unit_price) as inventory_value,
+        CASE 
+          WHEN p.stock_quantity <= COALESCE(p.low_stock_threshold, 10) AND p.stock_quantity > 0 
+          THEN 1 ELSE 0 
+        END as is_low_stock,
+        CASE WHEN p.stock_quantity = 0 THEN 1 ELSE 0 END as is_out_of_stock,
+        CASE 
+          WHEN p.stock_quantity <= COALESCE(p.min_quantity, p.low_stock_threshold, 10) 
+          THEN 1 ELSE 0 
+        END as needs_purchase,
+        p.photo_path
+      FROM products p
+      LEFT JOIN sectors s ON p.sector_id = s.id
+    `;
+
+    const params: any[] = [];
+    
+    if (sectorId !== undefined) {
+      query += ` WHERE p.sector_id = ?`;
+      params.push(sectorId);
+    }
+
+    query += ` ORDER BY is_low_stock DESC, is_out_of_stock DESC, p.name ASC`;
+
+    const results = db.prepare(query).all(...params) as any[];
+    
+    return results.map(row => ({
+      ...row,
+      is_low_stock: Boolean(row.is_low_stock),
+      is_out_of_stock: Boolean(row.is_out_of_stock),
+      needs_purchase: Boolean(row.needs_purchase),
+    }));
+  }
+
+  async getPurchaseRecommendations(sectorId?: number): Promise<PurchaseRecommendation[]> {
+    let query = `
+      SELECT 
+        p.id as productId,
+        p.name as productName,
+        p.stock_quantity as currentStock,
+        p.min_quantity,
+        p.unit_price,
+        p.photo_path as photoPath,
+        s.name as sector_name,
+        CASE 
+          WHEN p.stock_quantity = 0 THEN 'high'
+          WHEN p.stock_quantity <= COALESCE(p.min_quantity, p.low_stock_threshold, 10) * 0.5 THEN 'high'
+          WHEN p.stock_quantity <= COALESCE(p.min_quantity, p.low_stock_threshold, 10) THEN 'medium'
+          ELSE 'low'
+        END as priority
+      FROM products p
+      LEFT JOIN sectors s ON p.sector_id = s.id
+      WHERE p.stock_quantity <= COALESCE(p.min_quantity, p.low_stock_threshold, 10)
+    `;
+
+    const params: any[] = [];
+    
+    if (sectorId !== undefined) {
+      query += ` AND p.sector_id = ?`;
+      params.push(sectorId);
+    }
+
+    query += ` ORDER BY 
+      CASE priority 
+        WHEN 'high' THEN 1 
+        WHEN 'medium' THEN 2 
+        ELSE 3 
+      END,
+      p.name ASC
+    `;
+
+    const results = db.prepare(query).all(...params) as any[];
+    
+    return results.map(row => {
+      const minQuantity = row.min_quantity || row.low_stock_threshold || 10;
+      const recommendedQuantity = Math.max(minQuantity - row.currentStock, 0);
+      
+      return {
+        productId: row.productId,
+        productName: row.productName,
+        currentStock: row.currentStock,
+        recommendedQuantity,
+        estimatedCost: recommendedQuantity * row.unit_price,
+        priority: row.priority,
+        photoPath: row.photoPath,
+      };
+    });
   }
 
   // Consumptions
