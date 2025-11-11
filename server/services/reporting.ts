@@ -1279,16 +1279,22 @@ export async function generateFoodStationConsumptionWorkbook(
     ? ['matricula', 'nome', 'produto', 'quantidade', 'precoUnitario', 'precoTotal', 'dataHora'] as const
     : options.fields!;
 
-  // Define column mappings
+  // Define column mappings (Note: "Preço Total" now shows monthly total per user)
   const columnDefinitions = {
     matricula: { header: 'Matrícula', key: 'matricula', width: 15 },
     nome: { header: 'Nome Completo', key: 'nome', width: 30 },
     produto: { header: 'Produto', key: 'produto', width: 30 },
     quantidade: { header: 'Quantidade', key: 'quantidade', width: 12 },
     precoUnitario: { header: 'Preço Unitário', key: 'precoUnitario', width: 18 },
-    precoTotal: { header: 'Preço Total', key: 'precoTotal', width: 18 },
+    precoTotal: { header: 'Valor Total Mensal', key: 'precoTotal', width: 20 },
     dataHora: { header: 'Data e Hora', key: 'dataHora', width: 22 },
   };
+
+  // Create lookup map for user monthly totals (matricula -> monthly_total)
+  const monthlyTotalsMap = new Map<string, number>();
+  report.monthlyTotals.forEach(userTotal => {
+    monthlyTotalsMap.set(userTotal.matricula, userTotal.monthly_total);
+  });
 
   // Create Detailed Consumptions Sheet
   const detailsSheet = workbook.addWorksheet('Consumos Detalhados');
@@ -1305,7 +1311,11 @@ export async function generateFoodStationConsumptionWorkbook(
     if (fieldsToInclude.includes('produto')) row.produto = record.product_name;
     if (fieldsToInclude.includes('quantidade')) row.quantidade = record.quantity;
     if (fieldsToInclude.includes('precoUnitario')) row.precoUnitario = `R$ ${record.unit_price.toFixed(2)}`;
-    if (fieldsToInclude.includes('precoTotal')) row.precoTotal = `R$ ${record.total_value.toFixed(2)}`;
+    if (fieldsToInclude.includes('precoTotal')) {
+      // Use monthly total instead of transaction total
+      const userMonthlyTotal = monthlyTotalsMap.get(record.matricula) || 0;
+      row.precoTotal = `R$ ${userMonthlyTotal.toFixed(2)}`;
+    }
     if (fieldsToInclude.includes('dataHora')) {
       const date = new Date(record.consumed_at);
       row.dataHora = date.toLocaleString('pt-BR', {

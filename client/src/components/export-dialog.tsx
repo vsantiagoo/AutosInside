@@ -33,7 +33,7 @@ const FIELD_LABELS: Record<ExportField, string> = {
   produto: 'Produto',
   quantidade: 'Quantidade',
   precoUnitario: 'Preço Unitário',
-  precoTotal: 'Preço Total',
+  precoTotal: 'Valor Total Mensal',
   dataHora: 'Data e Hora',
 };
 

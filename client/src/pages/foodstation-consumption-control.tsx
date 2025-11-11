@@ -162,7 +162,7 @@ export default function FoodStationConsumptionControlPage() {
         <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-foreground" data-testid="text-page-title">
-              Controle de Consumo - FoodStation
+              Relatório FoodStation
             </h1>
             <p className="text-sm text-muted-foreground mt-1" data-testid="text-page-description">
               Relatório detalhado de consumos por usuário e período
@@ -520,7 +520,7 @@ export default function FoodStationConsumptionControlPage() {
                               {formatCurrency(record.unit_price)}
                             </TableCell>
                             <TableCell className="text-right" data-testid={`text-total-price-${record.consumption_id}`}>
-                              {formatCurrency(record.total_price)}
+                              {formatCurrency(record.total_value)}
                             </TableCell>
                             <TableCell data-testid={`text-consumed-at-${record.consumption_id}`}>
                               {formatDateTime(record.consumed_at)}
