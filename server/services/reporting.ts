@@ -1078,10 +1078,30 @@ export async function generateFoodStationConsumptionControlReport(
   const monthlyTotal = records.reduce((sum, r) => sum + r.total_price, 0);
   const totalItems = records.reduce((sum, r) => sum + r.quantity, 0);
 
+  // Calculate monthly totals per user (group by matricula)
+  const monthlyTotalsMap = new Map<string, { matricula: string; user_name: string; monthly_total: number }>();
+  
+  for (const record of records) {
+    const key = record.matricula;
+    if (!monthlyTotalsMap.has(key)) {
+      monthlyTotalsMap.set(key, {
+        matricula: record.matricula,
+        user_name: record.user_name,
+        monthly_total: 0,
+      });
+    }
+    const userTotal = monthlyTotalsMap.get(key)!;
+    userTotal.monthly_total += record.total_price;
+  }
+
+  const monthlyTotals: import('@shared/schema').MonthlyUserTotal[] = Array.from(monthlyTotalsMap.values())
+    .sort((a, b) => b.monthly_total - a.monthly_total); // Sort by highest total first
+
   return {
     userId: userId || null,
     userName,
     records,
+    monthlyTotals,
     monthlyTotal,
     totalItems,
     period: {

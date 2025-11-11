@@ -630,6 +630,7 @@ export type FoodStationConsumptionControlReport = {
   userId: number | null;
   userName: string | null;
   records: FoodStationConsumptionControlRecord[];
+  monthlyTotals: MonthlyUserTotal[];
   monthlyTotal: number;
   totalItems: number;
   period: {
@@ -702,3 +703,47 @@ export const sectorProductManagementQuerySchema = z.object({
 });
 
 export type SectorProductManagementQuery = z.infer<typeof sectorProductManagementQuerySchema>;
+
+// ============================================
+// FOODSTATION CONSUMPTION EXPORT
+// ============================================
+
+export const exportTypeEnum = z.enum(['complete', 'custom']);
+export type ExportType = z.infer<typeof exportTypeEnum>;
+
+export const exportFieldEnum = z.enum([
+  'matricula',
+  'nome',
+  'produto',
+  'quantidade',
+  'precoUnitario',
+  'precoTotal',
+  'dataHora'
+]);
+export type ExportField = z.infer<typeof exportFieldEnum>;
+
+export const foodStationConsumptionExportSchema = z.object({
+  type: exportTypeEnum,
+  fields: z.array(exportFieldEnum).optional(),
+  filters: z.object({
+    userId: z.number().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  }),
+}).superRefine((data, ctx) => {
+  if (data.type === 'custom' && (!data.fields || data.fields.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Ao menos um campo deve ser selecionado para exportação customizada',
+      path: ['fields'],
+    });
+  }
+});
+
+export type FoodStationConsumptionExportOptions = z.infer<typeof foodStationConsumptionExportSchema>;
+
+export type MonthlyUserTotal = {
+  matricula: string;
+  user_name: string;
+  monthly_total: number;
+};
