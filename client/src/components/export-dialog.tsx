@@ -10,13 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import type { FoodStationConsumptionExportOptions, ExportType, ExportField } from '@shared/schema';
+import type { FoodStationConsumptionExportOptions } from '@shared/schema';
 
 interface ExportDialogProps {
   onExport: (options: FoodStationConsumptionExportOptions) => Promise<void>;
@@ -27,26 +24,6 @@ interface ExportDialogProps {
   endDate: string;
 }
 
-const FIELD_LABELS: Record<ExportField, string> = {
-  matricula: 'Matrícula',
-  nome: 'Nome Completo',
-  produto: 'Produto',
-  quantidade: 'Quantidade',
-  precoUnitario: 'Preço Unitário',
-  precoTotal: 'Valor Total Mensal',
-  dataHora: 'Data e Hora',
-};
-
-const ALL_FIELDS: ExportField[] = [
-  'matricula',
-  'nome',
-  'produto',
-  'quantidade',
-  'precoUnitario',
-  'precoTotal',
-  'dataHora',
-];
-
 export default function ExportDialog({
   onExport,
   isPending,
@@ -56,44 +33,19 @@ export default function ExportDialog({
   endDate,
 }: ExportDialogProps) {
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<ExportType>('complete');
-  const [selectedFields, setSelectedFields] = useState<ExportField[]>(ALL_FIELDS);
-
-  const handleTypeChange = (value: ExportType) => {
-    setType(value);
-    // Pre-select all fields when switching to custom
-    if (value === 'custom') {
-      setSelectedFields(ALL_FIELDS);
-    }
-  };
-
-  const handleFieldToggle = (field: ExportField) => {
-    setSelectedFields((prev) =>
-      prev.includes(field)
-        ? prev.filter((f) => f !== field)
-        : [...prev, field]
-    );
-  };
 
   const handleExport = async () => {
     const options: FoodStationConsumptionExportOptions = {
-      type,
       filters: {
         userId,
         startDate,
         endDate,
       },
-      ...(type === 'custom' && { fields: selectedFields }),
     };
 
     await onExport(options);
     setOpen(false);
-    // Reset to defaults
-    setType('complete');
-    setSelectedFields(ALL_FIELDS);
   };
-
-  const isExportDisabled = type === 'custom' && selectedFields.length === 0;
 
   const formatDate = (dateStr: string) => {
     try {
@@ -111,13 +63,13 @@ export default function ExportDialog({
           Exportar Excel
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle data-testid="text-dialog-title">
             Exportar Relatório para Excel
           </DialogTitle>
           <DialogDescription data-testid="text-dialog-description">
-            Configure as opções de exportação para o arquivo Excel
+            O arquivo Excel será gerado com uma linha por usuário contendo: Matrícula, Nome Completo, Valor Total Mensal e Período.
           </DialogDescription>
         </DialogHeader>
 
@@ -144,70 +96,12 @@ export default function ExportDialog({
             </div>
           </div>
 
-          {/* Report Type Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Tipo de Relatório</Label>
-            <RadioGroup value={type} onValueChange={handleTypeChange}>
-              <div className="flex items-start space-x-2">
-                <RadioGroupItem value="complete" id="type-complete" data-testid="radio-complete" />
-                <div className="flex-1">
-                  <Label
-                    htmlFor="type-complete"
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    Completo
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Todas as colunas + planilha de totalizações mensais
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-2">
-                <RadioGroupItem value="custom" id="type-custom" data-testid="radio-custom" />
-                <div className="flex-1">
-                  <Label
-                    htmlFor="type-custom"
-                    className="text-sm font-medium cursor-pointer"
-                  >
-                    Resumido
-                  </Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Selecione as colunas desejadas (sem totalizações mensais)
-                  </p>
-                </div>
-              </div>
-            </RadioGroup>
+          {/* Export Format Info */}
+          <div className="rounded-md bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground">
+              <strong>Formato de Exportação:</strong> Uma linha por usuário com matrícula, nome completo, valor total mensal e período do relatório.
+            </p>
           </div>
-
-          {/* Field Selection (Custom Mode) */}
-          {type === 'custom' && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Colunas do Relatório</Label>
-              {selectedFields.length === 0 && (
-                <p className="text-xs text-destructive" data-testid="text-validation-error">
-                  Selecione pelo menos uma coluna
-                </p>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {ALL_FIELDS.map((field) => (
-                  <div key={field} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`field-${field}`}
-                      checked={selectedFields.includes(field)}
-                      onCheckedChange={() => handleFieldToggle(field)}
-                      data-testid={`checkbox-${field}`}
-                    />
-                    <Label
-                      htmlFor={`field-${field}`}
-                      className="text-sm cursor-pointer"
-                    >
-                      {FIELD_LABELS[field]}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
@@ -221,7 +115,7 @@ export default function ExportDialog({
           </Button>
           <Button
             onClick={handleExport}
-            disabled={isPending || isExportDisabled}
+            disabled={isPending}
             data-testid="button-confirm-export"
           >
             {isPending ? (
