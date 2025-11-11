@@ -574,6 +574,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             last_count_date: null,
             asset_number: null,
             status: 'Ativo',
+            expiry_date: null,
+            warranty_date: null,
+            visible_to_users: true,
           });
         } catch (error: any) {
           errors.push(`Row ${rowNumber}: ${error.message}`);
@@ -661,6 +664,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user_id: transactionData.user_id ?? null,
         transaction_type: transactionData.transaction_type ?? null,
         reason: transactionData.reason || null,
+        document_origin: null,
+        notes: null,
       });
 
       res.json(transaction);

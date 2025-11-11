@@ -1069,13 +1069,13 @@ export async function generateFoodStationConsumptionControlReport(
     product_name: c.product_name || '',
     quantity: c.qty,
     unit_price: c.unit_price,
-    total_price: c.total_price,
+    total_value: c.total_price,
     consumed_at: c.consumed_at,
     photo_path: c.photo_path || null,
   }));
 
   // Calculate totals
-  const monthlyTotal = records.reduce((sum, r) => sum + r.total_price, 0);
+  const monthlyTotal = records.reduce((sum, r) => sum + r.total_value, 0);
   const totalItems = records.reduce((sum, r) => sum + r.quantity, 0);
 
   // Calculate monthly totals per user (group by matricula)
@@ -1091,7 +1091,7 @@ export async function generateFoodStationConsumptionControlReport(
       });
     }
     const userTotal = monthlyTotalsMap.get(key)!;
-    userTotal.monthly_total += record.total_price;
+    userTotal.monthly_total += record.total_value;
   }
 
   const monthlyTotals: import('@shared/schema').MonthlyUserTotal[] = Array.from(monthlyTotalsMap.values())
@@ -1257,4 +1257,106 @@ export async function generateSectorProductManagementReport(
     },
     generatedAt: new Date().toISOString(),
   };
+}
+
+// ============================================
+// FOODSTATION CONSUMPTION EXPORT
+// ============================================
+
+/**
+ * Generate Excel Workbook for FoodStation Consumption Control Report
+ * Supports customizable field selection and monthly totals
+ */
+export async function generateFoodStationConsumptionWorkbook(
+  report: import('@shared/schema').FoodStationConsumptionControlReport,
+  options: import('@shared/schema').FoodStationConsumptionExportOptions
+): Promise<any> {
+  const ExcelJS = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+
+  // Determine which fields to include
+  const fieldsToInclude = options.type === 'complete' 
+    ? ['matricula', 'nome', 'produto', 'quantidade', 'precoUnitario', 'precoTotal', 'dataHora'] as const
+    : options.fields!;
+
+  // Define column mappings
+  const columnDefinitions = {
+    matricula: { header: 'Matrícula', key: 'matricula', width: 15 },
+    nome: { header: 'Nome Completo', key: 'nome', width: 30 },
+    produto: { header: 'Produto', key: 'produto', width: 30 },
+    quantidade: { header: 'Quantidade', key: 'quantidade', width: 12 },
+    precoUnitario: { header: 'Preço Unitário', key: 'precoUnitario', width: 18 },
+    precoTotal: { header: 'Preço Total', key: 'precoTotal', width: 18 },
+    dataHora: { header: 'Data e Hora', key: 'dataHora', width: 22 },
+  };
+
+  // Create Detailed Consumptions Sheet
+  const detailsSheet = workbook.addWorksheet('Consumos Detalhados');
+  
+  // Set columns based on selected fields (maintaining order)
+  detailsSheet.columns = fieldsToInclude.map(field => columnDefinitions[field as keyof typeof columnDefinitions]);
+
+  // Add data rows
+  report.records.forEach(record => {
+    const row: any = {};
+    
+    if (fieldsToInclude.includes('matricula')) row.matricula = record.matricula;
+    if (fieldsToInclude.includes('nome')) row.nome = record.user_name;
+    if (fieldsToInclude.includes('produto')) row.produto = record.product_name;
+    if (fieldsToInclude.includes('quantidade')) row.quantidade = record.quantity;
+    if (fieldsToInclude.includes('precoUnitario')) row.precoUnitario = `R$ ${record.unit_price.toFixed(2)}`;
+    if (fieldsToInclude.includes('precoTotal')) row.precoTotal = `R$ ${record.total_value.toFixed(2)}`;
+    if (fieldsToInclude.includes('dataHora')) {
+      const date = new Date(record.consumed_at);
+      row.dataHora = date.toLocaleString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    detailsSheet.addRow(row);
+  });
+
+  // Style header row
+  detailsSheet.getRow(1).font = { bold: true };
+  detailsSheet.getRow(1).fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF4CAF50' }, // Green
+  };
+  detailsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+  // Create Monthly Totals Sheet (always included for complete report)
+  if (options.type === 'complete' && report.monthlyTotals.length > 0) {
+    const totalsSheet = workbook.addWorksheet('Totais Mensais');
+    
+    totalsSheet.columns = [
+      { header: 'Matrícula', key: 'matricula', width: 15 },
+      { header: 'Nome Completo', key: 'nome', width: 30 },
+      { header: 'Total Mês', key: 'total', width: 18 },
+    ];
+
+    report.monthlyTotals.forEach(userTotal => {
+      totalsSheet.addRow({
+        matricula: userTotal.matricula,
+        nome: userTotal.user_name,
+        total: `R$ ${userTotal.monthly_total.toFixed(2)}`,
+      });
+    });
+
+    // Style header row
+    totalsSheet.getRow(1).font = { bold: true };
+    totalsSheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF2196F3' }, // Blue
+    };
+    totalsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  }
+
+  return workbook;
 }

@@ -621,7 +621,7 @@ export type FoodStationConsumptionControlRecord = {
   product_name: string;
   quantity: number;
   unit_price: number;
-  total_price: number;
+  total_value: number;
   consumed_at: string;
   photo_path: string | null;
 };
