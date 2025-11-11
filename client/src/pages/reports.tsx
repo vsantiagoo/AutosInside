@@ -111,11 +111,11 @@ export default function ReportsPage() {
 
   const reportCards = [
     {
-      title: "Visão Geral FoodStation",
-      description: "Análise completa com KPIs, produtos mais consumidos e previsão de reposição",
-      icon: UtensilsCrossed,
-      path: "/foodstation-overview",
-      color: "text-orange-500",
+      title: "Relatório FoodStation",
+      description: "Relatório detalhado de consumos por usuário com filtro de período e totalizações",
+      icon: Users,
+      path: "/foodstation-consumption-control",
+      color: "text-green-500",
     },
     {
       title: "Máquina de Café",
@@ -130,13 +130,6 @@ export default function ReportsPage() {
       icon: FileBarChart,
       path: "/general-inventory",
       color: "text-blue-500",
-    },
-    {
-      title: "Controle de Consumo FoodStation",
-      description: "Relatório detalhado de consumos por usuário com filtro de período e totalizações",
-      icon: Users,
-      path: "/foodstation-consumption-control",
-      color: "text-green-500",
     },
     {
       title: "Gestão de Produtos por Setor",
