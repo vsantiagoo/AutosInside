@@ -276,6 +276,130 @@ export default function FoodStationConsumptionControlPage() {
               </Card>
             </div>
 
+            {/* Monthly Totals Section */}
+            {report.monthlyTotals && report.monthlyTotals.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Totalizações Mensais por Usuário</CardTitle>
+                  <CardDescription>
+                    Ranking de consumo total por usuário no período selecionado
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Top 3 Highlight Entries */}
+                  {report.monthlyTotals.length >= 3 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {report.monthlyTotals.slice(0, 3).map((user, index) => {
+                        const isSelected = appliedFilters.userId !== 'all' && user.matricula === users.find(u => u.id.toString() === appliedFilters.userId)?.matricula;
+                        const position = index + 1;
+                        const bgColors = ['bg-amber-500/10', 'bg-slate-500/10', 'bg-orange-600/10'];
+                        const borderColors = ['border-amber-500/30', 'border-slate-500/30', 'border-orange-600/30'];
+                        
+                        return (
+                          <div 
+                            key={user.matricula} 
+                            className={cn(
+                              "relative overflow-hidden rounded-md border p-4",
+                              bgColors[index],
+                              borderColors[index],
+                              isSelected && "ring-2 ring-primary"
+                            )}
+                            data-testid={`card-top-user-${position}`}
+                          >
+                            <div className="flex items-center gap-3 mb-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarFallback className="text-base font-semibold">
+                                  {user.user_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg font-bold text-foreground/70">#{position}</span>
+                                  {isSelected && (
+                                    <span 
+                                      className="text-xs font-medium bg-primary text-primary-foreground px-2 py-0.5 rounded"
+                                      data-testid={`badge-selected-${position}`}
+                                    >
+                                      Selecionado
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm font-semibold truncate" data-testid={`text-top-user-name-${position}`}>
+                                  {user.user_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground" data-testid={`text-top-user-matricula-${position}`}>
+                                  Mat: {user.matricula}
+                                </p>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-2xl font-bold text-foreground" data-testid={`text-top-user-total-${position}`}>
+                                {formatCurrency(user.monthly_total)}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Total no período
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Remaining Users Table */}
+                  {report.monthlyTotals.length > (report.monthlyTotals.length >= 3 ? 3 : 0) && (
+                    <div className="overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">#</TableHead>
+                            <TableHead className="min-w-[120px]">Matrícula</TableHead>
+                            <TableHead className="min-w-[200px]">Nome Completo</TableHead>
+                            <TableHead className="text-right min-w-[150px]">Total Mensal</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {report.monthlyTotals.slice(report.monthlyTotals.length >= 3 ? 3 : 0).map((user, idx) => {
+                            const position = (report.monthlyTotals.length >= 3 ? 3 : 0) + idx + 1;
+                            const isSelected = appliedFilters.userId !== 'all' && user.matricula === users.find(u => u.id.toString() === appliedFilters.userId)?.matricula;
+                            
+                            return (
+                              <TableRow 
+                                key={user.matricula}
+                                className={cn(isSelected && "bg-primary/5 font-medium")}
+                                data-testid={`row-monthly-total-${position}`}
+                              >
+                                <TableCell className="text-muted-foreground font-medium">
+                                  {position}
+                                </TableCell>
+                                <TableCell data-testid={`cell-matricula-${position}`}>
+                                  {user.matricula}
+                                  {isSelected && (
+                                    <span 
+                                      className="ml-2 text-xs font-medium bg-primary text-primary-foreground px-1.5 py-0.5 rounded"
+                                      data-testid={`badge-table-selected-${position}`}
+                                    >
+                                      Selecionado
+                                    </span>
+                                  )}
+                                </TableCell>
+                                <TableCell data-testid={`cell-user-name-${position}`}>
+                                  {user.user_name}
+                                </TableCell>
+                                <TableCell className="text-right font-semibold" data-testid={`cell-total-${position}`}>
+                                  {formatCurrency(user.monthly_total)}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Consumption Table */}
             <Card>
               <CardHeader>
