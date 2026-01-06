@@ -2,12 +2,16 @@ CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   full_name TEXT NOT NULL,
   matricula TEXT UNIQUE NOT NULL,
+  email TEXT,
   password_hash TEXT,
   role TEXT NOT NULL DEFAULT 'user',
   monthly_limit REAL,
   limit_enabled INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration: Add email column if not exists
+ALTER TABLE users ADD COLUMN email TEXT;
 
 CREATE TABLE IF NOT EXISTS sectors (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

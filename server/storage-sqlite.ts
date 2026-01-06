@@ -132,9 +132,9 @@ class SqliteStorage implements IStorage {
 
   async createUser(insertUser: InsertUser & { password_hash: string | null }): Promise<User> {
     const result = db.prepare(`
-      INSERT INTO users (full_name, matricula, password_hash, role)
-      VALUES (?, ?, ?, ?)
-    `).run(insertUser.full_name, insertUser.matricula, insertUser.password_hash, insertUser.role);
+      INSERT INTO users (full_name, matricula, email, password_hash, role)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(insertUser.full_name, insertUser.matricula, insertUser.email || null, insertUser.password_hash, insertUser.role);
     
     return this.getUser(result.lastInsertRowid as number) as Promise<User>;
   }
@@ -150,6 +150,10 @@ class SqliteStorage implements IStorage {
     if (updateData.role !== undefined) {
       fields.push('role = ?');
       values.push(updateData.role);
+    }
+    if (updateData.email !== undefined) {
+      fields.push('email = ?');
+      values.push(updateData.email || null);
     }
     if (updateData.password_hash !== undefined) {
       fields.push('password_hash = ?');

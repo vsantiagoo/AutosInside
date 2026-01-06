@@ -5,6 +5,7 @@ export const userSchema = z.object({
   id: z.number(),
   full_name: z.string(),
   matricula: z.string(),
+  email: z.string().nullable(),
   password_hash: z.string().optional(),
   role: z.enum(['admin', 'user']),
   monthly_limit: z.number().nullable(),
@@ -15,6 +16,7 @@ export const userSchema = z.object({
 export const insertUserSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
   matricula: z.string().min(1, "Matricula is required"),
+  email: z.string().email("E-mail inválido").optional().or(z.literal('')),
   password: z.string().optional().refine(
     (val) => !val || val.length >= 6,
     { message: "Password must be at least 6 characters if provided" }
