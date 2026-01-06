@@ -248,6 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData: any = {
         full_name: userData.full_name,
         role: userData.role,
+        email: userData.email,
       };
 
       // If promoting to admin, ensure password exists or is being set
