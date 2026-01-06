@@ -53,7 +53,6 @@ export default function AdminUsers() {
       full_name: '',
       matricula: '',
       email: '',
-      password: '',
       role: 'user',
     },
   });
@@ -138,7 +137,6 @@ export default function AdminUsers() {
       full_name: user.full_name,
       matricula: user.matricula,
       email: user.email || '',
-      password: '',
       role: user.role,
     });
     setIsFormOpen(true);
@@ -150,7 +148,6 @@ export default function AdminUsers() {
       full_name: '',
       matricula: '',
       email: '',
-      password: '',
       role: 'user',
     });
     setIsFormOpen(true);
@@ -308,30 +305,6 @@ export default function AdminUsers() {
                     </FormControl>
                     <FormDescription>
                       Usado para enviar relatórios de consumo
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha {editingUser && '(deixe em branco para manter)'}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder={editingUser ? 'Deixe em branco para manter' : 'Digite a senha'}
-                        {...field}
-                        data-testid="input-password"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {editingUser 
-                        ? 'Deixe em branco para manter a senha atual' 
-                        : 'Obrigatório para usuários admin, opcional para usuários normais'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
