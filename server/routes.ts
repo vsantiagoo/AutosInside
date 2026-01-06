@@ -792,6 +792,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/consumptions/my/:startDate/:endDate', authMiddleware, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.params;
+      const consumptions = await storage.getUserConsumptions(
+        req.user!.id, 
+        startDate || undefined, 
+        endDate || undefined
+      );
+      res.json(consumptions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch user consumptions' });
+    }
+  });
+
+  app.get('/api/consumptions/my/:startDate/', authMiddleware, async (req, res) => {
+    try {
+      const { startDate } = req.params;
+      const consumptions = await storage.getUserConsumptions(
+        req.user!.id, 
+        startDate || undefined, 
+        undefined
+      );
+      res.json(consumptions);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message || 'Failed to fetch user consumptions' });
+    }
+  });
+
   app.post('/api/consumptions/send-report-email', authMiddleware, async (req, res) => {
     try {
       const { startDate, endDate } = req.body;
