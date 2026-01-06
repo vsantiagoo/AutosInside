@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
 const resendApiKey = process.env.RESEND_API_KEY;
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'Inventário <onboarding@resend.dev>';
 
 let resend: Resend | null = null;
 
@@ -30,7 +31,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Inventário <onboarding@resend.dev>',
+      from: resendFromEmail,
       to: options.to,
       subject: options.subject,
       html: options.html,
