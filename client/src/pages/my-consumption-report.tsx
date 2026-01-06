@@ -189,7 +189,7 @@ export default function MyConsumptionReport() {
               onClick={() => sendEmailMutation.mutate()}
               variant="outline"
               className="flex-1 sm:flex-none"
-              disabled={sendEmailMutation.isPending || consumptions.length === 0}
+              disabled={sendEmailMutation.isPending || !startDate || !endDate || consumptions.length === 0}
               data-testid="button-send-email"
             >
               {sendEmailMutation.isPending ? (

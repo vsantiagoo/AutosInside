@@ -820,46 +820,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const worksheet = workbook.addWorksheet('Relatório de Consumo');
       
       worksheet.columns = [
-        { header: 'Item', key: 'item', width: 35 },
-        { header: 'Quantidade', key: 'quantidade', width: 12 },
-        { header: 'Valor Unitário (R$)', key: 'valor_unitario', width: 18 },
-        { header: 'Data/Hora', key: 'data_hora', width: 20 },
+        { header: 'Produto', key: 'produto', width: 35 },
+        { header: 'Consumo', key: 'consumo', width: 12 },
+        { header: 'Valor Unitário', key: 'valor_unitario', width: 18 },
+        { header: 'Valor Total', key: 'valor_total', width: 18 },
+        { header: 'Data e Hora Log', key: 'data_hora', width: 22 },
       ];
       
-      const groupedByTimestamp: { [key: string]: typeof consumptions } = {};
+      const groupedByProductAndTime: { [key: string]: { product_name: string; qty: number; unit_price: number; consumed_at: string } } = {};
       consumptions.forEach(c => {
-        const key = c.consumed_at;
-        if (!groupedByTimestamp[key]) {
-          groupedByTimestamp[key] = [];
+        const key = `${c.product_id}_${c.consumed_at}`;
+        if (!groupedByProductAndTime[key]) {
+          groupedByProductAndTime[key] = {
+            product_name: c.product_name || 'Produto',
+            qty: 0,
+            unit_price: c.unit_price,
+            consumed_at: c.consumed_at || new Date().toISOString(),
+          };
         }
-        groupedByTimestamp[key].push(c);
+        groupedByProductAndTime[key].qty += c.qty;
       });
       
-      Object.entries(groupedByTimestamp).forEach(([timestamp, items]) => {
-        if (items.length === 1) {
-          const c = items[0];
-          const dataHora = new Date(c.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-          worksheet.addRow({
-            item: c.product_name,
-            quantidade: c.qty,
-            valor_unitario: c.unit_price,
-            data_hora: dataHora,
-          });
-        } else {
-          const dataHora = new Date(timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-          const itemNames = items.map(i => `${i.product_name} (${i.qty}x)`).join(', ');
-          const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
-          const avgPrice = items.reduce((sum, i) => sum + i.unit_price * i.qty, 0) / totalQty;
-          worksheet.addRow({
-            item: itemNames,
-            quantidade: totalQty,
-            valor_unitario: avgPrice,
-            data_hora: dataHora,
-          });
-        }
+      const sortedEntries = Object.values(groupedByProductAndTime).sort((a, b) => 
+        new Date(b.consumed_at).getTime() - new Date(a.consumed_at).getTime()
+      );
+      
+      sortedEntries.forEach(item => {
+        const dataHora = new Date(item.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const valorTotal = item.qty * item.unit_price;
+        worksheet.addRow({
+          produto: item.product_name,
+          consumo: item.qty,
+          valor_unitario: item.unit_price,
+          valor_total: valorTotal,
+          data_hora: dataHora,
+        });
       });
       
       worksheet.getColumn('valor_unitario').numFmt = '"R$ "#,##0.00';
+      worksheet.getColumn('valor_total').numFmt = '"R$ "#,##0.00';
       
       worksheet.getRow(1).font = { bold: true };
       worksheet.getRow(1).fill = {
@@ -869,11 +868,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const totalValue = consumptions.reduce((sum, c) => sum + c.total_price, 0);
+      const totalQty = consumptions.reduce((sum, c) => sum + c.qty, 0);
       worksheet.addRow({});
       worksheet.addRow({
-        item: 'TOTAL',
-        quantidade: consumptions.reduce((sum, c) => sum + c.qty, 0),
-        valor_unitario: totalValue,
+        produto: 'TOTAL',
+        consumo: totalQty,
+        valor_unitario: '',
+        valor_total: totalValue,
         data_hora: '',
       });
       const lastRow = worksheet.lastRow;
