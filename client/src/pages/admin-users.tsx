@@ -52,6 +52,7 @@ export default function AdminUsers() {
     defaultValues: {
       full_name: '',
       matricula: '',
+      email: '',
       password: '',
       role: 'user',
     },
@@ -136,6 +137,7 @@ export default function AdminUsers() {
     form.reset({
       full_name: user.full_name,
       matricula: user.matricula,
+      email: user.email || '',
       password: '',
       role: user.role,
     });
@@ -147,6 +149,7 @@ export default function AdminUsers() {
     form.reset({
       full_name: '',
       matricula: '',
+      email: '',
       password: '',
       role: 'user',
     });
@@ -284,6 +287,28 @@ export default function AdminUsers() {
                         data-testid="input-matricula"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        {...field}
+                        data-testid="input-email"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Usado para enviar relatórios de consumo
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

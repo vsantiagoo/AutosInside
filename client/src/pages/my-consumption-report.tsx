@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, DollarSign } from "lucide-react";
+import { Calendar, DollarSign, Mail, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { ConsumptionWithDetails } from "@shared/schema";
 
 export default function MyConsumptionReport() {
@@ -18,6 +20,7 @@ export default function MyConsumptionReport() {
   const [startDate, setStartDate] = useState(firstDayOfMonth);
   const [endDate, setEndDate] = useState(lastDayOfMonth);
   const [month, setMonth] = useState(currentMonth);
+  const { toast } = useToast();
 
   const { data: consumptions = [], isLoading } = useQuery<ConsumptionWithDetails[]>({
     queryKey: ['/api/consumptions/my', startDate, endDate],
@@ -26,6 +29,33 @@ export default function MyConsumptionReport() {
 
   const { data: monthlyData } = useQuery<{ total: number; year: number; month: number }>({
     queryKey: ['/api/consumptions/my-monthly-total'],
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/consumptions/send-report-email', {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao enviar e-mail');
+      }
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "E-mail enviado!",
+        description: data.message || "Relatório enviado com sucesso para seu e-mail.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao enviar e-mail",
+        description: error.message || "Não foi possível enviar o relatório.",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleMonthChange = (newMonth: string) => {
@@ -154,6 +184,20 @@ export default function MyConsumptionReport() {
               data-testid="button-clear-filter"
             >
               Limpar Filtros
+            </Button>
+            <Button 
+              onClick={() => sendEmailMutation.mutate()}
+              variant="outline"
+              className="flex-1 sm:flex-none"
+              disabled={sendEmailMutation.isPending || consumptions.length === 0}
+              data-testid="button-send-email"
+            >
+              {sendEmailMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4 mr-2" />
+              )}
+              Enviar por E-mail
             </Button>
           </div>
         </CardContent>

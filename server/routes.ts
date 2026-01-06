@@ -792,6 +792,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/consumptions/send-report-email', authMiddleware, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.body;
+      const userId = req.user!.id;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+      
+      if (!user.email) {
+        return res.status(400).json({ message: 'E-mail não cadastrado. Configure seu e-mail nas preferências.' });
+      }
+      
+      if (!isEmailServiceConfigured()) {
+        return res.status(503).json({ message: 'Serviço de e-mail não configurado. Entre em contato com o administrador.' });
+      }
+      
+      const consumptions = await storage.getUserConsumptions(userId, startDate, endDate);
+      
+      if (consumptions.length === 0) {
+        return res.status(400).json({ message: 'Não há consumos no período selecionado para enviar.' });
+      }
+      
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Relatório de Consumo');
+      
+      worksheet.columns = [
+        { header: 'Item', key: 'item', width: 35 },
+        { header: 'Quantidade', key: 'quantidade', width: 12 },
+        { header: 'Valor Unitário (R$)', key: 'valor_unitario', width: 18 },
+        { header: 'Data/Hora', key: 'data_hora', width: 20 },
+      ];
+      
+      const groupedByTimestamp: { [key: string]: typeof consumptions } = {};
+      consumptions.forEach(c => {
+        const key = c.consumed_at;
+        if (!groupedByTimestamp[key]) {
+          groupedByTimestamp[key] = [];
+        }
+        groupedByTimestamp[key].push(c);
+      });
+      
+      Object.entries(groupedByTimestamp).forEach(([timestamp, items]) => {
+        if (items.length === 1) {
+          const c = items[0];
+          const dataHora = new Date(c.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          worksheet.addRow({
+            item: c.product_name,
+            quantidade: c.qty,
+            valor_unitario: c.unit_price,
+            data_hora: dataHora,
+          });
+        } else {
+          const dataHora = new Date(timestamp).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          const itemNames = items.map(i => `${i.product_name} (${i.qty}x)`).join(', ');
+          const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
+          const avgPrice = items.reduce((sum, i) => sum + i.unit_price * i.qty, 0) / totalQty;
+          worksheet.addRow({
+            item: itemNames,
+            quantidade: totalQty,
+            valor_unitario: avgPrice,
+            data_hora: dataHora,
+          });
+        }
+      });
+      
+      worksheet.getColumn('valor_unitario').numFmt = '"R$ "#,##0.00';
+      
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' },
+      };
+      
+      const totalValue = consumptions.reduce((sum, c) => sum + c.total_price, 0);
+      worksheet.addRow({});
+      worksheet.addRow({
+        item: 'TOTAL',
+        quantidade: consumptions.reduce((sum, c) => sum + c.qty, 0),
+        valor_unitario: totalValue,
+        data_hora: '',
+      });
+      const lastRow = worksheet.lastRow;
+      if (lastRow) {
+        lastRow.font = { bold: true };
+      }
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      
+      const periodLabel = startDate && endDate 
+        ? `${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')}`
+        : 'Período completo';
+      
+      const result = await sendEmail({
+        to: user.email,
+        subject: `Relatório de Consumo - ${periodLabel}`,
+        html: `
+          <h2>Relatório de Consumo</h2>
+          <p>Olá, ${user.full_name}!</p>
+          <p>Segue em anexo seu relatório de consumo do período: <strong>${periodLabel}</strong>.</p>
+          <p><strong>Total de itens:</strong> ${consumptions.length}</p>
+          <p><strong>Valor total:</strong> R$ ${totalValue.toFixed(2)}</p>
+          <br/>
+          <p>Este é um e-mail automático. Não responda.</p>
+        `,
+        attachments: [{
+          filename: `relatorio_consumo_${startDate || 'completo'}_${endDate || ''}.xlsx`,
+          content: Buffer.from(buffer),
+        }],
+      });
+      
+      if (!result.success) {
+        return res.status(500).json({ message: result.error || 'Erro ao enviar e-mail' });
+      }
+      
+      res.json({ message: 'Relatório enviado com sucesso para seu e-mail!' });
+    } catch (error: any) {
+      console.error('Error sending consumption report email:', error);
+      res.status(500).json({ message: error.message || 'Erro ao enviar relatório por e-mail' });
+    }
+  });
+
   app.get('/api/consumptions/top-items', authMiddleware, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
