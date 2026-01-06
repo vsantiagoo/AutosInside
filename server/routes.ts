@@ -20,6 +20,7 @@ import {
   type User,
   type Product,
 } from "@shared/schema";
+import { sendEmail, isEmailServiceConfigured } from "./services/email";
 
 // Validate JWT secret is configured
 if (!process.env.SESSION_SECRET) {

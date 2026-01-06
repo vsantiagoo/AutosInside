@@ -10,9 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Migration: Add email column if not exists
-ALTER TABLE users ADD COLUMN email TEXT;
-
 CREATE TABLE IF NOT EXISTS sectors (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE

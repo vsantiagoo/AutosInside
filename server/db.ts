@@ -34,9 +34,10 @@ function addColumnIfNotExists(tableName: string, columnName: string, columnDefin
   }
 }
 
-// Add monthly_limit and limit_enabled to users table
+// Add monthly_limit, limit_enabled, and email to users table
 addColumnIfNotExists('users', 'monthly_limit', 'REAL');
 addColumnIfNotExists('users', 'limit_enabled', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfNotExists('users', 'email', 'TEXT');
 
 // Add new columns to products table
 addColumnIfNotExists('products', 'category', 'TEXT');
