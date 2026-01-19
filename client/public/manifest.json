@@ -1,0 +1,28 @@
+{
+  "name": "Sistema de Gestão de Estoque",
+  "short_name": "Estoque",
+  "description": "Sistema profissional de gestão de estoque com rastreamento em tempo real, monitoramento de consumo e relatórios completos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e88e5",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "pt-BR",
+  "scope": "/",
+  "prefer_related_applications": false
+}
