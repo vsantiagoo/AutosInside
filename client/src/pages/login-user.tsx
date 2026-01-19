@@ -25,16 +25,22 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import logoImage from '@assets/WhatsApp_Image_2025-11-04_at_15.54.56_1768834777751.jpeg';
 
-// Regex for validating matricula format: FS-XXX-XX (X = digit)
-const matriculaRegex = /^FS-\d{3}-\d{2}$/;
+// Flexible matricula validation - accepts multiple formats:
+// FS-XXX-XX, fs-xxx-xx, FSxxxxx, fsxxxxx, FS XXX XX, etc.
+function isValidMatricula(input: string): boolean {
+  // Remove all non-alphanumeric characters and convert to uppercase
+  const cleaned = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Check if it matches FS + 5 digits pattern
+  return /^FS\d{5}$/.test(cleaned);
+}
 
 const userLoginSchema = z.object({
   matricula: z.string()
     .min(1, "Matrícula é obrigatória")
     .trim()
     .refine(
-      (val) => matriculaRegex.test(val),
-      { message: "Matrícula inválida. Use o formato FS-XXX-XX" }
+      (val) => isValidMatricula(val),
+      { message: "Matrícula inválida. Exemplos: FS-123-45, fs12345, FS 123 45" }
     ),
 });
 
@@ -121,7 +127,7 @@ export default function LoginUser() {
                     <FormLabel>Matrícula</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="FS-XXX-XX"
+                        placeholder="Ex: FS-123-45 ou fs12345"
                         {...field}
                         data-testid="input-matricula"
                         autoFocus

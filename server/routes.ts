@@ -137,6 +137,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Normalize matricula to standard format FS-XXX-XX
+  // Accepts: FS-XXX-XX, fs-xxx-xx, FSxxxxx, fsxxxxx, FS XXX XX, etc.
+  function normalizeMatricula(input: string): string {
+    // Handle special case for admin
+    if (input.toLowerCase() === 'admin') {
+      return 'admin';
+    }
+    
+    // Remove all non-alphanumeric characters and convert to uppercase
+    const cleaned = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Check if it starts with FS and has 5 digits after
+    const match = cleaned.match(/^FS(\d{3})(\d{2})$/);
+    if (match) {
+      return `FS-${match[1]}-${match[2]}`;
+    }
+    
+    // If doesn't match expected pattern, return original uppercase without special chars
+    return cleaned;
+  }
+
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
     try {
@@ -146,7 +167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Matricula is required' });
       }
 
-      const user = await storage.getUserByMatricula(matricula);
+      // Normalize matricula to handle different input formats
+      const normalizedMatricula = normalizeMatricula(matricula.trim());
+      const user = await storage.getUserByMatricula(normalizedMatricula);
 
       if (!user) {
         return res.status(401).json({ message: 'User not found' });
