@@ -188,31 +188,33 @@ export default function MyConsumptionReport() {
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
-            <Button 
-              onClick={handleTodayFilter} 
-              variant="outline"
-              className="flex-1 sm:flex-none"
-              data-testid="button-today-filter"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Hoje
-            </Button>
-            <Button 
-              onClick={handleClearFilter} 
-              variant="outline"
-              className="flex-1 sm:flex-none"
-              data-testid="button-clear-filter"
-            >
-              Limpar Filtros
-            </Button>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 sm:flex-wrap">
+            <div className="flex gap-2 flex-1 sm:flex-none">
+              <Button 
+                onClick={handleTodayFilter} 
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                data-testid="button-today-filter"
+              >
+                <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="text-sm">Hoje</span>
+              </Button>
+              <Button 
+                onClick={handleClearFilter} 
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                data-testid="button-clear-filter"
+              >
+                <span className="text-sm">Limpar</span>
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Select
                 value={downloadFormat}
                 onValueChange={(value: 'excel' | 'pdf') => setDownloadFormat(value)}
                 data-testid="select-download-format"
               >
-                <SelectTrigger className="w-[120px]" data-testid="select-trigger-format">
+                <SelectTrigger className="w-[100px] sm:w-[120px]" data-testid="select-trigger-format">
                   <SelectValue placeholder="Formato" />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,11 +240,11 @@ export default function MyConsumptionReport() {
                 data-testid="button-download-report"
               >
                 {isDownloading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-1 sm:mr-2 animate-spin" />
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 mr-1 sm:mr-2" />
                 )}
-                Baixar Relatório
+                <span className="text-sm">Baixar</span>
               </Button>
             </div>
           </div>
@@ -292,9 +294,9 @@ export default function MyConsumptionReport() {
             
             return (
               <Card key={date} data-testid={`card-day-${date}`}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:py-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                    <CardTitle className="text-base sm:text-lg">
                       {dateObj.toLocaleDateString('pt-BR', { 
                         weekday: 'long', 
                         year: 'numeric', 
@@ -302,30 +304,30 @@ export default function MyConsumptionReport() {
                         day: 'numeric' 
                       })}
                     </CardTitle>
-                    <div className="text-lg font-semibold text-primary">
+                    <div className="text-base sm:text-lg font-semibold text-primary">
                       Total: R$ {dayTotal.toFixed(2)}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="px-3 sm:px-6 py-3 sm:py-4">
+                  <div className="space-y-2 sm:space-y-3">
                     {items.map((consumption) => (
                       <div 
                         key={consumption.id} 
-                        className="flex items-center justify-between p-3 border rounded-md"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 border rounded-md gap-2 sm:gap-0"
                         data-testid={`consumption-item-${consumption.id}`}
                       >
-                        <div className="flex-1">
-                          <div className="font-medium">{consumption.product_name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            Horário: {formatDateTime(consumption.consumed_at)}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm sm:text-base truncate">{consumption.product_name}</div>
+                          <div className="text-xs sm:text-sm text-muted-foreground">
+                            {formatDateTime(consumption.consumed_at)}
                           </div>
                         </div>
-                        <div className="text-right space-y-1">
-                          <div className="text-sm text-muted-foreground">
+                        <div className="flex items-center justify-between sm:block sm:text-right">
+                          <div className="text-xs sm:text-sm text-muted-foreground">
                             {consumption.qty} x R$ {consumption.unit_price.toFixed(2)}
                           </div>
-                          <div className="font-semibold text-primary">
+                          <div className="font-semibold text-primary text-sm sm:text-base">
                             R$ {consumption.total_price.toFixed(2)}
                           </div>
                         </div>

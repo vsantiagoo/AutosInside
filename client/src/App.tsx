@@ -89,25 +89,25 @@ function AppRouter() {
 
   return (
     <SidebarProvider style={sidebarStyle}>
-      <div className="flex h-screen w-full">
+      <div className="flex min-h-screen min-h-[100dvh] w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center justify-between px-4 h-16 border-b bg-background">
-            <div className="flex items-center gap-4">
+          <header className="flex items-center justify-between px-3 sm:px-4 h-14 sm:h-16 border-b bg-background safe-top shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="material-icons text-base">inventory_2</span>
-                <span className="font-medium text-foreground">Gestão de Inventário</span>
+              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                <span className="material-icons text-sm sm:text-base">inventory_2</span>
+                <span className="font-medium text-foreground hidden xs:inline sm:inline">Gestão de Inventário</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden md:block">
-                <div className="text-sm font-medium">{user?.full_name}</div>
-                <div className="text-xs text-muted-foreground">{user?.role === 'admin' ? 'Administrador' : 'Usuário'}</div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-right">
+                <div className="text-xs sm:text-sm font-medium truncate max-w-[120px] sm:max-w-none">{user?.full_name}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">{user?.role === 'admin' ? 'Admin' : 'Usuário'}</div>
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-6 bg-background">
+          <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 bg-background safe-bottom">
             <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route path="/" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/food-station"} replace />} />
