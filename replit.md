@@ -62,15 +62,6 @@ Preferred communication style: Simple, everyday language.
     - **FoodStation Consumptions Report (API)**: Customizable detailed consumption report.
     - **Cleaning Sector Report (API)**: Bimonthly control report.
 - **Stock Management System with Automatic Updates**: Implemented comprehensive stock movement tracking with automatic propagation to Inventory, Products, and Reports. Backend includes `StockSnapshot` type, `StockMovementFilters`, new storage methods, and API endpoints for stock movements, snapshots, and purchase recommendations. Atomic updates ensure data consistency. Purchase recommendations are prioritized based on stock levels.
-- **Progressive Web App (PWA)**: Full PWA support for installation on mobile devices (iOS/Android) and desktop (Windows/Mac). Features include:
-    - `manifest.json` for app installation with icons and theme colors
-    - Service Worker (`sw.js`) for offline caching and network resilience
-    - iOS-specific meta tags for Safari home screen support
-    - Android-specific meta tags for Chrome installation prompt
-    - Responsive design tested on mobile (400px), tablet (768px), and desktop viewports
-    - "Add to Home Screen" functionality on all platforms
-- **Out-of-Stock Warnings**: FoodStation products with zero stock display "Fora de estoque" indicator with disabled selection and toast notifications when users attempt to select unavailable items.
-- **Real-Time Cache Invalidation**: Comprehensive cache invalidation ensures all screens (Inventory, Stock Movements, Consumptions, Sector Details, Dashboard, Reports) update automatically when consumption or stock changes occur.
 
 ## External Dependencies
 - **Third-Party Libraries**:
