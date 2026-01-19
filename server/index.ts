@@ -18,9 +18,11 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "blob:", "https:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Required for Vite dev
       connectSrc: ["'self'", "ws:", "wss:"], // Required for HMR
+      frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com"], // Allow Replit preview
     },
   },
   crossOriginEmbedderPolicy: false, // Allow loading external resources
+  frameguard: false, // Disable X-Frame-Options to allow Replit webview
 }));
 
 // Rate limiting - protect against brute force attacks
