@@ -8,6 +8,9 @@ import { seedDatabase } from "./storage";
 
 const app = express();
 
+// Trust proxy for Replit environment (behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Security headers with helmet - configured for Replit preview compatibility
 app.use(helmet({
   contentSecurityPolicy: {
