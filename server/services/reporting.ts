@@ -1,4 +1,4 @@
-import { storage } from '../storage-sqlite';
+import { storage } from '../storage';
 import type {
   Sector,
   Product,
