@@ -8,7 +8,7 @@ import { seedDatabase } from "./storage";
 
 const app = express();
 
-// Security headers with helmet
+// Security headers with helmet - configured for Replit preview compatibility
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -18,10 +18,12 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "blob:", "https:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Required for Vite dev
       connectSrc: ["'self'", "ws:", "wss:"], // Required for HMR
-      frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com"], // Allow Replit preview
+      frameAncestors: ["'self'", "https://*.replit.dev", "https://*.replit.com", "https://*.repl.co"], // Allow Replit preview
     },
   },
   crossOriginEmbedderPolicy: false, // Allow loading external resources
+  crossOriginOpenerPolicy: false, // Allow embedding in Replit webview
+  crossOriginResourcePolicy: false, // Allow cross-origin resources
   frameguard: false, // Disable X-Frame-Options to allow Replit webview
 }));
 
