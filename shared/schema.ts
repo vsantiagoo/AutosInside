@@ -1,4 +1,131 @@
 import { z } from "zod";
+import { pgTable, serial, text, integer, real, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+
+// ============================================
+// DRIZZLE TABLE DEFINITIONS (PostgreSQL)
+// ============================================
+
+// Users Table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  full_name: text("full_name").notNull(),
+  matricula: varchar("matricula", { length: 50 }).notNull().unique(),
+  email: text("email"),
+  password_hash: text("password_hash"),
+  role: varchar("role", { length: 20 }).notNull().default("user"),
+  monthly_limit: real("monthly_limit"),
+  limit_enabled: boolean("limit_enabled").notNull().default(false),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Sectors Table
+export const sectors = pgTable("sectors", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+});
+
+// Products Table
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sector_id: integer("sector_id").references(() => sectors.id),
+  sku: text("sku"),
+  category: text("category"),
+  unit_measure: text("unit_measure"),
+  unit_price: real("unit_price").notNull().default(0),
+  sale_price: real("sale_price"),
+  stock_quantity: integer("stock_quantity").notNull().default(0),
+  min_quantity: integer("min_quantity"),
+  max_quantity: integer("max_quantity"),
+  total_in: integer("total_in").notNull().default(0),
+  total_out: integer("total_out").notNull().default(0),
+  photo_path: text("photo_path"),
+  low_stock_threshold: integer("low_stock_threshold").default(10),
+  supplier: text("supplier"),
+  last_purchase_date: text("last_purchase_date"),
+  last_count_date: text("last_count_date"),
+  expiry_date: text("expiry_date"),
+  warranty_date: text("warranty_date"),
+  asset_number: text("asset_number"),
+  status: varchar("status", { length: 20 }).default("Ativo"),
+  visible_to_users: boolean("visible_to_users").notNull().default(true),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Stock Transactions Table
+export const stockTransactions = pgTable("stock_transactions", {
+  id: serial("id").primaryKey(),
+  product_id: integer("product_id").notNull().references(() => products.id),
+  user_id: integer("user_id").references(() => users.id),
+  transaction_type: varchar("transaction_type", { length: 20 }),
+  change: integer("change").notNull(),
+  reason: text("reason"),
+  document_origin: text("document_origin"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Consumptions Table
+export const consumptions = pgTable("consumptions", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").notNull().references(() => users.id),
+  product_id: integer("product_id").notNull().references(() => products.id),
+  qty: integer("qty").notNull(),
+  unit_price: real("unit_price").notNull(),
+  total_price: real("total_price").notNull(),
+  consumed_at: timestamp("consumed_at").defaultNow().notNull(),
+});
+
+// ============================================
+// DRIZZLE RELATIONS
+// ============================================
+
+export const usersRelations = relations(users, ({ many }) => ({
+  consumptions: many(consumptions),
+  stockTransactions: many(stockTransactions),
+}));
+
+export const sectorsRelations = relations(sectors, ({ many }) => ({
+  products: many(products),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+  sector: one(sectors, {
+    fields: [products.sector_id],
+    references: [sectors.id],
+  }),
+  stockTransactions: many(stockTransactions),
+  consumptions: many(consumptions),
+}));
+
+export const stockTransactionsRelations = relations(stockTransactions, ({ one }) => ({
+  product: one(products, {
+    fields: [stockTransactions.product_id],
+    references: [products.id],
+  }),
+  user: one(users, {
+    fields: [stockTransactions.user_id],
+    references: [users.id],
+  }),
+}));
+
+export const consumptionsRelations = relations(consumptions, ({ one }) => ({
+  user: one(users, {
+    fields: [consumptions.user_id],
+    references: [users.id],
+  }),
+  product: one(products, {
+    fields: [consumptions.product_id],
+    references: [products.id],
+  }),
+}));
+
+// ============================================
+// ZOD SCHEMAS (For Validation)
+// ============================================
 
 // Users Schema
 export const userSchema = z.object({
