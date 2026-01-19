@@ -1149,14 +1149,15 @@ class DatabaseStorage implements IStorage {
 export const storage = new DatabaseStorage();
 
 export async function seedDatabase(): Promise<void> {
-  if (process.env.NODE_ENV !== 'development') {
-    console.log('\n📦 PRODUCTION MODE');
-    console.log('⚠️  No default users created. Please create an admin user manually.\n');
-    return;
-  }
-
-  console.log('\n⚠️  DEVELOPMENT MODE - Seeding test data');
+  const isProduction = process.env.NODE_ENV !== 'development';
   
+  if (isProduction) {
+    console.log('\n📦 PRODUCTION MODE - Ensuring required data exists');
+  } else {
+    console.log('\n⚠️  DEVELOPMENT MODE - Seeding test data');
+  }
+  
+  // Always ensure admin user exists (required for system access)
   const adminMatricula = 'admin';
   const adminPassword = 'Admin123';
   const pwHash = await bcrypt.hash(adminPassword, 10);
@@ -1172,26 +1173,32 @@ export async function seedDatabase(): Promise<void> {
         role: 'admin',
         password_hash: pwHash,
       });
-      console.log('✅ Default admin user created (DEVELOPMENT ONLY):');
+      console.log('✅ Default admin user created:');
       console.log('   Matricula: admin');
       console.log('   Password: Admin123');
-      console.log('   ⚠️  WARNING: This is a test account. DO NOT use in production!');
+      if (isProduction) {
+        console.log('   ⚠️  IMPORTANT: Please change this password after first login!');
+      }
+    } else {
+      console.log('✅ Admin user already exists');
     }
   } catch (e: any) {
     console.error('Error seeding admin:', e.message);
   }
   
-  const sampleSectors = ['FoodStation', 'Máquina de Café', 'Limpeza'];
-  for (const sectorName of sampleSectors) {
+  // Always ensure the 3 required sectors exist
+  const requiredSectors = ['FoodStation', 'Máquina de Café', 'Limpeza'];
+  for (const sectorName of requiredSectors) {
     try {
       const allSectors = await storage.getAllSectors();
       const exists = allSectors.find(s => s.name === sectorName);
       if (!exists) {
         await storage.createSector({ name: sectorName });
+        console.log(`✅ Sector "${sectorName}" created`);
       }
     } catch (e: any) {
       // Sector already exists or error, continue
     }
   }
-  console.log('✅ Sample sectors created\n');
+  console.log('✅ Required sectors verified\n');
 }
