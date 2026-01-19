@@ -92,7 +92,7 @@ export default function LoginUser() {
             <img 
               src={logoImage} 
               alt="Logo" 
-              className="w-24 h-24 object-contain"
+              className="w-24 h-24 object-contain animate-float mix-blend-multiply dark:mix-blend-screen dark:invert"
               data-testid="img-logo"
             />
           </div>
