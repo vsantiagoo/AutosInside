@@ -190,20 +190,13 @@ export default function StockTransactions() {
       return await apiRequest('POST', '/api/stock-movements', data);
     },
     onSuccess: () => {
-      // Comprehensive cache invalidation for real-time integration
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['/api/stock-movements'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stock-snapshots'] });
       queryClient.invalidateQueries({ queryKey: ['/api/purchase-recommendations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/consumptions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
-      // Invalidate sector-specific queries
-      queryClient.invalidateQueries({ predicate: (query) => {
-        const key = query.queryKey[0]?.toString() || '';
-        return key.includes('/api/sectors/') || key.includes('/api/reports/');
-      }});
       
       toast({
         title: 'Estoque atualizado',

@@ -208,24 +208,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/users', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-      const userData = req.body;
+      const userData = insertUserSchema.parse(req.body);
       
-      // Auto-generate unique matricula in format FS-XXX-XX
-      const generateMatricula = async (): Promise<string> => {
-        const randomPart1 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-        const randomPart2 = String(Math.floor(Math.random() * 100)).padStart(2, '0');
-        const matricula = `FS-${randomPart1}-${randomPart2}`;
-        
-        // Check if matricula already exists
-        const existing = await storage.getUserByMatricula(matricula);
-        if (existing) {
-          // Recursively generate a new one if exists
-          return generateMatricula();
-        }
-        return matricula;
-      };
-      
-      const matricula = await generateMatricula();
+      const existing = await storage.getUserByMatricula(userData.matricula);
+      if (existing) {
+        return res.status(400).json({ message: 'Matricula already exists' });
+      }
 
       // For admin users, password is required
       if (userData.role === 'admin' && !userData.password) {
@@ -236,10 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const password_hash = userData.password ? await bcrypt.hash(userData.password, 10) : null;
       
       const user = await storage.createUser({
-        full_name: userData.full_name,
-        matricula,
-        email: userData.email || null,
-        role: userData.role || 'user',
+        ...userData,
         password_hash,
       });
 

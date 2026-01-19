@@ -51,6 +51,7 @@ export default function AdminUsers() {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       full_name: '',
+      matricula: '',
       email: '',
       role: 'user',
     },
@@ -58,14 +59,13 @@ export default function AdminUsers() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/users', data);
-      return response.json();
+      return await apiRequest('POST', '/api/users', data);
     },
-    onSuccess: (user: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
         title: 'Usuário criado',
-        description: `Matrícula gerada: ${user.matricula}`,
+        description: 'O usuário foi criado com sucesso.',
       });
       setIsFormOpen(false);
       form.reset();
@@ -146,6 +146,7 @@ export default function AdminUsers() {
     setEditingUser(null);
     form.reset({
       full_name: '',
+      matricula: '',
       email: '',
       role: 'user',
     });
@@ -269,28 +270,24 @@ export default function AdminUsers() {
                 )}
               />
 
-              {editingUser && (
-                <FormField
-                  control={form.control}
-                  name="matricula"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Matrícula</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          disabled
-                          className="bg-muted"
-                          data-testid="input-matricula"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        A matrícula não pode ser alterada
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              )}
+              <FormField
+                control={form.control}
+                name="matricula"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Matrícula *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite a matrícula"
+                        {...field}
+                        disabled={!!editingUser}
+                        data-testid="input-matricula"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
