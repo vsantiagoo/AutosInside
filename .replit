@@ -42,3 +42,4 @@ waitForPort = 5000
 
 [userenv.shared]
 RESEND_API_KEY = "re_iqG4yRMo_EpLRUFCwnBKdmr7fiCLdLDkU"
+RESEND_FROM_EMAIL = "Inventário <onboarding@resend.dev>"
