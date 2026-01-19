@@ -6,7 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, DollarSign, Download, Loader2 } from "lucide-react";
+import { Calendar, DollarSign, Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { ConsumptionWithDetails } from "@shared/schema";
 
@@ -20,6 +27,7 @@ export default function MyConsumptionReport() {
   const [endDate, setEndDate] = useState(lastDayOfMonth);
   const [month, setMonth] = useState(currentMonth);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState<'excel' | 'pdf'>('excel');
   const { toast } = useToast();
 
   const { data: consumptions = [], isLoading } = useQuery<ConsumptionWithDetails[]>({
@@ -36,7 +44,7 @@ export default function MyConsumptionReport() {
     
     setIsDownloading(true);
     try {
-      const response = await fetch(`/api/consumptions/download-report/${startDate}/${endDate}`, {
+      const response = await fetch(`/api/consumptions/download-report/${startDate}/${endDate}?format=${downloadFormat}`, {
         credentials: 'include',
       });
       
@@ -49,7 +57,8 @@ export default function MyConsumptionReport() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `relatorio-consumo-${startDate}-${endDate}.xlsx`;
+      const extension = downloadFormat === 'pdf' ? 'pdf' : 'xlsx';
+      a.download = `relatorio-consumo-${startDate}-${endDate}.${extension}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -197,20 +206,45 @@ export default function MyConsumptionReport() {
             >
               Limpar Filtros
             </Button>
-            <Button 
-              onClick={handleDownloadReport}
-              variant="outline"
-              className="flex-1 sm:flex-none"
-              disabled={isDownloading || !startDate || !endDate || consumptions.length === 0}
-              data-testid="button-download-report"
-            >
-              {isDownloading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              Baixar Relatório
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select
+                value={downloadFormat}
+                onValueChange={(value: 'excel' | 'pdf') => setDownloadFormat(value)}
+                data-testid="select-download-format"
+              >
+                <SelectTrigger className="w-[120px]" data-testid="select-trigger-format">
+                  <SelectValue placeholder="Formato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="excel" data-testid="select-item-excel">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      Excel
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="pdf" data-testid="select-item-pdf">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      PDF
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={handleDownloadReport}
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                disabled={isDownloading || !startDate || !endDate || consumptions.length === 0}
+                data-testid="button-download-report"
+              >
+                {isDownloading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Baixar Relatório
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

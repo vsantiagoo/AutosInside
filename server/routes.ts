@@ -7,6 +7,7 @@ import multer from "multer";
 import { promises as fs } from "fs";
 import path from "path";
 import ExcelJS from "exceljs";
+import PDFDocument from "pdfkit";
 import { z } from "zod";
 import {
   loginSchema,
@@ -824,24 +825,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/consumptions/download-report/:startDate/:endDate', authMiddleware, async (req, res) => {
     try {
       const { startDate, endDate } = req.params;
+      const format = (req.query.format as string) || 'excel';
       const userId = req.user!.id;
       
+      const user = await storage.getUser(userId);
       const consumptions = await storage.getUserConsumptions(userId, startDate, endDate);
       
       if (consumptions.length === 0) {
         return res.status(400).json({ message: 'Não há consumos no período selecionado.' });
       }
-      
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Relatório de Consumo');
-      
-      worksheet.columns = [
-        { header: 'Produto', key: 'produto', width: 35 },
-        { header: 'Consumo', key: 'consumo', width: 12 },
-        { header: 'Valor Unitário', key: 'valor_unitario', width: 18 },
-        { header: 'Valor Total', key: 'valor_total', width: 18 },
-        { header: 'Data e Hora Log', key: 'data_hora', width: 22 },
-      ];
       
       const groupedByProductAndTime: { [key: string]: { product_name: string; qty: number; unit_price: number; consumed_at: string } } = {};
       consumptions.forEach(c => {
@@ -861,48 +853,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
         new Date(b.consumed_at).getTime() - new Date(a.consumed_at).getTime()
       );
       
-      sortedEntries.forEach(item => {
-        const dataHora = new Date(item.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-        const valorTotal = item.qty * item.unit_price;
-        worksheet.addRow({
-          produto: item.product_name,
-          consumo: item.qty,
-          valor_unitario: item.unit_price,
-          valor_total: valorTotal,
-          data_hora: dataHora,
-        });
-      });
-      
-      worksheet.getColumn('valor_unitario').numFmt = '"R$ "#,##0.00';
-      worksheet.getColumn('valor_total').numFmt = '"R$ "#,##0.00';
-      
-      worksheet.getRow(1).font = { bold: true };
-      worksheet.getRow(1).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFE0E0E0' },
-      };
-      
       const totalValue = consumptions.reduce((sum, c) => sum + c.total_price, 0);
       const totalQty = consumptions.reduce((sum, c) => sum + c.qty, 0);
-      worksheet.addRow({});
-      worksheet.addRow({
-        produto: 'TOTAL',
-        consumo: totalQty,
-        valor_unitario: '',
-        valor_total: totalValue,
-        data_hora: '',
-      });
-      const lastRow = worksheet.lastRow;
-      if (lastRow) {
-        lastRow.font = { bold: true };
+      
+      if (format === 'pdf') {
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=relatorio-consumo-${startDate}-${endDate}.pdf`);
+        
+        doc.pipe(res);
+        
+        doc.fontSize(18).font('Helvetica-Bold').text('Relatório de Consumo', { align: 'center' });
+        doc.moveDown(0.5);
+        
+        const periodLabel = `${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')}`;
+        doc.fontSize(11).font('Helvetica').text(`Período: ${periodLabel}`, { align: 'center' });
+        if (user) {
+          doc.text(`Usuário: ${user.full_name}`, { align: 'center' });
+        }
+        doc.moveDown(1);
+        
+        const tableTop = doc.y;
+        const colWidths = [180, 60, 90, 90, 100];
+        const headers = ['Produto', 'Qtd', 'Valor Unit.', 'Valor Total', 'Data e Hora'];
+        
+        doc.font('Helvetica-Bold').fontSize(9);
+        let xPos = 50;
+        headers.forEach((header, i) => {
+          doc.text(header, xPos, tableTop, { width: colWidths[i], align: i === 0 ? 'left' : 'right' });
+          xPos += colWidths[i];
+        });
+        
+        doc.moveTo(50, tableTop + 15).lineTo(545, tableTop + 15).stroke();
+        
+        doc.font('Helvetica').fontSize(9);
+        let yPos = tableTop + 22;
+        
+        sortedEntries.forEach(item => {
+          if (yPos > 750) {
+            doc.addPage();
+            yPos = 50;
+          }
+          
+          const dataHora = new Date(item.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          const valorTotal = item.qty * item.unit_price;
+          
+          xPos = 50;
+          doc.text(item.product_name.substring(0, 35), xPos, yPos, { width: colWidths[0] });
+          xPos += colWidths[0];
+          doc.text(String(item.qty), xPos, yPos, { width: colWidths[1], align: 'right' });
+          xPos += colWidths[1];
+          doc.text(`R$ ${item.unit_price.toFixed(2)}`, xPos, yPos, { width: colWidths[2], align: 'right' });
+          xPos += colWidths[2];
+          doc.text(`R$ ${valorTotal.toFixed(2)}`, xPos, yPos, { width: colWidths[3], align: 'right' });
+          xPos += colWidths[3];
+          doc.text(dataHora, xPos, yPos, { width: colWidths[4], align: 'right' });
+          
+          yPos += 18;
+        });
+        
+        doc.moveTo(50, yPos).lineTo(545, yPos).stroke();
+        yPos += 8;
+        
+        doc.font('Helvetica-Bold');
+        xPos = 50;
+        doc.text('TOTAL', xPos, yPos, { width: colWidths[0] });
+        xPos += colWidths[0];
+        doc.text(String(totalQty), xPos, yPos, { width: colWidths[1], align: 'right' });
+        xPos += colWidths[0] + colWidths[1];
+        doc.text(`R$ ${totalValue.toFixed(2)}`, xPos, yPos, { width: colWidths[3], align: 'right' });
+        
+        doc.end();
+      } else {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Relatório de Consumo');
+        
+        worksheet.columns = [
+          { header: 'Produto', key: 'produto', width: 35 },
+          { header: 'Consumo', key: 'consumo', width: 12 },
+          { header: 'Valor Unitário', key: 'valor_unitario', width: 18 },
+          { header: 'Valor Total', key: 'valor_total', width: 18 },
+          { header: 'Data e Hora Log', key: 'data_hora', width: 22 },
+        ];
+        
+        sortedEntries.forEach(item => {
+          const dataHora = new Date(item.consumed_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          const valorTotal = item.qty * item.unit_price;
+          worksheet.addRow({
+            produto: item.product_name,
+            consumo: item.qty,
+            valor_unitario: item.unit_price,
+            valor_total: valorTotal,
+            data_hora: dataHora,
+          });
+        });
+        
+        worksheet.getColumn('valor_unitario').numFmt = '"R$ "#,##0.00';
+        worksheet.getColumn('valor_total').numFmt = '"R$ "#,##0.00';
+        
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE0E0E0' },
+        };
+        
+        worksheet.addRow({});
+        worksheet.addRow({
+          produto: 'TOTAL',
+          consumo: totalQty,
+          valor_unitario: '',
+          valor_total: totalValue,
+          data_hora: '',
+        });
+        const lastRow = worksheet.lastRow;
+        if (lastRow) {
+          lastRow.font = { bold: true };
+        }
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=relatorio-consumo-${startDate}-${endDate}.xlsx`);
+        
+        await workbook.xlsx.write(res);
+        res.end();
       }
-      
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename=relatorio-consumo-${startDate}-${endDate}.xlsx`);
-      
-      await workbook.xlsx.write(res);
-      res.end();
     } catch (error: any) {
       res.status(500).json({ message: error.message || 'Erro ao gerar relatório' });
     }
