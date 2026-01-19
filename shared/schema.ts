@@ -13,13 +13,16 @@ export const userSchema = z.object({
   created_at: z.string(),
 });
 
+// Password validation regex: at least 8 chars, 1 uppercase, 1 lowercase, 1 number
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
 export const insertUserSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  matricula: z.string().min(1, "Matricula is required"),
+  full_name: z.string().min(1, "Full name is required").max(100, "Nome muito longo"),
+  matricula: z.string().min(1, "Matricula is required").max(50, "Matrícula muito longa"),
   email: z.string().email("E-mail inválido").optional().or(z.literal('')),
   password: z.string().optional().refine(
-    (val) => !val || val.length >= 6,
-    { message: "Password must be at least 6 characters if provided" }
+    (val) => !val || passwordRegex.test(val),
+    { message: "Senha deve ter no mínimo 8 caracteres, incluindo maiúscula, minúscula e número" }
   ),
   role: z.enum(['admin', 'user']).default('user'),
 });

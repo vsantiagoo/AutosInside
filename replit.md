@@ -6,83 +6,59 @@ This is a full-stack inventory management system for tracking products, stock tr
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Updates (November 11, 2025)
-
-### Stock Management System with Automatic Updates
-Implemented comprehensive stock movement tracking across all sectors with automatic propagation to Inventory, Products, and Reports:
-
-**Backend**:
-- **Schema Extensions** (`shared/schema.ts`): Added `StockSnapshot` type (complete product stock status with flags for low_stock/out_of_stock/needs_purchase), `StockMovementFilters` for dynamic transaction filtering, extended `StockTransactionWithProduct` with sector information
-- **Storage Layer** (`server/storage-sqlite.ts`): New methods `getStockTransactionsWithFilters()`, `getStockSnapshots()`, `getPurchaseRecommendations()` with parameterized SQL queries, boolean normalization, and priority calculation
-- **API Endpoints** (`server/routes.ts`): 
-  - `GET /api/stock-movements` - List movements with filters (sector, product, type, date range, user)
-  - `POST /api/stock-movements` - Create movement with stock validation (prevents negative stock)
-  - `GET /api/stock-snapshots` - Get complete stock status snapshots
-  - `GET /api/purchase-recommendations` - Get prioritized purchase recommendations
-- **Atomic Updates**: `createStockTransaction` uses SQLite transactions to atomically update `stock_quantity`, `total_in`, `total_out` ensuring data consistency
-
-**Automatic Propagation**: When stock transactions are created via POST /api/stock-movements, the atomic update to products table ensures that all views (Inventory KPIs, Product listings, Dashboard stats, Reports) automatically see updated data on next query/refetch.
-
-**Purchase Recommendations Logic**:
-- **High Priority**: Stock = 0 OR ≤ 50% of min_quantity
-- **Medium Priority**: Stock ≤ min_quantity
-- **Low Priority**: Other cases
-- **Recommended Quantity**: max(min_quantity - current_stock, 0)
-- **Estimated Cost**: recommended_quantity × unit_price
-
-**Frontend Integration** (Planned): Shared `useStockInsights(sectorId)` hook and widgets for Dashboard, Inventory, and Products pages with automatic cache invalidation on mutations.
-
 ## System Architecture
 ### Frontend Architecture
 - **Frameworks**: React 18 with TypeScript, Vite, React Router, TanStack Query.
 - **UI/UX**: Shadcn/ui components on Radix UI, Tailwind CSS with a custom Material Design-inspired theme, Class Variance Authority (CVA), Roboto font. Material Design principles, HSL CSS variables for theming, elevation system, responsive grid layouts.
 - **State Management**: React Query for server state, React Context for authentication, React Hook Form with Zod for form state.
-- **Responsive Design**: Mobile-first approach with Tailwind breakpoints, ensuring full responsiveness across various devices (375px to 1440px+).
-- **Navigation Structure**: 
-  - **Reports Hub**: Centralized reports page (`/reports`) provides access to all reports via clickable cards (Relatório FoodStation, Coffee Machine, General Inventory, Sector Management)
-  - **User Menu**: Regular users maintain access to "Estação de Alimentos" in main menu
+- **Responsive Design**: Mobile-first approach with Tailwind breakpoints.
+- **Navigation Structure**: Reports Hub (`/reports`), User Menu access to "Estação de Alimentos".
 
 ### Backend Architecture
 - **Server**: Express.js on Node.js with TypeScript (ESM).
 - **API**: RESTful endpoints under `/api`, supporting file uploads (Multer) and Excel export (ExcelJS).
 - **Authentication**: Dual-mode (matricula only for users, matricula + password for admins), JWT tokens in HTTP-only cookies, bcrypt for password hashing.
 - **Authorization**: Role-based access control (`admin`, `user`).
-- **Request/Response**: Zod for validation, centralized error handling, JSON responses, CORS.
+- **Request/Response**: Zod for validation, centralized error handling, JSON responses.
+
+### Security Features
+- **Helmet.js**: Security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+- **Rate Limiting**: Login attempts (20 per 15 mins/IP), General API (200 requests per min/IP).
+- **Password Requirements**: Minimum 8 characters with uppercase, lowercase, and number.
+- **SQL Injection Prevention**: Parameterized statements.
+- **XSS Prevention**: Content Security Policy, input validation.
+- **CSRF Protection**: HTTP-only cookies with SameSite.
+- **File Upload Security**: Type validation, size limits (5MB images, 10MB imports).
+- **Request Body Limits**: Maximum 10MB.
 
 ### Data Storage
-- **Database**: `better-sqlite3` for SQLite (`data.db`) with WAL mode. File-based storage for product photos (`uploads/`).
-- **Schema**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` tables. Products table includes aggregated transaction totals and expanded fields for comprehensive product tracking. Stock transactions include user tracking, transaction types, and document origin.
-- **Data Access**: Storage abstraction layer (`IStorage`), synchronous SQLite operations, type-safe queries with TypeScript interfaces, Zod for schema validation.
-- **Migrations**: SQL migrations in `server/migrations.sql` executed on startup. Database seeding for default admin and sample sectors.
-- **Financial Data Model**: Distinguishes between `unit_price` (acquisition cost for internal accounting) and `sale_price` (user-facing, for revenue tracking).
+- **Database**: `better-sqlite3` for SQLite (`data.db`) with WAL mode.
+- **File Storage**: Product photos (`uploads/`).
+- **Schema**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` tables.
+- **Data Access**: Storage abstraction layer (`IStorage`), synchronous SQLite operations, type-safe queries, Zod validation.
+- **Migrations**: SQL migrations in `server/migrations.sql` executed on startup.
+- **Financial Data Model**: `unit_price` (acquisition cost) and `sale_price` (user-facing).
 
 ### Feature Specifications
 - **Login UX**: Password visibility toggle, case-insensitive matricula lookup, smart form validation, enhanced error messages, improved accessibility.
-- **Food Station**: Quick consumption tracking with inline list view, checkbox-based selection, real-time summary, and auto-logout. Records consumption timestamps in America/Sao_Paulo timezone.
-- **Enhanced Dashboard** (Admin-only): Comprehensive real-time dashboard at `/dashboard` with sector-based filtering, KPI cards (Total Products, Low Stock Alerts, Monthly Consumptions, Total Inventory Value), Low Stock Alerts, Top Consumed Items, and Recent Consumptions. Auto-refreshes data every 10-30 seconds.
-- **Inventory Management**: `/inventory` route (admin-only) displays comprehensive KPIs by sector, including total products, total inventory value, low stock count, and out-of-stock count, with Excel export functionality.
-- **Sector Reports**: Admin users can generate and download comprehensive Excel reports for each sector, including summary, products, stock transactions, and consumption records.
+- **Food Station**: Quick consumption tracking with inline list view, checkbox-based selection, real-time summary, auto-logout, and consumption timestamp recording.
+- **Enhanced Dashboard** (Admin-only): Comprehensive real-time dashboard at `/dashboard` with sector-based filtering, KPI cards (Total Products, Low Stock Alerts, Monthly Consumptions, Total Inventory Value), Low Stock Alerts, Top Consumed Items, and Recent Consumptions.
+- **Inventory Management**: `/inventory` route (admin-only) displays comprehensive KPIs by sector, with Excel export functionality.
+- **Sector Reports**: Admin users can generate and download comprehensive Excel reports for each sector.
 - **Localization**: Complete Brazilian Portuguese translation for all user-facing text, currency (R$), and date formatting.
-- **Product Forms**: Unified ProductForm component with 15+ fields covering Basic Info, Financial Data, Inventory Control, Supplier/Assets, Dates, and Photo Upload. Includes product visibility control.
-- **Sector Details Page**: Comprehensive sector management at `/sector/:id` (admin-only) with real-time KPIs, performance indicators, product management (creation/editing via dialog), and transaction history. Auto-refreshes data every 15-30 seconds.
-- **Monthly Consumption Limits**: Users can configure monthly spending limits with real-time tracking, progress bars, and automatic validation in FoodStation.
+- **Product Forms**: Unified ProductForm component with 15+ fields covering Basic Info, Financial Data, Inventory Control, Supplier/Assets, Dates, and Photo Upload, including product visibility control (inverted checkbox logic for `visible_to_users`).
+- **Sector Details Page**: Comprehensive sector management at `/sector/:id` (admin-only) with real-time KPIs, product management, and transaction history.
+- **Monthly Consumption Limits**: Users can configure and track monthly spending limits.
 - **Consumption Reporting**: Users can view personal consumption history with date filtering and monthly totals.
-- **Product Visibility Control**: Admins can hide products from regular users' FoodStation view while maintaining full reporting integrity. The feature uses **inverted checkbox logic**: when "Ocultar do FoodStation" is **checked**, the product is **hidden** (`visible_to_users=false`); when **unchecked**, it is **visible** (`visible_to_users=true`). The default is unchecked (visible). Hidden products are excluded from `/api/products` for regular users but always included for admins. All reports intentionally exclude visibility filtering for accurate analytics. React Query cache invalidation uses predicate matching to synchronize product changes across all screens (Products, Sectors, Inventory, Dashboard).
-- **Stock Movements Management** (`/stock`) (Admin-only): Comprehensive stock movement tracking interface with multi-criteria filtering, transaction creation, and detailed history. Features include:
-  - **Advanced Filters**: Six dynamic filters (sector, product, type, user, date range) with filter encadeamento (product filter updates based on selected sector), active filter count badge, and one-click clear all filters.
-  - **Transaction Creation Form**: Modal dialog with 5 validated fields (product, transaction type [Entrada/Saída/Ajuste], quantity, document origin, notes). Real-time stock validation prevents negative stock for withdrawals (Saída). Form displays current stock levels and auto-closes after successful submission.
-  - **Transaction History Table**: Paginated table (20 items/page) with 8 columns (date/time, product with photo, sector, type with color-coded badges, quantity with trend icons, user, document origin, notes). Supports sorting and comprehensive data display with responsive design.
-  - **Client-Side Pagination**: Smart pagination with auto-reset when filters change, auto-clamp when total pages decrease (prevents blank table), page number buttons with ellipsis, and record counter ("Mostrando X a Y de Z movimentações").
-  - **Empty States**: Context-aware messages (no data vs. no filtered results) with appropriate CTAs (create transaction vs. clear filters).
-  - **Cache Invalidation**: Mutations automatically refresh 6 related queries (['/api/stock-movements'], ['/api/products'], ['/api/inventory/kpis'], ['/api/dashboard/stats'], ['/api/stock-snapshots'], ['/api/purchase-recommendations']) ensuring real-time updates across Dashboard, Inventory, Products, and Reports.
-  - **Bug Fixes**: SelectItem components use `value="all"` instead of `value=""` to comply with Radix UI requirements. Pagination uses `useEffect` for reset and clamp logic instead of `useMemo`.
+- **Stock Movements Management** (`/stock`) (Admin-only): Comprehensive stock movement tracking interface with multi-criteria filtering, transaction creation, and detailed history. Features include advanced filters, a transaction creation form with real-time stock validation, a paginated transaction history table, client-side pagination, and context-aware empty states. Cache invalidation ensures real-time updates across related views.
 - **Advanced Reporting Module** (Admin-only):
-  - **Relatório FoodStation** (`/foodstation-consumption-control`): Detailed consumption tracking with user filtering (all users or individual), date range selection, KPIs (total items, total value, period coverage, record count), comprehensive table showing matricula, user name, product details, quantities, unit prices, and consumption timestamps, monthly totals visualization (top 3 users in highlight cards + remaining users in scrollable table), and **dual-format Excel export** with user-selectable options: (1) **Consolidado** - one row per user with 4 columns (Matrícula, Nome Completo, Valor Total Mensal, Período); (2) **Detalhado** - one row per consumption with 7 columns (Matrícula, Nome, Item, Quantidade, Valor Unitário, Valor Total, Data de Consumo). Both formats use numeric currency cells with BRL formatting (`numFmt: "R$ "#,##0.00`) enabling sorting and aggregations. Detailed format includes period banner in merged header row. Export inherits applied filters. **Bug Fix (Nov 11, 2025)**: Backend route now correctly extracts filters from nested `filters` object, ensuring user and date range filters are properly applied. Auto-refresh every 30 seconds.
-  - **Coffee Machine Report** (`/coffee-machine-report`): Weekly/biweekly monitoring with consumption frequency analysis, KPIs (total products, exits, value, high-frequency items, weekly average), product table with stock levels and suggested reorder cadence, and bar chart visualization of top consumed products. Auto-refresh every 30 seconds.
-  - **General Inventory Report** (`/general-inventory`): Consolidated view of all products across all sectors with filtering by sector/keyword, KPIs (total products/sectors/value, low/out-of-stock items), pie chart showing value distribution by sector, horizontal bar chart of sector totals, comprehensive product table, and Excel/PDF export capabilities. Auto-refresh every 30 seconds.
-  - **Sector Management Report** (`/sector-management-report`): Generic product management report for all 5 sectors (FoodStation, Limpeza, Materiais de Escritório, Máquina de Café, Máquinas e Equipamentos). Features sector selection, period filtering (15/30/60/90 days), KPIs (total products, entries, exits, inventory value, reorder value), top 5 products visualization with progress bars, and detailed table with stock predictions including average daily consumption, days until stockout, recommended reorder quantity, next order date, and status badges. Auto-refresh every 30 seconds.
-  - **FoodStation Consumptions Report** (API): Customizable detailed consumption report with support for grouping by user/product/date and field selection via `/api/reports/foodstation/consumptions`.
-  - **Cleaning Sector Report** (API): Bimonthly control report with opening/closing stock snapshots, purchase calculations, and month-over-month comparison via `/api/reports/sector/cleaning`.
+    - **Relatório FoodStation**: Detailed consumption tracking with user filtering, date range selection, KPIs, comprehensive table, monthly totals visualization, and dual-format Excel export (Consolidado and Detalhado).
+    - **Coffee Machine Report**: Weekly/biweekly monitoring with consumption frequency analysis, KPIs, product table, and bar chart visualization.
+    - **General Inventory Report**: Consolidated view of all products across all sectors with filtering, KPIs, pie/bar charts, comprehensive product table, and Excel/PDF export.
+    - **Sector Management Report**: Generic product management report for all 5 sectors with sector selection, period filtering, KPIs, top 5 products visualization, and detailed table with stock predictions.
+    - **FoodStation Consumptions Report (API)**: Customizable detailed consumption report.
+    - **Cleaning Sector Report (API)**: Bimonthly control report.
+- **Stock Management System with Automatic Updates**: Implemented comprehensive stock movement tracking with automatic propagation to Inventory, Products, and Reports. Backend includes `StockSnapshot` type, `StockMovementFilters`, new storage methods, and API endpoints for stock movements, snapshots, and purchase recommendations. Atomic updates ensure data consistency. Purchase recommendations are prioritized based on stock levels.
 
 ## External Dependencies
 - **Third-Party Libraries**:
