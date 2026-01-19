@@ -89,11 +89,19 @@ export default function FoodStation() {
         description: `${consumptions.length} item(ns) registrado(s). Saindo...`,
       });
 
-      // Invalidate queries before logout
+      // Comprehensive cache invalidation for real-time integration across all screens
       queryClient.invalidateQueries({ queryKey: ['/api/consumptions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       queryClient.invalidateQueries({ queryKey: ['/api/consumptions/my-monthly-total'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stock-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
+      // Invalidate sector-specific queries (for sector details pages)
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0]?.toString() || '';
+        return key.includes('/api/sectors/') || key.includes('/api/reports/');
+      }});
 
       // Logout after a short delay to show the toast
       setTimeout(async () => {
@@ -181,7 +189,10 @@ export default function FoodStation() {
     );
   }
 
-  const availableProducts = products?.filter(p => p.stock_quantity > 0 && p.sector_name === 'FoodStation') || [];
+  // Get all FoodStation products (including out-of-stock) for display
+  const foodStationProducts = products?.filter(p => p.sector_name === 'FoodStation') || [];
+  // Available products for selection (in stock only)
+  const availableProducts = foodStationProducts.filter(p => p.stock_quantity > 0);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -228,11 +239,11 @@ export default function FoodStation() {
         </Alert>
       </div>
 
-      {availableProducts.length === 0 ? (
+      {foodStationProducts.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
-              Nenhum produto disponível em estoque
+              Nenhum produto cadastrado no FoodStation
             </p>
           </CardContent>
         </Card>
@@ -240,7 +251,8 @@ export default function FoodStation() {
         <Card>
           <CardContent className="p-0">
             <div className="divide-y">
-              {availableProducts.map((product) => {
+              {foodStationProducts.map((product) => {
+                const isOutOfStock = product.stock_quantity <= 0;
                 const quantity = selectedItems[product.id] || 0;
                 const isSelected = quantity > 0;
                 const price = product.sale_price ?? product.unit_price;
@@ -249,7 +261,7 @@ export default function FoodStation() {
                 return (
                   <div 
                     key={product.id}
-                    className={`p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover-elevate ${isSelected ? 'bg-accent/30' : ''}`}
+                    className={`p-3 md:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 ${isOutOfStock ? 'opacity-60 bg-muted/30' : 'hover-elevate'} ${isSelected ? 'bg-accent/30' : ''}`}
                     data-testid={`row-product-${product.id}`}
                   >
                     {/* Mobile: Top Row (Checkbox, Image, Name) */}
@@ -257,7 +269,18 @@ export default function FoodStation() {
                       {/* Checkbox */}
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={(checked) => toggleItem(product.id, checked as boolean)}
+                        onCheckedChange={(checked) => {
+                          if (isOutOfStock && checked) {
+                            toast({
+                              variant: 'destructive',
+                              title: 'Produto fora de estoque',
+                              description: `O produto "${product.name}" não está disponível no momento.`,
+                            });
+                            return;
+                          }
+                          toggleItem(product.id, checked as boolean);
+                        }}
+                        disabled={isOutOfStock}
                         data-testid={`checkbox-product-${product.id}`}
                         className="flex-shrink-0"
                       />
@@ -283,9 +306,16 @@ export default function FoodStation() {
                         <h3 className="font-semibold text-sm sm:text-base truncate">
                           {product.name}
                         </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Em estoque: {product.stock_quantity}
-                        </p>
+                        {isOutOfStock ? (
+                          <p className="text-xs sm:text-sm text-destructive font-medium flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Fora de estoque
+                          </p>
+                        ) : (
+                          <p className="text-xs sm:text-sm text-muted-foreground">
+                            Em estoque: {product.stock_quantity}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -311,8 +341,20 @@ export default function FoodStation() {
                           min="1"
                           max={product.stock_quantity}
                           value={isSelected ? quantity : ''}
-                          onChange={(e) => setQuantity(product.id, e.target.value)}
-                          disabled={!isSelected}
+                          onChange={(e) => {
+                            const newQty = parseInt(e.target.value) || 1;
+                            if (newQty > product.stock_quantity) {
+                              toast({
+                                variant: 'destructive',
+                                title: 'Quantidade indisponível',
+                                description: `Máximo disponível: ${product.stock_quantity} unidades`,
+                              });
+                              setQuantity(product.id, product.stock_quantity.toString());
+                            } else {
+                              setQuantity(product.id, e.target.value);
+                            }
+                          }}
+                          disabled={!isSelected || isOutOfStock}
                           className="text-center h-9"
                           placeholder="0"
                           data-testid={`input-quantity-${product.id}`}
