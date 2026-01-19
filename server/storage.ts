@@ -1181,7 +1181,7 @@ export async function seedDatabase(): Promise<void> {
     console.error('Error seeding admin:', e.message);
   }
   
-  const sampleSectors = ['FoodStation', 'Limpeza', 'Materiais de Escritório', 'Máquina de Café', 'Máquinas e Equipamentos'];
+  const sampleSectors = ['FoodStation', 'Máquina de Café', 'Limpeza'];
   for (const sectorName of sampleSectors) {
     try {
       const allSectors = await storage.getAllSectors();
