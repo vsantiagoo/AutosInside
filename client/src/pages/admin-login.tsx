@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import logoImage from '@assets/WhatsApp_Image_2025-11-04_at_15.54.56_1768834777751.jpeg';
 
 const adminLoginSchema = z.object({
   matricula: z.string()
@@ -91,9 +92,12 @@ export default function AdminLogin() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
-              <span className="material-icons text-white text-4xl">admin_panel_settings</span>
-            </div>
+            <img 
+              src={logoImage} 
+              alt="Logo" 
+              className="w-24 h-24 object-contain"
+              data-testid="img-logo"
+            />
           </div>
           <div>
             <CardTitle className="text-3xl font-bold">Login de Administrador</CardTitle>
