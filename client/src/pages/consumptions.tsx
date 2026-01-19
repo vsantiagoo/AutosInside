@@ -33,7 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ShoppingCart, Loader2, Download } from 'lucide-react';
+import { Plus, ShoppingCart, Loader2, Download, Package } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Consumptions() {
@@ -69,9 +69,19 @@ export default function Consumptions() {
       return await apiRequest('POST', '/api/consumptions', data);
     },
     onSuccess: () => {
+      // Comprehensive cache invalidation for real-time integration
       queryClient.invalidateQueries({ queryKey: ['/api/consumptions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stock-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sectors'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/consumptions/my-monthly-total'] });
+      // Invalidate sector-specific queries
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const key = query.queryKey[0]?.toString() || '';
+        return key.includes('/api/sectors/') || key.includes('/api/reports/');
+      }});
       toast({
         title: 'Consumo registrado',
         description: 'O consumo foi registrado com sucesso.',
