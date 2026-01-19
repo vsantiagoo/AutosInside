@@ -32,12 +32,15 @@ Preferred communication style: Simple, everyday language.
 - **Request Body Limits**: Maximum 10MB.
 
 ### Data Storage
-- **Database**: `better-sqlite3` for SQLite (`data.db`) with WAL mode.
+- **Database**: PostgreSQL (Neon-backed) with Drizzle ORM.
+- **ORM Configuration**: `server/db.ts` (connection pool), `drizzle.config.ts` (CLI config).
+- **Schema Definition**: `shared/schema.ts` using Drizzle `pgTable` with proper types (serial, text, integer, real, boolean, timestamp).
 - **File Storage**: Product photos (`uploads/`).
-- **Schema**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` tables.
-- **Data Access**: Storage abstraction layer (`IStorage`), synchronous SQLite operations, type-safe queries, Zod validation.
-- **Migrations**: SQL migrations in `server/migrations.sql` executed on startup.
+- **Tables**: `users`, `sectors`, `products`, `stock_transactions`, `consumptions` with foreign key relations.
+- **Data Access**: Storage abstraction layer (`IStorage`) in `server/storage.ts`, async Drizzle queries, type-safe with parameterized statements.
+- **Migrations**: Use `npm run db:push` for schema changes (never write manual SQL migrations).
 - **Financial Data Model**: `unit_price` (acquisition cost) and `sale_price` (user-facing).
+- **Development Seeding**: `seedDatabase()` in `server/storage.ts` creates sample data on startup in dev mode.
 
 ### Feature Specifications
 - **Login UX**: Password visibility toggle, case-insensitive matricula lookup, smart form validation, enhanced error messages, improved accessibility.
@@ -69,9 +72,8 @@ Preferred communication style: Simple, everyday language.
     - `multer`: Multipart form data handling.
     - `zod`: Runtime type validation and schema definition.
     - `bcrypt`: Password hashing.
-    - `better-sqlite3`: SQLite database driver.
 - **Development Tools**:
     - `tsx`: TypeScript execution for development.
     - `esbuild`: Production bundling for backend.
     - `@replit/vite-plugin-*`: Replit-specific enhancements.
-- **Environment Requirements**: `SESSION_SECRET` for JWT signing, Node.js with ESM support, file system access for SQLite and uploads.
+- **Environment Requirements**: `SESSION_SECRET` for JWT signing, Node.js with ESM support, file system access for uploads.
