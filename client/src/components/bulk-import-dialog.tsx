@@ -91,7 +91,10 @@ Printer Paper,PPR-003,12.50,200,Office Supplies,20`;
     const a = document.createElement('a');
     a.href = url;
     a.download = 'product_import_template.csv';
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
 

@@ -113,7 +113,10 @@ export default function Consumptions() {
       const a = document.createElement('a');
       a.href = url;
       a.download = `consumptions-${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       toast({
         title: 'Exportação bem-sucedida',

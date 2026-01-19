@@ -135,7 +135,10 @@ export default function GeneralInventory() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `Inventario_Geral_${new Date().toISOString().split('T')[0]}.xlsx`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
